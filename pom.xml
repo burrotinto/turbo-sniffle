@@ -53,8 +53,22 @@
             <artifactId>opencv</artifactId>
             <version>[4.3.0,)</version>
         </dependency>
-    </dependencies>
 
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>net.sourceforge.tess4j</groupId>-->
+<!--            <artifactId>tess4j</artifactId>-->
+<!--            <version>4.5.4</version>-->
+<!--        </dependency>-->
+
+                <!-- https://mvnrepository.com/artifact/com.asprise.ocr/java-ocr-api -->
+        <dependency>
+            <groupId>com.asprise.ocr</groupId>
+            <artifactId>java-ocr-api</artifactId>
+            <version>15.3.0.3</version>
+        </dependency>
+
+    </dependencies>
 <!--    <dependencyManagement>-->
 <!--        <dependencies>-->
 <!--            <dependency>-->

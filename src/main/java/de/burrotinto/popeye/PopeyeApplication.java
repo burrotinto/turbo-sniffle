@@ -9,9 +9,12 @@ import java.awt.*;
 @SpringBootApplication
 public class PopeyeApplication {
 
-
+    static {
+        nu.pattern.OpenCV.loadLocally();
+//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
     public static void main(String[] args) {
-
+        nu.pattern.OpenCV.loadLocally();
 //        SpringApplication.run(PopeyeApplication.class, args);
 
 
