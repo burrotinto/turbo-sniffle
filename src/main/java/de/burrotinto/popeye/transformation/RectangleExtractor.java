@@ -7,7 +7,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
+//import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Component;
 
@@ -61,12 +61,12 @@ public class RectangleExtractor {
             double[] l = linesP.get(x, 0);
             Imgproc.line(cdstP, new Point(l[0], l[1]), new Point(l[2], l[3]), new Scalar(0, 0, 255), 3, Imgproc.LINE_AA, 0);
         }
-        // Show results
-        HighGui.imshow("Source", src);
-        HighGui.imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-        HighGui.imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-        // Wait and Exit
-        HighGui.waitKey();
+//        // Show results
+//        HighGui.imshow("Source", src);
+//        HighGui.imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
+//        HighGui.imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+//        // Wait and Exit
+//        HighGui.waitKey();
         System.exit(0);
 
         return listOfRectangles;

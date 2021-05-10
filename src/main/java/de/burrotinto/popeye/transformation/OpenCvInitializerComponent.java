@@ -3,7 +3,7 @@ package de.burrotinto.popeye.transformation;
 //import com.asprise.ocr.Ocr;
 import lombok.SneakyThrows;
 import org.opencv.core.*;
-import org.opencv.highgui.HighGui;
+//import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class OpenCvInitializerComponent {
 //            ocr.stopEngine();
             Mat grayimg = mat.clone();
               Imgproc.cvtColor(mat,grayimg, Imgproc.COLOR_BGR2GRAY);
-            HighGui.imshow(grayimg.toString(), new FindPointer().getHoughPTransform(grayimg,1,3.14 / 180,150));
+            Imgcodecs.imwrite("pic/"+grayimg.toString(), new FindPointer().getLineSegmentDetector(grayimg,1,3.14 / 180,150));
 
 //            Imgcodecs.imwrite("sixpacks/round"+rnd.nextInt()+".jpg", mat);
         });
@@ -100,7 +100,7 @@ public class OpenCvInitializerComponent {
 //            Imgcodecs.imwrite("round"+x+".jpg", img);
 //        }
 
-        HighGui.waitKey();
+//        HighGui.waitKey();
         System.exit(0);
 
         Imgcodecs.imwrite("sixpack2.jpg", img);
