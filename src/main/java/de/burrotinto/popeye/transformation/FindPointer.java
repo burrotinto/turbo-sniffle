@@ -1,59 +1,81 @@
-package de.burrotinto.popeye.transformation;
-
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.LineSegmentDetector;
-
-
-public class FindPointer {
-    public Mat getHoughTransform(Mat image, double rho, double theta, int threshold) {
-        Mat result = image.clone();
-        Mat lines = new Mat();
-        Imgproc.HoughLines(image, lines, rho, theta, threshold);
-
-        for (int i = 0; i < lines.cols(); i++) {
-            double data[] = lines.get(i, 0);
-            double rho1 = data[0];
-            double theta1 = data[1];
-            double cosTheta = Math.cos(theta1);
-            double sinTheta = Math.sin(theta1);
-            double x0 = cosTheta * rho1;
-            double y0 = sinTheta * rho1;
-            Point pt1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
-            Point pt2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
-            Imgproc.line(result, pt1, pt2, new Scalar(255, 0, 0), 2);
-        }
-        return result;
-    }
-
-    public Mat getHoughPTransform(Mat image, double rho, double theta, int threshold) {
-        Mat result = image.clone();
-        Imgproc.Canny(result, result, 100, 300, 3, false);
-        Mat lines = new Mat();
-        Imgproc.HoughLinesP(result, lines, rho, theta, threshold);
-
-        for (int i = 0; i < lines.cols(); i++) {
-            double[] val = lines.get(0, i);
-            Imgproc.line(result, new Point(val[0], val[1]), new Point(val[2], val[3]), new Scalar(255, 0, 0), 10);
-        }
-        return result;
-    }
-
-    public Mat getLineSegmentDetector(Mat image, double rho, double theta, int threshold) {
-        Mat result = image.clone();
-        Imgproc.Canny(result, result, 100, 300, 3, false);
-        Mat lines = new Mat();
-        Mat x = new Mat(result.size(),result.type());
-        Imgproc.createLineSegmentDetector().detect(result,lines);
-        Imgproc.createLineSegmentDetector().drawSegments(x,lines);
-
-        for (int i = 0; i < lines.cols(); i++) {
-            double[] val = lines.get(0, i);
-            Imgproc.line(result, new Point(val[0], val[1]), new Point(val[2], val[3]), new Scalar(255, 0, 0), 10);
-        }
-        return x;
-    }
-
-}
+//package de.burrotinto.popeye.transformation;
+//
+//import org.opencv.core.Mat;
+//import org.opencv.core.MatOfInt;
+//import org.opencv.core.MatOfPoint;
+//import org.opencv.core.MatOfPoint2f;
+//import org.opencv.core.Point;
+//import org.opencv.core.RotatedRect;
+//import org.opencv.core.Size;
+//import org.opencv.imgproc.Imgproc;
+//import org.opencv.imgproc.Moments;
+//
+//import java.util.ArrayList;
+//import java.util.List;
+//
+//
+//public class FindPointer {
+//    public Pointer getPointer(Mat src, int threshold) {
+//        Mat srcGray = new Mat();
+//        Mat cannyOutput = new Mat();
+//
+//        //Bild vorbereiten
+//        Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.blur(srcGray, srcGray, new Size(3, 3));
+//
+//        Imgproc.Canny(srcGray, cannyOutput, threshold, threshold * 2);
+//
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        Mat hierarchy = new Mat();
+//        Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
+//
+//
+//        RotatedRect[] minRect = new RotatedRect[contours.size()];
+//        List<Moments> mu = new ArrayList<>(contours.size());
+//
+//        for (int i = 0; i < contours.size(); i++) {
+//            minRect[i] = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(i).toArray()));
+//            mu.add(Imgproc.moments(contours.get(i)));
+//        }
+//
+//        List<Point> mc = new ArrayList<>(contours.size());
+//        for (int i = 0; i < contours.size(); i++) {
+//            //add 1e-5 to avoid division by zero
+//            mc.add(new Point(mu.get(i).m10 / (mu.get(i).m00 + 1e-5), mu.get(i).m01 / (mu.get(i).m00 + 1e-5)));
+//        }
+////        Mat drawing = Mat.zeros(cannyOutput.size(), CvType.CV_8UC3);
+//        Mat drawing = srcGray.clone();
+//
+//        List<MatOfPoint> hullList = new ArrayList<>();
+//        for (MatOfPoint contour : contours) {
+//            MatOfInt hull = new MatOfInt();
+//            Imgproc.convexHull(contour, hull);
+//            Point[] contourArray = contour.toArray();
+//            Point[] hullPoints = new Point[hull.rows()];
+//            List<Integer> hullContourIdxList = hull.toList();
+//            for (int i = 0; i < hullContourIdxList.size(); i++) {
+//                hullPoints[i] = contourArray[hullContourIdxList.get(i)];
+//            }
+//            hullList.add(new MatOfPoint(hullPoints));
+//        }
+//
+//        // getMaxScaledObject
+//        int maxSO = 0;
+//        double maxScale = 0;
+//        for (int i = 0; i < contours.size(); i++) {
+//            //Länge und breite des Objectes
+//            double l = Math.max(minRect[i].size.height, minRect[i].size.width);
+//            double b = Math.min(minRect[i].size.height, minRect[i].size.width);
+//            if (l / b > maxScale
+//                    && Double.isFinite(l / b)
+//                    && !Double.isNaN(l / b)
+//                    && cannyOutput.size().height * 0.2 < l) {
+//                maxScale = l / b;
+//                maxSO = i;
+//            }
+//
+//        }
+//
+//        return hullList.get(maxSO);
+//    }
+//}
