@@ -3,6 +3,7 @@ package de.burrotinto.popeye.transformation;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
+import org.opencv.features2d.SimpleBlobDetector;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Component;
 

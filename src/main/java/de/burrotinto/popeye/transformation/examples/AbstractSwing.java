@@ -1,22 +1,15 @@
 package de.burrotinto.popeye.transformation.examples;
 
-import de.burrotinto.popeye.transformation.CircleExtractor;
-import de.burrotinto.popeye.transformation.Helper;
-import de.burrotinto.popeye.transformation.Pair;
 import de.burrotinto.popeye.transformation.Pointer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -27,16 +20,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-class FindContours2 {
-    private Mat srcGray = new Mat();
-    private JFrame frame;
-    private JLabel imgSrcLabel;
-    private JLabel imgContoursLabel;
-    private static final int MAX_THRESHOLD = 758;
-    private int threshold = 120;
-    private Random rng = new Random();
+abstract class AbstractSwing {
+    protected Mat srcGray = new Mat();
+    protected JFrame frame;
+    protected JLabel imgSrcLabel;
+    protected JLabel imgContoursLabel;
+    protected static final int MAX_THRESHOLD = 758;
+    protected int threshold = 120;
+    protected Random rng = new Random();
 
-    public FindContours2(Mat src) {
+    public AbstractSwing(Mat src) {
         Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
         Imgproc.blur(srcGray, srcGray, new Size(3, 3));
         // Create and set up the window.
@@ -53,7 +46,7 @@ class FindContours2 {
         update();
     }
 
-    public FindContours2(String file) {
+    public AbstractSwing(String file) {
         this(Imgcodecs.imread(file));
     }
 
@@ -90,53 +83,11 @@ class FindContours2 {
     }
 
     private void update() {
-        Mat cannyOutput = new Mat();
-        Imgproc.Canny(srcGray, cannyOutput, threshold, threshold * 2);
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
-
-        List<Pointer> pointers = new LinkedList<>();
-
-        for (MatOfPoint contour : contours) {
-            Pointer.isPointer(contour).ifPresent(pointers::add);
-        }
-
-        Mat drawing = srcGray.clone();
-
-
-        for (Pointer point : pointers) {
-            Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
-            Imgproc.line(drawing, point.getDirection().p1, point.getDirection().p2, color, 2);
-            Imgproc.putText(drawing, "[" + point.scale() + "]", point.getDirection().p2, 2, 0.5, color);
-
-            // rotated rectangle
-            Point[] rectPoints = new Point[4];
-            point.getMinRect().points(rectPoints);
-            for (int j = 0; j < 4; j++) {
-                Imgproc.line(drawing, rectPoints[j], rectPoints[(j+1) % 4], color);
-            }
-        }
-
-
-        imgContoursLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(drawing)));
-        frame.repaint();
-        imgContoursLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(drawing)));
+        imgContoursLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(getDrawing())));
         frame.repaint();
     }
 
-    public static void main(String[] args) {
-        // Load the native OpenCV library
-        nu.pattern.OpenCV.loadLocally();
-        // Schedule a job for the event dispatch thread:
-        // creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new FindContours2("sixpacks/robinDR400_KMH.JPG");
-//                new CircleExtractor().getAllCircles(Imgcodecs.imread("sixpacks/robindr400.JPG")).forEach(FindContours2::new);
+    abstract protected Mat getDrawing();
 
-            }
-        });
-    }
+
 }

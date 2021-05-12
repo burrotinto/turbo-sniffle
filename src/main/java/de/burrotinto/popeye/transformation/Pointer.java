@@ -42,7 +42,7 @@ public class Pointer {
     }
 
     public double getWidth() {
-        return Imgproc.fitEllipseDirect(new MatOfPoint2f(contour.toArray())).boundingRect().width;
+        return contour.size().width;
     }
 
     public double scale() {
@@ -59,7 +59,7 @@ public class Pointer {
 
     static public Optional<Pointer> isPointer(MatOfPoint contour) {
         Pointer p = new Pointer(contour);
-        if (p.hullList.size() <= 5) {
+        if (p.scale() > 10 && p.scale() < 100) {
 
             return Optional.of(p);
         } else
