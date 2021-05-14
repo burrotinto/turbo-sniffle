@@ -1,24 +1,12 @@
 package de.burrotinto.popeye.transformation.examples;
 
-import de.burrotinto.popeye.transformation.AnalogOneArrow;
+import de.burrotinto.popeye.meters.AnalogOneArrow;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 class FittingElipse extends AbstractSwing {
 

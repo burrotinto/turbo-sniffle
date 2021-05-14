@@ -1,22 +1,15 @@
 package de.burrotinto.popeye.transformation.examples;
 
-import de.burrotinto.popeye.transformation.CircleExtractor;
-import de.burrotinto.popeye.transformation.Helper;
-import de.burrotinto.popeye.transformation.Pair;
-import de.burrotinto.popeye.transformation.Pointer;
+import de.burrotinto.popeye.meters.Pointer;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
