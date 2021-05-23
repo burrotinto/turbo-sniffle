@@ -18,12 +18,12 @@
         <vaadin.version>14.5.4</vaadin.version>
     </properties>
 
-<!--    <repositories>-->
-<!--        <repository>-->
-<!--            <id>clojars.org</id>-->
-<!--            <url>https://repo.clojars.org</url>-->
-<!--        </repository>-->
-<!--    </repositories>-->
+    <!--    <repositories>-->
+    <!--        <repository>-->
+    <!--            <id>clojars.org</id>-->
+    <!--            <url>https://repo.clojars.org</url>-->
+    <!--        </repository>-->
+    <!--    </repositories>-->
 
 
     <dependencies>
@@ -31,10 +31,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.vaadin</groupId>-->
-<!--            <artifactId>vaadin-spring-boot-starter</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.vaadin</groupId>-->
+        <!--            <artifactId>vaadin-spring-boot-starter</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -53,12 +53,12 @@
             <artifactId>opencv</artifactId>
             <version>4.3.0-0</version>
         </dependency>
-<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.openpnp/opencv &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.openpnp</groupId>-->
-<!--            <artifactId>opencv</artifactId>-->
-<!--            <version>2.4.13-0</version>-->
-<!--        </dependency>-->
+        <!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.openpnp/opencv &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openpnp</groupId>-->
+        <!--            <artifactId>opencv</artifactId>-->
+        <!--            <version>2.4.13-0</version>-->
+        <!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.boofcv/boofcv-all -->
         <dependency>
             <groupId>org.boofcv</groupId>
@@ -77,33 +77,24 @@
             <version>0.37</version>
         </dependency>
 
-
-        <!--        &lt;!&ndash; https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>net.sourceforge.tess4j</groupId>-->
-<!--            <artifactId>tess4j</artifactId>-->
-<!--            <version>4.5.4</version>-->
-<!--        </dependency>-->
-
-                <!-- https://mvnrepository.com/artifact/com.asprise.ocr/java-ocr-api -->
+        <!-- https://mvnrepository.com/artifact/net.sourceforge.tess4j/tess4j -->
         <dependency>
-            <groupId>com.asprise.ocr</groupId>
-            <artifactId>java-ocr-api</artifactId>
-            <version>15.3.0.3</version>
+            <groupId>net.sourceforge.tess4j</groupId>
+            <artifactId>tess4j</artifactId>
+            <version>4.0.0</version>
         </dependency>
-
     </dependencies>
-<!--    <dependencyManagement>-->
-<!--        <dependencies>-->
-<!--            <dependency>-->
-<!--                <groupId>com.vaadin</groupId>-->
-<!--                <artifactId>vaadin-bom</artifactId>-->
-<!--                <version>${vaadin.version}</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-<!--        </dependencies>-->
-<!--    </dependencyManagement>-->
+    <!--    <dependencyManagement>-->
+    <!--        <dependencies>-->
+    <!--            <dependency>-->
+    <!--                <groupId>com.vaadin</groupId>-->
+    <!--                <artifactId>vaadin-bom</artifactId>-->
+    <!--                <version>${vaadin.version}</version>-->
+    <!--                <type>pom</type>-->
+    <!--                <scope>import</scope>-->
+    <!--            </dependency>-->
+    <!--        </dependencies>-->
+    <!--    </dependencyManagement>-->
 
     <build>
         <plugins>
@@ -118,39 +109,39 @@
                         </exclude>
                     </excludes>
                 </configuration>
-<!--                <configuration>-->
-<!--                    <argLine>-Djava.library.path=${project.basedir}/libraries/</argLine>-->
-<!--                </configuration>-->
+                <!--                <configuration>-->
+                <!--                    <argLine>-Djava.library.path=${project.basedir}/libraries/</argLine>-->
+                <!--                </configuration>-->
             </plugin>
         </plugins>
     </build>
 
-<!--    <profiles>-->
-<!--        <profile>-->
-<!--            <id>production</id>-->
-<!--            <build>-->
-<!--                <plugins>-->
-<!--                    <plugin>-->
-<!--                        <groupId>com.vaadin</groupId>-->
-<!--                        <artifactId>vaadin-maven-plugin</artifactId>-->
-<!--                        <version>${vaadin.version}</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>frontend</id>-->
-<!--                                <phase>compile</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>prepare-frontend</goal>-->
-<!--                                    <goal>build-frontend</goal>-->
-<!--                                </goals>-->
-<!--                                <configuration>-->
-<!--                                    <productionMode>true</productionMode>-->
-<!--                                </configuration>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
-<!--                </plugins>-->
-<!--            </build>-->
-<!--        </profile>-->
-<!--    </profiles>-->
+    <!--    <profiles>-->
+    <!--        <profile>-->
+    <!--            <id>production</id>-->
+    <!--            <build>-->
+    <!--                <plugins>-->
+    <!--                    <plugin>-->
+    <!--                        <groupId>com.vaadin</groupId>-->
+    <!--                        <artifactId>vaadin-maven-plugin</artifactId>-->
+    <!--                        <version>${vaadin.version}</version>-->
+    <!--                        <executions>-->
+    <!--                            <execution>-->
+    <!--                                <id>frontend</id>-->
+    <!--                                <phase>compile</phase>-->
+    <!--                                <goals>-->
+    <!--                                    <goal>prepare-frontend</goal>-->
+    <!--                                    <goal>build-frontend</goal>-->
+    <!--                                </goals>-->
+    <!--                                <configuration>-->
+    <!--                                    <productionMode>true</productionMode>-->
+    <!--                                </configuration>-->
+    <!--                            </execution>-->
+    <!--                        </executions>-->
+    <!--                    </plugin>-->
+    <!--                </plugins>-->
+    <!--            </build>-->
+    <!--        </profile>-->
+    <!--    </profiles>-->
 
 </project>

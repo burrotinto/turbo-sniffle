@@ -1,7 +1,9 @@
 package de.burrotinto.popeye.meters;
 
-import de.burrotinto.popeye.transformation.Helper;
+import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.popeye.transformation.PointPair;
+import lombok.Getter;
+import lombok.Setter;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -20,6 +22,13 @@ public class Pointer {
     final private List<MatOfPoint> hullList = new ArrayList<>();
     final private RotatedRect minRect;
 
+    @Getter
+    @Setter
+    private Point arrow;
+    @Getter
+    @Setter
+    private Point bottom;
+
     public Pointer(MatOfPoint contour) {
         this.contour = contour;
         //Minimales Rechteck
@@ -36,6 +45,8 @@ public class Pointer {
         }
         hullList.add(new MatOfPoint(hullPoints));
 
+        arrow = getDirection().p1;
+        bottom = getDirection().p2;
     }
 
 
@@ -61,10 +72,9 @@ public class Pointer {
 
     static public Optional<Pointer> isPointer(MatOfPoint contour) {
         Pointer p = new Pointer(contour);
-        if (p.scale() > 10 && p.scale() < 100) {
-
+//        if (p.scale() > 10 && p.scale() < 100) {
             return Optional.of(p);
-        } else
-            return Optional.empty();
+//        } else
+//            return Optional.empty();
     }
 }

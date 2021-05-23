@@ -126,7 +126,7 @@ class FindContours2 {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new FindContours2("sixpacks/robinDR400_KMH.JPG");
+                new FindContours2("turbo-sniffle3test.png");
 //                new CircleExtractor().getAllCircles(Imgcodecs.imread("sixpacks/robindr400.JPG")).forEach(FindContours2::new);
 
             }

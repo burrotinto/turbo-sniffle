@@ -3,7 +3,7 @@ package de.burrotinto.popeye.transformation;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class Pair<T> {
+public class Pair<T,D> {
     public T p1;
-    public T p2;
+    public D p2;
 }

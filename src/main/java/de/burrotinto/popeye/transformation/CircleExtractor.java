@@ -1,7 +1,9 @@
 package de.burrotinto.popeye.transformation;
 
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.features2d.SimpleBlobDetector;
 import org.opencv.imgproc.Imgproc;
@@ -28,7 +30,7 @@ public class CircleExtractor {
 
         Imgproc.HoughCircles(prepared, circles, Imgproc.HOUGH_GRADIENT, 1.0,
                 (double) prepared.rows() / 16, // change this value to detect circles with different distances to each other
-                100.0, 30.0, 60, 100); // change the last two parameters
+                100.0, 30.0); // change the last two parameters
         // (min_radius & max_radius) to detect larger circles
         for (int x = 0; x < circles.cols(); x++) {
             double[] c = circles.get(0, x);
@@ -38,13 +40,18 @@ public class CircleExtractor {
             int radius = (int) Math.round(c[2]);
 
             //Bildauschnitt
-            Mat newImage = src.submat((int) Math.round(center.y - radius), (int) Math.round(center.y + radius), (int) Math.round(center.x - radius), (int) Math.round(center.x + radius));
+            if ((int) center.x - radius >= 0
+                    && (int) center.y - radius >= 0
+                    && (int) center.x + radius < src.width()
+                    && (int) center.y + radius < src.height()) {
 
-            Mat resizeimage = new Mat();
-            Size sz = new Size(256, 256);
-            Imgproc.resize(newImage, resizeimage, sz);
+                Mat newImage = src.submat((int) Math.round(center.y - radius), (int) Math.round(center.y + radius), (int) Math.round(center.x - radius), (int) Math.round(center.x + radius));
+                Mat resizeimage = new Mat();
+                Size sz = new Size(512, 512);
+                Imgproc.resize(newImage, resizeimage, sz);
 
-            listOfCircles.add(resizeimage);
+                listOfCircles.add(resizeimage);
+            }
         }
         return listOfCircles;
     }

@@ -2,6 +2,7 @@ package de.burrotinto.popeye.transformation.examples;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -23,6 +24,9 @@ abstract class AbstractSwing {
     protected Random rng = new Random();
 
     public AbstractSwing(Mat src) {
+        Size sz = new Size(512, 512);
+        Imgproc.resize(src, src, sz);
+
         Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
         Imgproc.blur(srcGray, srcGray, new Size(3, 3));
         // Create and set up the window.
@@ -75,6 +79,9 @@ abstract class AbstractSwing {
         pane.add(imgPanel, BorderLayout.CENTER);
     }
 
+    protected Scalar randomColor(){
+        return new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+    }
     private void update() {
         imgContoursLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(getDrawing())));
         frame.repaint();
