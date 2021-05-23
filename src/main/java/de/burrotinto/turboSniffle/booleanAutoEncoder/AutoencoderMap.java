@@ -14,10 +14,11 @@ public class AutoencoderMap extends HashMap<Mat, Mat> {
         if (super.get(key) != null) {
             return super.get(key);
         } else {
-            AtomicReference<Pair<Mat, Integer>> aenhlichstes = new AtomicReference<>();
-            this.keySet().parallelStream().forEach(mat -> {
-                val dist = BooleanAutoencoder.HAMMINGDISTANZ(mat, (Mat) key);
-                if (aenhlichstes.get() == null || aenhlichstes.get().p2 > dist) {
+            AtomicReference<Pair<Mat, Integer>> aenhlichstes = new AtomicReference<>(new Pair<>(null, ((Mat) key).width() * ((Mat) key).height()));
+            this.keySet().forEach(mat -> {
+                val dist = BooleanAutoencoder.HAMMINGDISTANZ(mat, (Mat) key,aenhlichstes.get().p2 );
+
+                if ( aenhlichstes.get().p2 > dist) {
                     aenhlichstes.set(new Pair(mat, dist));
                 }
             });

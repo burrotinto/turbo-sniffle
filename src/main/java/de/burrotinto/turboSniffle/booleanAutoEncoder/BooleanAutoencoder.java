@@ -45,11 +45,29 @@ public class BooleanAutoencoder {
         int distanz = 0;
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.cols(); j++) {
-                for (int k = 0; k < a.get(i, j).length; k++) {
-                    if (a.get(i, j)[k] != b.get(i, j)[k]) {
-                        distanz++;
+                if (a.get(i, j)[0] != b.get(i, j)[0]) {
+                    distanz++;
+                }
+            }
+        }
+        return distanz;
+    }
+
+    @SneakyThrows
+    public static int HAMMINGDISTANZ(Mat a, Mat b,int max) {
+        int distanz = 0;
+        for (int i = 0; i < a.rows(); i++) {
+            for (int j = 0; j < a.cols(); j++) {
+                if (a.get(i, j)[0] != b.get(i, j)[0]) {
+                    distanz++;
+                    if(distanz > max){
+                        return distanz;
                     }
                 }
+//                for (int k = 0; k < a.get(i, j).length; k++) {
+//                    val x = b.get(i, j);
+//
+//                }
             }
         }
         return distanz;

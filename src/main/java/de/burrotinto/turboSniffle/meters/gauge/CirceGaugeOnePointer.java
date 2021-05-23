@@ -42,7 +42,6 @@ public class CirceGaugeOnePointer extends CircleGauge implements Measuring {
     private Mat cannyOutput;
     private int threshold;
     private RotatedRect minEllipseDisplay;
-    private List<MatOfPoint> contours = new ArrayList<>();
     private int indexDisplay = 0;
 
     private Pointer[] pointer = new Pointer[0];

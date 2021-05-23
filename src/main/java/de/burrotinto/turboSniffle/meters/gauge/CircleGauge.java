@@ -15,6 +15,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public abstract class CircleGauge implements Measuring {
@@ -22,6 +23,7 @@ public abstract class CircleGauge implements Measuring {
     private Mat fittedSrc;
     protected int threshold;
 
+    protected List<MatOfPoint> contours = new ArrayList<>();
 
     private RotatedRect gaugeElipse;
     private Mat gaugeMat;
@@ -64,7 +66,8 @@ public abstract class CircleGauge implements Measuring {
         Imgproc.resize(gaugeMat.submat(rect), gaugeMat, new Size(512, 512));
         Imgproc.resize(mat.submat(rect), fittedSrc, new Size(512, 512));
 
-        Imgcodecs.imwrite(System.currentTimeMillis()+".jpg",fittedSrc);
+//        Imgproc.drawMarker(fittedSrc,new Point(drawing.width()/2,drawing.height()/2), getColor());
+//        Imgcodecs.imwrite(System.currentTimeMillis()+".jpg",fittedSrc);
 
         gaugeElipse = getGreatestElipse(gaugeMat);
     }
@@ -172,5 +175,11 @@ public abstract class CircleGauge implements Measuring {
 
     protected Scalar getColor(){
         return new Scalar(255,255,255);
+    }
+
+
+    @Override
+    public List<MatOfPoint> getContoures() {
+        return contours;
     }
 }
