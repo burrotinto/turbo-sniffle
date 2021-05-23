@@ -1,0 +1,5 @@
+EAST:
+https://arxiv.org/abs/1704.03155v2
+
+Pointerdedection:
+https://www.degruyter.com/document/doi/10.1515/phys-2019-0010/html
