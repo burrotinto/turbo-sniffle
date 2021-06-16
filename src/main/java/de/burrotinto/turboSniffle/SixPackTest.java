@@ -25,10 +25,10 @@ class SixPackTest{
 //        displayMainFrame.addMeasuring(new Point(750,50),400,"ALT", MeasuringType.AnalogSimple,"*100 feet");
 //        displayMainFrame.addMeasuring(new Point(50,400),400,"TURN_COORDINATOR", MeasuringType.AnalogSimple,"");
 //        displayMainFrame.addMeasuring(new Point(400,400),400,"COMPASS", MeasuringType.AnalogSimple,"°");
-        displayMainFrame.addMeasuring(new Point(750,400),400,"VERTICAL_SPEED", MeasuringType.Vertical_Speed,"1000 ft per min");
+//        displayMainFrame.addMeasuring(new Point(750,400),400,"VERTICAL_SPEED", MeasuringType.Vertical_Speed,"1000 ft per min");
 
         System.out.println(displayMainFrame.getValue("AIRSPEED") + displayMainFrame.getUnit("AIRSPEED") );
-        System.out.println(displayMainFrame.getValue("VERTICAL_SPEED") + displayMainFrame.getUnit("VERTICAL_SPEED") );
+//        System.out.println(displayMainFrame.getValue("VERTICAL_SPEED") + displayMainFrame.getUnit("VERTICAL_SPEED") );
 
         HighGui.imshow("AIRSPEED",displayMainFrame.getMeasuring("AIRSPEED").getDrawing());
         HighGui.imshow("VERTICAL_SPEED",displayMainFrame.getMeasuring("VERTICAL_SPEED").getDrawing());

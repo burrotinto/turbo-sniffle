@@ -54,8 +54,8 @@ public class BooleanAutoencoder {
     }
 
     @SneakyThrows
-    public static int HAMMINGDISTANZ(Mat a, Mat b,int max) {
-        int distanz = 0;
+    public static long HAMMINGDISTANZ(Mat a, Mat b,long max) {
+        long distanz = 0;
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.cols(); j++) {
                 if (a.get(i, j)[0] != b.get(i, j)[0]) {
@@ -64,10 +64,20 @@ public class BooleanAutoencoder {
                         return distanz;
                     }
                 }
-//                for (int k = 0; k < a.get(i, j).length; k++) {
-//                    val x = b.get(i, j);
-//
-//                }
+            }
+        }
+        return distanz;
+    }
+
+    @SneakyThrows
+    public static long DISTANZ(Mat a, Mat b,long max) {
+        int distanz = 0;
+        for (int i = 0; i < a.rows(); i++) {
+            for (int j = 0; j < a.cols(); j++) {
+                distanz += Math.abs(a.get(i, j)[0] - b.get(i, j)[0]);
+                if(distanz > max){
+                    return distanz;
+                }
             }
         }
         return distanz;

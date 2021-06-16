@@ -2,6 +2,8 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.meters.Measuring;
 import lombok.val;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -40,9 +42,38 @@ public abstract class CircleGauge implements Measuring {
     @Override
     public void update(Mat mat) {
         fittedSrc = mat.clone();
-        val canny = getEdgeDedectionCannyGauge(mat);
-        val lines = getLineDedection(canny);
-        val removedLines = removeLines(canny, lines);
+        val edgeDedected = getSobel(mat);
+        val lines = getLineDedection(edgeDedected);
+
+
+
+        //BA
+
+        val input = fittedSrc.clone();
+        val ca = new Mat(input.size(), input.type());
+        val sobel = getSobel(input);
+
+        Imgproc.Canny(mat, ca, threshold, threshold * 2);
+
+        Imgcodecs.imwrite("eingabe.jpg",input);
+        Imgcodecs.imwrite("Canny.jpg",ca);
+        Imgcodecs.imwrite("Sobel.jpg",sobel);
+
+        Mat out = new Mat(edgeDedected.size(),edgeDedected.type());
+        for (int x = 0; x < lines.rows(); x++) {
+            double[] l = lines.get(x, 0);
+            Imgproc.line(out, new Point(l[0], l[1]), new Point(l[2], l[3]), new Scalar(255, 255, 255), 3, Imgproc.LINE_8, 0);
+        }
+
+
+
+
+
+        val removedLines = removeLines(edgeDedected, lines);
+        HighGui.imshow("asd",out);
+        HighGui.imshow("asdvcbvb",removedLines);
+        HighGui.waitKey();
+
         val elipse = getGreatestElipse(removedLines);
 
         gaugeMat = Mat.zeros(mat.size(), mat.type());
@@ -53,7 +84,7 @@ public abstract class CircleGauge implements Measuring {
         val rect = new Rect((int) elipse.center.x - rad, (int) elipse.center.y - rad, rad * 2, rad * 2);
 
 
-        val drawing = canny.clone();
+        val drawing = edgeDedected.clone();
         Imgproc.ellipse(drawing,elipse,new Scalar(255,255,255),10);
         Imgproc.rectangle(drawing,elipse.boundingRect(),new Scalar(255,255,255));
         Imgproc.resize(drawing, drawing, new Size(512, 512));
@@ -109,7 +140,7 @@ public abstract class CircleGauge implements Measuring {
 
     protected Mat getLineDedection(Mat mat) {
         Mat linesP = new Mat(); // will hold the results of the detection
-        Imgproc.HoughLinesP(mat, linesP, 1, Math.PI / 180, 255 / 4, 50, 10); // runs the actual detection
+        Imgproc.HoughLinesP(mat, linesP, 1, Math.PI / 180, 255 / 4, mat.size().height/5.0, mat.size().height/25.5); // runs the actual detection
 
         return linesP;
     }
@@ -119,7 +150,7 @@ public abstract class CircleGauge implements Measuring {
         var hierarchy = new Mat();
         Imgproc.findContours(canny, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        //Check und initialisierung der Anzeige
+        //Check und initialisierung der AnzeigeDabei wer
         RotatedRect[] minEllipse = new RotatedRect[contours.size()];
 
         int indexDisplay = 0;
@@ -182,4 +213,38 @@ public abstract class CircleGauge implements Measuring {
     public List<MatOfPoint> getContoures() {
         return contours;
     }
+
+    Mat getSobel(Mat input){
+        // First we declare the variables we are going to use
+        Mat grad = new Mat();
+        int scale = 1;
+        int delta = 0;
+        int ddepth = CvType.CV_16S;
+
+        Mat grad_x = new Mat(), grad_y = new Mat();
+        Mat abs_grad_x = new Mat(), abs_grad_y = new Mat();
+
+        Imgproc.Sobel( input, grad_x, ddepth, 1, 0, 3, scale, delta, Core.BORDER_DEFAULT );
+        Imgproc.Sobel( input, grad_y, ddepth, 0, 1, 3, scale, delta, Core.BORDER_DEFAULT );
+
+        // converting back to CV_8U
+        Core.convertScaleAbs( grad_x, abs_grad_x );
+        Core.convertScaleAbs( grad_y, abs_grad_y );
+        Core.addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+
+        val out = new Mat(grad.size(),grad.type());
+        for (int i = 0; i < grad.rows(); i++) {
+            for (int j = 0; j < grad.cols(); j++) {
+                if(grad.get(i,j)[0]> 85){
+                    out.put(i,j,255.0,255.0,255.0);
+                } else {
+                    out.put(i,j,0,0,0);
+                }
+
+            }
+        }
+        return out;
+
+    }
 }
+
