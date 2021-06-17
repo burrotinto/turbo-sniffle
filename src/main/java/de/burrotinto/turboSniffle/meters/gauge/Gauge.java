@@ -1,30 +1,41 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
+
 import lombok.val;
 import org.opencv.core.*;
+import org.opencv.features2d.Feature2D;
+import org.opencv.features2d.Features2d;
+import org.opencv.features2d.SimpleBlobDetector;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Gauge {
+    public static final Scalar WHITE = new Scalar(255.0, 255.0, 255.0);
+
     public Gauge(Mat input) {
         val greyInput = Mat.zeros(input.size(), input.type());
         Imgproc.cvtColor(input, greyInput, Imgproc.COLOR_BGR2GRAY);
-//        Imgproc.resize(greyInput,greyInput,new Size(256,256));
+//        Imgproc.blur(greyInput, greyInput, new Size(3.0, 3.0));
 
         val canny = getEdgeDedectionCanny(greyInput, 85);
         val sobel = getEdgeDedectionSobel(greyInput, 85);
-        val both =  getEdgeDedectionSobelAndCanny(greyInput, 85);
+        val both = getEdgeDedectionSobelAndCanny(greyInput, 85);
 //        HighGui.imshow("CANNY", canny);
 //        HighGui.imshow("SOBEL", sobel);
-        HighGui.imshow("BOTH",both);
 
+        HighGui.imshow("BOTH", both);
+//        blob(both);
+        HighGui.imshow("GREY", greyInput);
 
         Mat out = new Mat(sobel.size(), sobel.type());
         val sobelLines = getLineDedection(sobel);
@@ -40,19 +51,23 @@ public class Gauge {
 //        HighGui.waitKey();
 
 
-        val bothWithOutLines = removeLines(both,bothLines);
+        val bothWithOutLines = removeLines(both, bothLines);
+
+        val biggestEllipse = getGreatestElipse(both);
+
+
         Imgproc.ellipse(canny, getGreatestElipse(removeLines(canny, cannyLines)), new Scalar(255, 255, 255), 10);
         Imgproc.ellipse(sobel, getGreatestElipse(removeLines(sobel, sobelLines)), new Scalar(255, 255, 255), 10);
-//        Imgproc.ellipse(both, getGreatestElipse( both), new Scalar(255, 255, 255), 10);
+        Imgproc.ellipse(both, biggestEllipse, new Scalar(255, 255, 255), 20);
 
 
 //        HighGui.imshow("CANNY_e", canny);
 //        HighGui.imshow("SOBEL_e", sobel);
-        HighGui.imshow("BOTH_e",bothWithOutLines);
+        HighGui.imshow("BOTH_e", both);
 
 //        HighGui.imshow("trans Sobel", transponiere(input, getGreatestElipse(removeLines(sobel, sobelLines))));
 //        HighGui.imshow("trans Canny", transponiere(input, getGreatestElipse(removeLines(canny, cannyLines))));
-        HighGui.imshow("trans BOTH", transponiere(input, getGreatestElipse(bothWithOutLines)));
+        HighGui.imshow("trans BOTH", transponiere(input, biggestEllipse));
 //                HighGui.imshow("trans Sobel",transponiere(input,getGreatestElipse(sobel)));
 //        HighGui.imshow("trans Canny",transponiere(input,getGreatestElipse(canny)));
 
@@ -123,6 +138,26 @@ public class Gauge {
         return linesP;
     }
 
+    public static void blob(Mat mat) {
+        Mat MatOut = new Mat();
+
+        // make a simpleblob detector:
+        SimpleBlobDetector blobby = SimpleBlobDetector.create();
+// save the original config:
+// (or use the one below)
+        blobby.write("data/blob.xml");
+
+        MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
+
+        blobby.detect(mat, keypoints1);
+
+        Scalar cores = new Scalar(0, 0, 255);
+
+        Features2d.drawKeypoints(mat, keypoints1, MatOut, cores, 2);
+
+        HighGui.imshow("blob", MatOut);
+        HighGui.waitKey();
+    }
 
     public static RotatedRect getGreatestElipse(Mat edgeDetected) {
         val contours = new ArrayList<MatOfPoint>();
@@ -132,7 +167,6 @@ public class Gauge {
         RotatedRect[] minEllipse = new RotatedRect[contours.size()];
 
         int indexDisplay = 0;
-
 
         for (int i = 0; i < contours.size(); i++) {
             minEllipse[i] = new RotatedRect();
