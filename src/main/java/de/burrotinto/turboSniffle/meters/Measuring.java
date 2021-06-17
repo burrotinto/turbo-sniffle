@@ -2,6 +2,7 @@ package de.burrotinto.turboSniffle.meters;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Size;
 
 import java.util.List;
 
@@ -10,4 +11,5 @@ public interface Measuring {
     void update(Mat mat);
     Mat getDrawing();
     List<MatOfPoint> getContoures();
+    Size getSize();
 }

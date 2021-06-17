@@ -21,6 +21,7 @@ import java.util.List;
 
 
 public abstract class CircleGauge implements Measuring {
+    private static final Size SIZE = new Size(512, 512);
     private final int thresholdCanny = 255/3;
     private Mat fittedSrc;
     protected int threshold;
@@ -94,8 +95,8 @@ public abstract class CircleGauge implements Measuring {
 //        HighGui.waitKey();
 
 
-        Imgproc.resize(gaugeMat.submat(rect), gaugeMat, new Size(512, 512));
-        Imgproc.resize(mat.submat(rect), fittedSrc, new Size(512, 512));
+        Imgproc.resize(gaugeMat.submat(rect), gaugeMat, getSize());
+        Imgproc.resize(mat.submat(rect), fittedSrc,getSize());
 
 //        Imgproc.drawMarker(fittedSrc,new Point(drawing.width()/2,drawing.height()/2), getColor());
 //        Imgcodecs.imwrite(System.currentTimeMillis()+".jpg",fittedSrc);
@@ -245,6 +246,11 @@ public abstract class CircleGauge implements Measuring {
         }
         return out;
 
+    }
+
+    @Override
+    public Size getSize() {
+        return SIZE;
     }
 }
 

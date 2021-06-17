@@ -87,8 +87,11 @@ public class CirceGaugeOnePointer extends CircleGauge implements Measuring {
             }
 
             //Längsten Kandidaten auswählen
-            pointer = new Pointer[1];
-            pointer[0] = zeigerKandidaten.stream().max((o1, o2) -> (int) (o1.getLength() - o2.getLength())).get();
+            zeigerKandidaten.stream().max((o1, o2) -> (int) (o1.getLength() - o2.getLength())).ifPresent(pointer1 -> {
+                pointer = new Pointer[1];
+                pointer[0] = pointer1;
+            });
+
 
 
         }
