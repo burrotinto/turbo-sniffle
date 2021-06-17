@@ -3,7 +3,6 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import lombok.val;
 import org.opencv.core.*;
-import org.opencv.features2d.Feature2D;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.SimpleBlobDetector;
 import org.opencv.highgui.HighGui;
@@ -11,9 +10,6 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,16 +54,16 @@ public class Gauge {
 
         Imgproc.ellipse(canny, getGreatestElipse(removeLines(canny, cannyLines)), new Scalar(255, 255, 255), 10);
         Imgproc.ellipse(sobel, getGreatestElipse(removeLines(sobel, sobelLines)), new Scalar(255, 255, 255), 10);
-        Imgproc.ellipse(both, biggestEllipse, new Scalar(255, 255, 255), 20);
+//        Imgproc.ellipse(both, biggestEllipse, new Scalar(255, 255, 255), 20);
 
 
 //        HighGui.imshow("CANNY_e", canny);
 //        HighGui.imshow("SOBEL_e", sobel);
-        HighGui.imshow("BOTH_e", both);
+//        HighGui.imshow("BOTH_e", both);
 
 //        HighGui.imshow("trans Sobel", transponiere(input, getGreatestElipse(removeLines(sobel, sobelLines))));
 //        HighGui.imshow("trans Canny", transponiere(input, getGreatestElipse(removeLines(canny, cannyLines))));
-        HighGui.imshow("trans BOTH", transponiere(input, biggestEllipse));
+        HighGui.imshow("trans BOTH", transponiere(greyInput, biggestEllipse));
 //                HighGui.imshow("trans Sobel",transponiere(input,getGreatestElipse(sobel)));
 //        HighGui.imshow("trans Canny",transponiere(input,getGreatestElipse(canny)));
 
@@ -162,20 +158,26 @@ public class Gauge {
     public static RotatedRect getGreatestElipse(Mat edgeDetected) {
         val contours = new ArrayList<MatOfPoint>();
         var hierarchy = new Mat();
-        Imgproc.findContours(edgeDetected, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(edgeDetected, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         RotatedRect[] minEllipse = new RotatedRect[contours.size()];
 
         int indexDisplay = 0;
 
+        val draw = edgeDetected.clone();
+
         for (int i = 0; i < contours.size(); i++) {
             minEllipse[i] = new RotatedRect();
             if (contours.get(i).rows() > 5) {
                 minEllipse[i] = Imgproc.fitEllipseDirect(new MatOfPoint2f(contours.get(i).toArray()));
+
+                Imgproc.ellipse(draw, minEllipse[i], WHITE, 10);
+
             }
 
 
             val radius = (int) Math.max(minEllipse[i].size.width, minEllipse[i].size.height) / 2;
+
 
             if (minEllipse[i].size.area() > minEllipse[indexDisplay].size.area()
                     && minEllipse[i].center.x - radius >= 0
@@ -186,7 +188,8 @@ public class Gauge {
                 indexDisplay = i;
             }
         }
-
+//        HighGui.imshow("asas", draw);
+//        HighGui.waitKey();
         return minEllipse[indexDisplay];
     }
 
@@ -232,6 +235,6 @@ public class Gauge {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        new Gauge(Imgcodecs.imread("data/example/temp.jpg"));
+        new Gauge(Imgcodecs.imread("data/example/druck.jpg"));
     }
 }
