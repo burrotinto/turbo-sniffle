@@ -1,8 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 
-import de.burrotinto.ellipse.CannyEdgeDetector;
-import de.burrotinto.ellipse.EllipseDetector;
 import lombok.val;
 import org.opencv.core.*;
 import org.opencv.features2d.Features2d;
@@ -12,112 +10,64 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Gauge {
+public class Gauge2 {
     public static final Scalar WHITE = new Scalar(255.0, 255.0, 255.0);
 
-    public Gauge(Mat input) {
-//        val greyInput = Mat.zeros(input.size(), input.type());
-//        Imgproc.cvtColor(input, greyInput, Imgproc.COLOR_BGR2GRAY);
-////        Imgproc.blur(greyInput, greyInput, new Size(3.0, 3.0));
-//
-//        val canny = getEdgeDedectionCanny(greyInput, 85);
-//        val sobel = getEdgeDedectionSobel(greyInput, 85);
-//        val both = getEdgeDedectionSobelAndCanny(greyInput, 85);
-////        HighGui.imshow("CANNY", canny);
-////        HighGui.imshow("SOBEL", sobel);
-//
-//        HighGui.imshow("BOTH", both);
-////        blob(both);
-//        HighGui.imshow("GREY", greyInput);
-//
-//        Mat out = new Mat(sobel.size(), sobel.type());
-//        val sobelLines = getLineDedection(sobel);
-//        val cannyLines = getLineDedection(canny);
-//        val bothLines = getLineDedection(both);
-//
-////        for (int x = 0; x < sobelLines.rows(); x++) {
-////            double[] l = sobelLines.get(x, 0);
-////            Imgproc.line(out, new Point(l[0], l[1]), new Point(l[2], l[3]), new Scalar(255, 255, 255), 3, Imgproc.LINE_8, 0);
-////        }
-//
-////        HighGui.imshow("SOBEL_LINES",out);
-////        HighGui.waitKey();
-//
-//
-//        val bothWithOutLines = removeLines(both, bothLines);
+    public Gauge2(Mat input) {
+        val greyInput = Mat.zeros(input.size(), input.type());
+        Imgproc.cvtColor(input, greyInput, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.blur(greyInput, greyInput, new Size(3.0, 3.0));
 
-//        val biggestEllipse = getGreatestElipse(both);
-        val biggestEllipse = getGreatestEllipseII(input);
+        val canny = getEdgeDedectionCanny(greyInput, 85);
+        val sobel = getEdgeDedectionSobel(greyInput, 85);
+        val both = getEdgeDedectionSobelAndCanny(greyInput, 85);
+//        HighGui.imshow("CANNY", canny);
+//        HighGui.imshow("SOBEL", sobel);
 
-//        Imgproc.ellipse(canny, getGreatestElipse(removeLines(canny, cannyLines)), new Scalar(255, 255, 255), 10);
-//        Imgproc.ellipse(sobel, getGreatestElipse(removeLines(sobel, sobelLines)), new Scalar(255, 255, 255), 10);
-//        Imgproc.ellipse(input, biggestEllipse, new Scalar(255, 255, 255), 20);
+        HighGui.imshow("BOTH", both);
+//        blob(both);
+        HighGui.imshow("GREY", greyInput);
+
+        Mat out = new Mat(sobel.size(), sobel.type());
+        val sobelLines = getLineDedection(sobel);
+        val cannyLines = getLineDedection(canny);
+        val bothLines = getLineDedection(both);
+
+//        for (int x = 0; x < sobelLines.rows(); x++) {
+//            double[] l = sobelLines.get(x, 0);
+//            Imgproc.line(out, new Point(l[0], l[1]), new Point(l[2], l[3]), new Scalar(255, 255, 255), 3, Imgproc.LINE_8, 0);
+//        }
+
+//        HighGui.imshow("SOBEL_LINES",out);
+//        HighGui.waitKey();
 
 
+        val bothWithOutLines = removeLines(both, bothLines);
+
+        val biggestEllipse = getGreatestElipse(both);
+
+
+        Imgproc.ellipse(canny, getGreatestElipse(removeLines(canny, cannyLines)), new Scalar(255, 255, 255), 10);
+        Imgproc.ellipse(sobel, getGreatestElipse(removeLines(sobel, sobelLines)), new Scalar(255, 255, 255), 10);
+//        Imgproc.ellipse(both, biggestEllipse, new Scalar(255, 255, 255), 20);
 
 
 //        HighGui.imshow("CANNY_e", canny);
 //        HighGui.imshow("SOBEL_e", sobel);
-        HighGui.imshow("BOTH_e", input);
+//        HighGui.imshow("BOTH_e", both);
 
 //        HighGui.imshow("trans Sobel", transponiere(input, getGreatestElipse(removeLines(sobel, sobelLines))));
 //        HighGui.imshow("trans Canny", transponiere(input, getGreatestElipse(removeLines(canny, cannyLines))));
-        HighGui.imshow("trans BOTH", transponiere(input, biggestEllipse));
+        HighGui.imshow("trans BOTH", transponiere(greyInput, biggestEllipse));
 //                HighGui.imshow("trans Sobel",transponiere(input,getGreatestElipse(sobel)));
 //        HighGui.imshow("trans Canny",transponiere(input,getGreatestElipse(canny)));
 
-        val xxx = transponiere(input, biggestEllipse);
-
-        greatestCircle(transponiere(input, biggestEllipse));
-
-        Imgproc.drawMarker(xxx,new Point(xxx.width() / 2.0, xxx.height() / 2.0),WHITE);
-        val rotate = Imgproc.getRotationMatrix2D(new Point(xxx.width() / 2.0, xxx.height() / 2.0), 90- biggestEllipse.angle, 1.0);
-        Imgproc.warpAffine(xxx, xxx, rotate, xxx.size());
-        HighGui.imshow("BOTH_roteted", xxx);
         HighGui.waitKey();
-    }
-
-
-    public RotatedRect getGreatestEllipseII(Mat input) {
-        CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
-//        cannyEdgeDetector.setLowThreshold(2.5f); // 2.5
-//        cannyEdgeDetector.setHighThreshold(7.5f); // 7.5
-        cannyEdgeDetector.setAutoThreshold(true);
-        // 2 is default for CannyEdgeDetector but 1 is setting from Ellipse reference code
-        cannyEdgeDetector.setGaussianKernelRadius(1f); // 2
-        // 16 is default for Canny Edge Detector, but 5 is setting from ellipse reference code.
-        cannyEdgeDetector.setGaussianKernelWidth(5); // 16
-        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(input));
-        cannyEdgeDetector.process();
-
-        EllipseDetector ellipseDetector = new EllipseDetector();
-        ellipseDetector.setEdgeImage(cannyEdgeDetector);
-        ellipseDetector.setUseMedianCenter(true);
-        ellipseDetector.setDistanceToEllipseContour(0.5f);
-        ellipseDetector.process();
-
-        final RotatedRect[] max = {null};
-
-        ellipseDetector.getFinalEllipseList().forEach(ellipse -> {
-            val e = EllipseDetector.createContour(ellipse);
-            val radius = (int) Math.max(e.size.width, e.size.height) / 2;
-            if (max[0] == null || (
-                    e.size.area() > max[0].size.area()
-                            && e.center.x - radius >= 0
-                            && e.center.y - radius >= 0
-                            && e.center.x + radius < input.width()
-                            && e.center.y + radius < input.height()
-            )) {
-                max[0] = e;
-            }
-        });
-        return max[0];
     }
 
 
@@ -215,6 +165,7 @@ public class Gauge {
         int indexDisplay = 0;
 
 
+
         for (int i = 0; i < contours.size(); i++) {
             minEllipse[i] = new RotatedRect();
             if (contours.get(i).rows() > 5) {
@@ -280,32 +231,8 @@ public class Gauge {
         return proj;
     }
 
-    public void greatestCircle (Mat input) {
-
-        Mat gray = new Mat();
-        Imgproc.cvtColor(input, gray, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.medianBlur(gray, gray, 5);
-
-        Mat circles = new Mat();
-        Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0,
-                (double)gray.rows()/16, // change this value to detect circles with different distances to each other
-                100.0, 30.0, 1, 30); // change the last two parameters
-        // (min_radius & max_radius) to detect larger circles
-        for (int x = 0; x < circles.cols(); x++) {
-            double[] c = circles.get(0, x);
-            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-            // circle center
-            Imgproc.circle(input, center, 1, new Scalar(0,100,100), 3, 8, 0 );
-            // circle outline
-            int radius = (int) Math.round(c[2]);
-            Imgproc.circle(input, center, radius, new Scalar(255,0,255), 3, 8, 0 );
-        }
-        HighGui.imshow("detected circles", input);
-        HighGui.waitKey();
-        System.exit(0);
-    }
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        new Gauge(Imgcodecs.imread("data/example/temp.jpg"));
+        new Gauge2(Imgcodecs.imread("data/example/druck.jpg"));
     }
 }
