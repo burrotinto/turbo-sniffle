@@ -2,7 +2,17 @@ package de.burrotinto.ellipse;
 
 // http://www.tomgibara.com/computer-vision/CannyEdgeDetector.java
 
+import lombok.SneakyThrows;
+import lombok.val;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 /**
@@ -33,7 +43,6 @@ import java.util.Arrays;
  * consult an explanation of the algorithm.</p>
  *
  * @author Tom Gibara
- *
  */
 
 public class CannyEdgeDetector {
@@ -127,6 +136,28 @@ public class CannyEdgeDetector {
         return edgeImage;
     }
 
+
+    @SneakyThrows
+    public Mat getEdgeMat() {
+        Mat out;
+        byte[] data;
+        int r, g, b;
+
+        val in = getEdgeImage();
+
+
+        out = new Mat(in.getHeight(), in.getWidth(), CvType.CV_8U);
+        data = new byte[in.getWidth() * in.getHeight() * (int) out.elemSize()];
+        int[] dataBuff = in.getRGB(0, 0, in.getWidth(), in.getHeight(), null, 0, in.getWidth());
+        for (int i = 0; i < dataBuff.length; i++) {
+            data[i] = (byte) ((dataBuff[i] >> 0) & 0xFF);
+//            data[i * 3 + 1] = (byte) ((dataBuff[i] >> 8) & 0xFF);
+//            data[i * 3 + 2] = (byte) ((dataBuff[i] >> 16) & 0xFF);
+        }
+        out.put(0, 0, data);
+        return out;
+    }
+
     /**
      * Sets the edges image. Calling this method will not change the operation
      * of the edge detector in any way. It is intended to provide a means by
@@ -209,7 +240,7 @@ public class CannyEdgeDetector {
      * values is deemed negligable, so this is actually a maximum radius.
      *
      * @param gaussianKernelWidth a radius for the convolution operation in
-     * pixels, at least 2.
+     *                            pixels, at least 2.
      */
 
     public void setGaussianKernelWidth(int gaussianKernelWidth) {
@@ -254,8 +285,9 @@ public class CannyEdgeDetector {
 
     /**
      * Sets whether the contrast is normalized
+     *
      * @param contrastNormalized true if the contrast should be normalized,
-     * false otherwise
+     *                           false otherwise
      */
 
     public void setContrastNormalized(boolean contrastNormalized) {
@@ -276,7 +308,7 @@ public class CannyEdgeDetector {
             setAutoHighLowThreshold();
         }
         int low = Math.round(lowThreshold * MAGNITUDE_SCALE);
-        int high = Math.round( highThreshold * MAGNITUDE_SCALE);
+        int high = Math.round(highThreshold * MAGNITUDE_SCALE);
         performHysteresis(low, high);
         thresholdEdges();
         writeEdges(data);
@@ -335,7 +367,7 @@ public class CannyEdgeDetector {
                 float sumY = sumX;
                 int xOffset = 1;
                 int yOffset = width;
-                for(; xOffset < kwidth ;) {
+                for (; xOffset < kwidth; ) {
                     sumY += kernel[xOffset] * (data[index - yOffset] + data[index + yOffset]);
                     sumX += kernel[xOffset] * (data[index - xOffset] + data[index + xOffset]);
                     yOffset += width;
@@ -515,7 +547,7 @@ public class CannyEdgeDetector {
         int x0 = x1 == 0 ? x1 : x1 - 1;
         int x2 = x1 == width - 1 ? x1 : x1 + 1;
         int y0 = y1 == 0 ? y1 : y1 - 1;
-        int y2 = y1 == height -1 ? y1 : y1 + 1;
+        int y2 = y1 == height - 1 ? y1 : y1 + 1;
 
         data[i1] = magnitude[i1];
         for (int x = x0; x <= x2; x++) {
@@ -541,7 +573,7 @@ public class CannyEdgeDetector {
 //        return Math.round(0.299f * r + 0.587f * g + 0.114f * b);
         float max = Math.max(r, Math.max(g, b));
         float min = Math.min(r, Math.min(g, b));
-        return Math.round((max + min)/2.0f);
+        return Math.round((max + min) / 2.0f);
     }
 
     private void readLuminance() {
@@ -599,8 +631,8 @@ public class CannyEdgeDetector {
         int j = 0;
         for (int i = 0; i < histogram.length; i++) {
             sum += histogram[i];
-            int target = sum*255/picsize;
-            for (int k = j+1; k <=target; k++) {
+            int target = sum * 255 / picsize;
+            for (int k = j + 1; k <= target; k++) {
                 remap[k] = i;
             }
             j = target;
