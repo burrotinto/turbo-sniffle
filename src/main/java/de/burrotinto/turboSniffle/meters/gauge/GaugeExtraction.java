@@ -1,8 +1,9 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 
-import de.burrotinto.ellipse.CannyEdgeDetector;
-import de.burrotinto.ellipse.EllipseDetector;
+import de.burrotinto.turboSniffle.cv.Helper;
+import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
+import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 public class GaugeExtraction {
     public static final Scalar WHITE = new Scalar(255.0, 255.0, 255.0);
 
-    public GaugeExtraction(Mat input) {
+    static public Gauge extract(Mat input) {
         System.out.println(getEdgeDedectionCanny(input, 85).type());
         val cannyEdgeDetector = getCanny();
 
@@ -54,31 +55,18 @@ public class GaugeExtraction {
         Mat hierarchy = new Mat();
         Imgproc.findContours(getEdgeDedectionCanny(gedreht, 85), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        val draw = Mat.zeros(gedreht.size(), gedreht.type());
 
-        contours.stream().forEach(matOfPoint -> {
-            val minRect = Imgproc.minAreaRect(new MatOfPoint2f(matOfPoint.toArray()));
-            val p = new Mat();
-            Point[] rectPoints = new Point[4];
-            minRect.points(rectPoints);
-            for (int j = 0; j < 4; j++) {
-                Imgproc.line(draw, rectPoints[j], rectPoints[(j + 1) % 4], WHITE);
-            }
-        });
-
-        var candidaten = contours.stream().sorted((o1, o2) -> (int) (Imgproc.minAreaRect(new MatOfPoint2f(o2.toArray())).size.area() - Imgproc.minAreaRect(new MatOfPoint2f(o1.toArray())).size.area())).collect(Collectors.toList());
-
-        candidaten = candidaten.subList(0, 3);
-        Imgproc.drawContours(draw, candidaten, -1, WHITE, 5);
-
+        val gauge = new Gauge(gedreht);
         HighGui.imshow("0. Input", input);
         HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
         HighGui.imshow("2 + 3. maskiert", maskiert);
         HighGui.imshow("4. transponiert", transponiert);
-        HighGui.imshow("5. Gedreht", gedreht);
-        HighGui.imshow("6. blackAndWhite", draw);
+        HighGui.imshow("5. Gedreht", gauge.getSource());
 
+        System.out.println(gauge.getSource().type()+"");
         HighGui.waitKey();
+
+        return gauge;
     }
 
 
@@ -96,17 +84,13 @@ public class GaugeExtraction {
     }
 
     @SneakyThrows
-    public RotatedRect getGreatestEllipseII(CannyEdgeDetector edgeDetector) {
+    static public RotatedRect getGreatestEllipseII(CannyEdgeDetector edgeDetector) {
 
         EllipseDetector ellipseDetector = new EllipseDetector();
         ellipseDetector.setEdgeImage(edgeDetector);
         ellipseDetector.setUseMedianCenter(true);
         ellipseDetector.setDistanceToEllipseContour(0.1f);
         ellipseDetector.process();
-
-
-//        ImageIO.write(ellipseDetector.createFinalEllipseImage(), "png", new File("x.png"));
-//
 
         val mat = bufferedImageToMat(edgeDetector.getEdgeImage());
 
@@ -117,7 +101,7 @@ public class GaugeExtraction {
 
                     if (
                             radius > 128 &&
-                            e.center.x - radius >= 0
+                                    e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
                                     && e.center.y + radius < mat.height()
@@ -131,23 +115,6 @@ public class GaugeExtraction {
         ).sorted((o1, o2) -> (o2.ellipseScore > o1.ellipseScore) ? 1 : 0);
 
         return EllipseDetector.createContour(ellipsInside.findFirst().get());
-//        final RotatedRect[] max = {null};
-//        ellipseDetector.getFinalEllipseList().forEach(ellipse -> {
-//            val e = EllipseDetector.createContour(ellipse);
-//            val radius = (int) Math.max(e.size.width, e.size.height) / 2;
-//
-//            if (max[0] == null || (
-//                    ellipse.ellipseScore > 0.5 &&
-//                            e.size.area() > max[0].size.area()
-//                            && e.center.x - radius >= 0
-//                            && e.center.y - radius >= 0
-//                            && e.center.x + radius < mat.width()
-//                            && e.center.y + radius < mat.height()
-//            )) {
-//                max[0] = e;
-//            }
-//        });
-//        return max[0];
     }
 
     public RotatedRect getGreatestEllipseCanny(Mat input) {
@@ -251,6 +218,12 @@ public class GaugeExtraction {
         HighGui.waitKey();
     }
 
+
+    /**
+     * Min Ellipse verfahren
+     * @param edgeDetected
+     * @return
+     */
     public static RotatedRect getGreatestElipse(Mat edgeDetected) {
         val contours = new ArrayList<MatOfPoint>();
         var hierarchy = new Mat();
@@ -281,8 +254,6 @@ public class GaugeExtraction {
                 indexDisplay = i;
             }
         }
-//        HighGui.imshow("asas", draw);
-//        HighGui.waitKey();
         return minEllipse[indexDisplay];
     }
 
@@ -304,10 +275,6 @@ public class GaugeExtraction {
     }
 
     public static Mat transponiere(Mat mat, List<Point> corner) {
-        //        https://stackoverflow.com/questions/40688491/opencv-getperspectivetransform-and-warpperspective-java
-
-        //     https://github.com/badlogic/opencv-fun/blob/master/src/pool/tests/PerspectiveTransform.java
-
 
         List<Point> target = new ArrayList<Point>();
         target.add(new Point(0, 0));
@@ -319,10 +286,13 @@ public class GaugeExtraction {
         Mat cornersMat = Converters.vector_Point2f_to_Mat(corner);
         Mat targetMat = Converters.vector_Point2f_to_Mat(target);
         Mat trans = Imgproc.getPerspectiveTransform(cornersMat, targetMat);
-        Mat invTrans = Imgproc.getPerspectiveTransform(targetMat, cornersMat);
+
         Mat proj = new Mat();
         Imgproc.warpPerspective(mat, proj, trans, new Size(mat.cols(), mat.rows()));
-        Imgproc.resize(proj, proj, new Size(256, 256));
+
+        val maxPoints = Helper.maxDistance(corner);
+        val maxDist = Helper.calculateDistanceBetweenPointsWithPoint2D(maxPoints);
+        Imgproc.resize(proj, proj, new Size(maxDist, maxDist));
         return proj;
     }
 
@@ -379,8 +349,8 @@ public class GaugeExtraction {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-//        new GaugeExtraction(Imgcodecs.imread("data/example/temp.jpg"));
-//        new GaugeExtraction(Imgcodecs.imread("data/example/testBild1.jpg"));
-        new GaugeExtraction(Imgcodecs.imread("data/example/Li_Example_1.png"));
+//        extract(Imgcodecs.imread("data/example/temp.jpg"));
+//        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
+        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
     }
 }

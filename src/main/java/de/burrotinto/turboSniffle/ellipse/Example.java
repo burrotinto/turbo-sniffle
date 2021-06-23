@@ -1,4 +1,4 @@
-package de.burrotinto.ellipse;
+package de.burrotinto.turboSniffle.ellipse;
 
 
 import java.awt.image.BufferedImage;

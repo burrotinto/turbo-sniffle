@@ -1,7 +1,7 @@
 package de.burrotinto.turboSniffle.cv;
 
-import de.burrotinto.turboSniffle.meters.gauge.CirceGaugeOnePointer;
-import de.burrotinto.turboSniffle.meters.gauge.CirceGaugeVerticalSpeed;
+import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeOnePointer;
+import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeVerticalSpeed;
 import de.burrotinto.turboSniffle.meters.Measuring;
 import de.burrotinto.turboSniffle.meters.MeasuringType;
 import lombok.AllArgsConstructor;

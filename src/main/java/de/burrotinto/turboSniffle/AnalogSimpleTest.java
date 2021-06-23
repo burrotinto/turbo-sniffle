@@ -4,8 +4,8 @@
 //import de.burrotinto.popeye.transformation.CircleExtractor;
 //import de.burrotinto.turboSniffle.cv.Helper;
 //import de.burrotinto.turboSniffle.cv.DisplayMainFrame;
-//import de.burrotinto.turboSniffle.meters.gauge.CirceGaugeOnePointer;
-//import de.burrotinto.turboSniffle.meters.gauge.CircleGauge;
+//import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeOnePointer;
+//import de.burrotinto.turboSniffle.meters.gauge.test.CircleGauge;
 //import lombok.val;
 //import org.opencv.core.CvType;
 //import org.opencv.core.Mat;

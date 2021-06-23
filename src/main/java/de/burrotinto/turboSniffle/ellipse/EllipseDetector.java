@@ -1,4 +1,4 @@
-package de.burrotinto.ellipse;
+package de.burrotinto.turboSniffle.ellipse;
 
 
 import lombok.val;
@@ -1394,7 +1394,7 @@ public class EllipseDetector {
         }
         val m = new MatOfPoint2f();
         m.fromList(points);
-        return Imgproc.fitEllipseDirect(m);
+        return Imgproc.minAreaRect(m);
     }
 
     ;

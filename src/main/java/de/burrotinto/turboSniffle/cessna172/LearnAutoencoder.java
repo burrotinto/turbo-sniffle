@@ -5,7 +5,7 @@
 //import de.burrotinto.turboSniffle.booleanAutoEncoder.HammingDouble;
 //import de.burrotinto.turboSniffle.cv.DisplayMainFrame;
 //import de.burrotinto.turboSniffle.meters.MeasuringType;
-//import de.burrotinto.turboSniffle.meters.gauge.CirceGaugeOnePointer;
+//import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeOnePointer;
 //import lombok.val;
 //import org.opencv.core.*;
 //import org.opencv.highgui.HighGui;

@@ -1,4 +1,4 @@
-package de.burrotinto.turboSniffle.meters.gauge;
+package de.burrotinto.turboSniffle.meters.gauge.test;
 
 import de.burrotinto.turboSniffle.meters.Measuring;
 import lombok.val;

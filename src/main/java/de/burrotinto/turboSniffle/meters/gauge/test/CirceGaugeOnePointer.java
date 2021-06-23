@@ -1,4 +1,4 @@
-package de.burrotinto.turboSniffle.meters.gauge;
+package de.burrotinto.turboSniffle.meters.gauge.test;
 
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.cv.Helper;
@@ -19,7 +19,6 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;

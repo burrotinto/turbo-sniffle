@@ -1,4 +1,4 @@
-package de.burrotinto.ellipse;
+package de.burrotinto.turboSniffle.ellipse;
 
 // http://www.tomgibara.com/computer-vision/CannyEdgeDetector.java
 
@@ -6,13 +6,8 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 /**
