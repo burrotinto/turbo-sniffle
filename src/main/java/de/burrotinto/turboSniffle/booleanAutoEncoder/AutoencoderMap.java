@@ -40,7 +40,7 @@ public class AutoencoderMap extends HashMap<Mat, Mat> {
             case HAMMING:
                 return BooleanAutoencoder.HAMMINGDISTANZ(a, b, max);
             default:
-                return BooleanAutoencoder.DISTANZ(a, b, max);
+                return BooleanAutoencoder.DISTANZ(a, b,1 ,max);
         }
     }
 }

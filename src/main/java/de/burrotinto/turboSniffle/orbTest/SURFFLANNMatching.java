@@ -2,13 +2,10 @@ package de.burrotinto.turboSniffle.orbTest;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.opencv.core.Core;
-import org.opencv.core.DMatch;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.Scalar;
+
+import de.burrotinto.turboSniffle.meters.gauge.GaugeExtraction;
+import de.burrotinto.turboSniffle.meters.gauge.GaugeWithOnePointer;
+import org.opencv.core.*;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.ORB;
@@ -18,10 +15,10 @@ import org.opencv.xfeatures2d.SURF;
 
 class SURFFLANNMatching {
     public void run(String[] args) {
-        String filename1 = args.length > 1 ? args[1] : "data/example/xxx.png";
-        String filename2 = args.length > 1 ? args[0] : "data/example/jer.jpg";
+        String filename1 = args.length > 1 ? args[1] : "data/example/images (7).jpg";
+
         Mat img1 = Imgcodecs.imread(filename1, Imgcodecs.IMREAD_GRAYSCALE);
-        Mat img2 = Imgcodecs.imread(filename2, Imgcodecs.IMREAD_GRAYSCALE);
+        Mat img2 = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/druck.jpg")).getSource()).toSize(new Size(256,256));
         if (img1.empty() || img2.empty()) {
             System.err.println("Cannot read images!");
             System.exit(0);
@@ -41,14 +38,14 @@ class SURFFLANNMatching {
 
         //-- Step 2: Matching descriptor vectors with a FLANN based matcher
         // Since SURF is a floating-point descriptor NORM_L2 is used
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
         List<MatOfDMatch> knnMatches = new ArrayList<>();
         matcher.knnMatch(descriptors1, descriptors2, knnMatches, 2);
 
         MatOfDMatch match = new MatOfDMatch();
         matcher.match(descriptors1,descriptors2,match, new Mat());
         //-- Filter matches using the Lowe's ratio test
-        float ratioThresh = 0.6f;
+        float ratioThresh = 0.85f;
 
 
         List<DMatch> listOfGoodMatches = new ArrayList<>();

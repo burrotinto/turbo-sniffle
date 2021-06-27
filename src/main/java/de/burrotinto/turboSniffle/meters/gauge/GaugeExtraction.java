@@ -56,13 +56,23 @@ public class GaugeExtraction {
         Imgproc.findContours(getEdgeDedectionCanny(gedreht, 85), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
 
-        val gauge = new Gauge(gedreht);
+        //Gauge Constuctor
+        val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
+        val cannyTransponiert = transponiere(cannyMask, biggestEllipse);
+        val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
+        Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
+
+        Gauge gauge = new Gauge(gedreht,cannyGedreht);
+
         HighGui.imshow("0. Input", input);
         HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
         HighGui.imshow("2 + 3. maskiert", maskiert);
         HighGui.imshow("4. transponiert", transponiert);
         HighGui.imshow("5. Gedreht", gauge.getSource());
+        HighGui.imshow("5a. Gedreht Canny", gauge.getCanny());
 
+
+        HighGui.imshow("6. Aufrollen", GaugeOnePointerLearningDataset.AUFROLLEN(gauge.getSource(), 1440));
         System.out.println(gauge.getSource().type()+"");
         HighGui.waitKey();
 
@@ -78,7 +88,7 @@ public class GaugeExtraction {
         // 2 is default for CannyEdgeDetector but 1 is setting from Ellipse reference code
         cannyEdgeDetector.setGaussianKernelRadius(1f); // 2
         // 16 is default for Canny Edge Detector, but 5 is setting from ellipse reference code.
-        cannyEdgeDetector.setGaussianKernelWidth(5); // 16
+        cannyEdgeDetector.setGaussianKernelWidth(10); // 16
 
         return cannyEdgeDetector;
     }
@@ -349,8 +359,8 @@ public class GaugeExtraction {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-//        extract(Imgcodecs.imread("data/example/temp.jpg"));
+        extract(Imgcodecs.imread("data/example/temp.jpg"));
 //        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
-        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
+//        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
     }
 }

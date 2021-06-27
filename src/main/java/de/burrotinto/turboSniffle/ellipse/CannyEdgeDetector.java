@@ -146,8 +146,6 @@ public class CannyEdgeDetector {
         int[] dataBuff = in.getRGB(0, 0, in.getWidth(), in.getHeight(), null, 0, in.getWidth());
         for (int i = 0; i < dataBuff.length; i++) {
             data[i] = (byte) ((dataBuff[i] >> 0) & 0xFF);
-//            data[i * 3 + 1] = (byte) ((dataBuff[i] >> 8) & 0xFF);
-//            data[i * 3 + 2] = (byte) ((dataBuff[i] >> 16) & 0xFF);
         }
         out.put(0, 0, data);
         return out;

@@ -21,23 +21,22 @@ public class BooleanAutoencoder {
     }
 
 
-    public Mat classify(Mat mat){
+    public Mat classify(Mat mat) {
         return decode(encode(mat));
     }
 
 
-
-    public void learn(List<Mat> learnings){
-        val p = learnings.size()/2;
+    public void learn(List<Mat> learnings) {
+        val p = Math.sqrt(learnings.size());
 
         learnings.forEach(mat -> {
             val reduct = mat.clone();
             Imgproc.resize(mat, reduct, new Size(p, p));
-            encodeMap.put(mat.clone(),reduct);
+            encodeMap.put(mat.clone(), reduct);
         });
 
         //decode
-        encodeMap.entrySet().forEach(matMatEntry -> decodeMap.put(matMatEntry.getValue(),matMatEntry.getKey()));
+        encodeMap.entrySet().forEach(matMatEntry -> decodeMap.put(matMatEntry.getValue(), matMatEntry.getKey()));
     }
 
     @SneakyThrows
@@ -54,30 +53,46 @@ public class BooleanAutoencoder {
     }
 
     @SneakyThrows
-    public static long HAMMINGDISTANZ(Mat a, Mat b,long max) {
+    public static long HAMMINGDISTANZ(Mat a, Mat b, long max) {
         long distanz = 0;
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.cols(); j++) {
-                if (a.get(i, j)[0] != b.get(i, j)[0]) {
-                    distanz++;
-                    if(distanz > max){
-                        return distanz;
+
+                for (int k = 0; k < a.get(i, j).length; k++) {
+                    if (a.get(i, j)[k] != b.get(i, j)[k]) {
+                        distanz++;
+                        if (distanz > max) {
+                            return distanz;
+                        }
                     }
                 }
+
             }
         }
         return distanz;
     }
 
     @SneakyThrows
-    public static long DISTANZ(Mat a, Mat b,long max) {
-        int distanz = 0;
+    public static long DISTANZ(Mat a, Mat b, int thres, long max) {
+        long distanz = 0;
         for (int i = 0; i < a.rows(); i++) {
             for (int j = 0; j < a.cols(); j++) {
                 distanz += Math.abs(a.get(i, j)[0] - b.get(i, j)[0]);
-                if(distanz > max){
-                    return distanz;
+                if (distanz > max) {
+                    return Long.MAX_VALUE;
                 }
+
+            }
+        }
+        return distanz;
+    }
+
+    @SneakyThrows
+    public static long DISTANZ(Mat a, Mat b) {
+        int distanz = 0;
+        for (int i = 0; i < a.height(); i++) {
+            for (int j = 0; j < a.width(); j++) {
+                distanz += Math.abs(a.get(i, j)[0] - b.get(i, j)[0]) > 128 ? 1 : 0;
             }
         }
         return distanz;
