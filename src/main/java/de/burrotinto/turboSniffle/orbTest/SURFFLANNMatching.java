@@ -18,7 +18,7 @@ class SURFFLANNMatching {
         String filename1 = args.length > 1 ? args[1] : "data/example/images (7).jpg";
 
         Mat img1 = Imgcodecs.imread(filename1, Imgcodecs.IMREAD_GRAYSCALE);
-        Mat img2 = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/druck.jpg")).getSource()).toSize(new Size(256,256));
+        Mat img2 = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/druck.jpg"),"").getSource()).toSize(new Size(256,256));
         if (img1.empty() || img2.empty()) {
             System.err.println("Cannot read images!");
             System.exit(0);

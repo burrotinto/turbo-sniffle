@@ -19,7 +19,8 @@ import java.util.Optional;
 
 public class Pointer {
     @Getter
-    final private MatOfPoint contour;
+    final private List<MatOfPoint> contour ;
+    @Getter
     final private List<MatOfPoint> hullList = new ArrayList<>();
     final private RotatedRect minRect;
 
@@ -31,7 +32,9 @@ public class Pointer {
     private Point bottom;
 
     public Pointer(MatOfPoint contour) {
-        this.contour = contour;
+        ArrayList<MatOfPoint> l = new ArrayList<>();
+        this.contour = l;
+        this.contour.add(contour);
         //Minimales Rechteck
         minRect = Imgproc.minAreaRect(new MatOfPoint2f(contour.toArray()));
 //        minRect = Imgproc.boundingRect(new MatOfPoint2f(contour.toArray()));
@@ -40,14 +43,15 @@ public class Pointer {
         Imgproc.convexHull(contour, hull);
         Point[] contourArray = contour.toArray();
         Point[] hullPoints = new Point[hull.rows()];
+
         List<Integer> hullContourIdxList = hull.toList();
         for (int i = 0; i < hullContourIdxList.size(); i++) {
             hullPoints[i] = contourArray[hullContourIdxList.get(i)];
         }
         hullList.add(new MatOfPoint(hullPoints));
 
-        arrow = getDirection().p1;
-        bottom = getDirection().p2;
+        arrow = getDirection().p2;
+        bottom = getDirection().p1;
     }
 
 
@@ -56,7 +60,7 @@ public class Pointer {
     }
 
     public double getWidth() {
-        return contour.size().width;
+        return contour.get(0).size().width;
     }
 
     public double scale() {
@@ -64,7 +68,7 @@ public class Pointer {
     }
 
     public PointPair getDirection() {
-        return Helper.maxDistance(contour.toList());
+        return Helper.maxDistance(contour.get(0).toList());
     }
 
     public RotatedRect getMinRect() {

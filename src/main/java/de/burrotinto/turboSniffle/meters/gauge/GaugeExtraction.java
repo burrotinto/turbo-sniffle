@@ -1,11 +1,18 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 
+import de.burrotinto.popeye.transformation.Pair;
 import de.burrotinto.turboSniffle.cv.Helper;
+import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
+import de.burrotinto.turboSniffle.meters.gauge.impl.AutoBrightness;
+import de.burrotinto.turboSniffle.meters.gauge.impl.Clustering;
+import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
+import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeOnePointer;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.jdesktop.swingx.painter.ImagePainter;
 import org.opencv.core.*;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.SimpleBlobDetector;
@@ -22,15 +29,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class GaugeExtraction {
+
+    public static void main(String[] args) {
+        nu.pattern.OpenCV.loadLocally();
+        extract(Imgcodecs.imread("data/example/testTemp.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
+//        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
+//        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
+    }
+
     public static final Scalar WHITE = new Scalar(255.0, 255.0, 255.0);
 
-    static public Gauge extract(Mat input) {
-        System.out.println(getEdgeDedectionCanny(input, 85).type());
+    static public Gauge extract(Mat input, String prefix) {
         val cannyEdgeDetector = getCanny();
 
         //1. Canny Edge Dedection mit auto Threashold
         cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(input));
         cannyEdgeDetector.process();
+
+
+        //TestEllipse
+//        HighGui.imshow("c",cannyEdgeDetector.getEdgeMat());
+
+//        val biggestEllipse = getGreatestElipse(sc);
 
 
         //2. Finden der größten Ellipse mit einem Ellipse Score über 0.8
@@ -50,19 +70,18 @@ public class GaugeExtraction {
         Imgproc.warpAffine(transponiert, gedreht, rotate, transponiert.size());
 
 
-        //6.
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(getEdgeDedectionCanny(gedreht, 85), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
         //Gauge Constuctor
         val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
         val cannyTransponiert = transponiere(cannyMask, biggestEllipse);
         val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
         Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
 
-        Gauge gauge = new Gauge(gedreht,cannyGedreht);
+        val maxCircle = greatestCircle(cannyGedreht);
+
+
+        Gauge gauge = new Gauge(
+                gedreht, cannyGedreht);
+
 
         HighGui.imshow("0. Input", input);
         HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
@@ -70,10 +89,31 @@ public class GaugeExtraction {
         HighGui.imshow("4. transponiert", transponiert);
         HighGui.imshow("5. Gedreht", gauge.getSource());
         HighGui.imshow("5a. Gedreht Canny", gauge.getCanny());
+        HighGui.imshow("6a. Aufrollen Src", gauge.getAusgerolltSource());
+        HighGui.imshow("6b. Aufrollen Canny", gauge.getAusgerolltBW());
+//
+//        Imgcodecs.imwrite("data/out/" + prefix + "_input.png", input);
+//        Imgcodecs.imwrite("data/out/" + prefix + "_canny.png", cannyEdgeDetector.getEdgeMat());
+//        Imgcodecs.imwrite("data/out/" + prefix + "_maskiert.png", maskiert);
+//        Imgcodecs.imwrite("data/out/" + prefix + "_transponiert.png", transponiert);
+//        Imgcodecs.imwrite("data/out/" + prefix + "_gedreht.png", gauge.getSource());
+//        Imgcodecs.imwrite("data/out/" + prefix + "_gedrehtCanny.png", gauge.getCanny());
+//        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenSRC.png", gauge.getAusgerolltSource());
+//        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenCANNY.png", gauge.getAusgerolltBW());
+//
 
+//
 
-        HighGui.imshow("6. Aufrollen", GaugeOnePointerLearningDataset.AUFROLLEN(gauge.getSource(), 1440));
-        System.out.println(gauge.getSource().type()+"");
+        val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
+        val m = new MatOfPoint2f();
+        m.fromList(x.p2);
+        Mat sc = x.p1;
+        val e = Imgproc.fitEllipse(m);
+        Imgproc.ellipse(sc, e, WHITE, 5);
+        Imgproc.arrowedLine(sc, e.center, gauge.getPointer()[0].getArrow(), WHITE, 2, Imgproc.LINE_AA);
+        HighGui.imshow("7. Zeiger", gauge.getPointerOnlyMat());
+
+        HighGui.imshow("sc", sc);
         HighGui.waitKey();
 
         return gauge;
@@ -231,6 +271,7 @@ public class GaugeExtraction {
 
     /**
      * Min Ellipse verfahren
+     *
      * @param edgeDetected
      * @return
      */
@@ -307,29 +348,29 @@ public class GaugeExtraction {
     }
 
 
-    public void greatestCircle(Mat input) {
-
-        Mat gray = new Mat();
-        Imgproc.cvtColor(input, gray, Imgproc.COLOR_BGR2GRAY);
-//        Imgproc.medianBlur(gray, gray, 5);
+    public static Pair<Point, Integer> greatestCircle(Mat input) {
 
         Mat circles = new Mat();
-        Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0,
-                (double) gray.rows() / 4, // change this value to detect circles with different distances to each other
-                100.0, 30.0, 1, 1000); // change the last two parameters
+        Imgproc.HoughCircles(input, circles, Imgproc.HOUGH_GRADIENT, 1.0,
+                (double) input.rows() / 4, // change this value to detect circles with different distances to each other
+                100.0, 30.0, input.rows() / 3, input.rows() / 2); // change the last two parameters
         // (min_radius & max_radius) to detect larger circles
+        Pair<Point, Integer> max = null;
         for (int x = 0; x < circles.cols(); x++) {
             double[] c = circles.get(0, x);
             Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-            // circle center
-            Imgproc.circle(input, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
-            // circle outline
+//            // circle center
+//            Imgproc.circle(input, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
+//            // circle outline
             int radius = (int) Math.round(c[2]);
-            Imgproc.circle(input, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
+//            Imgproc.circle(input, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
+            if (max == null || max.p2 < radius) {
+                max = new Pair<>(center, radius);
+            }
         }
-        HighGui.imshow("detected circles", input);
-        HighGui.waitKey();
-        System.exit(0);
+//        HighGui.imshow("detected circles", input);
+//        HighGui.waitKey();
+        return max;
     }
 
 
@@ -346,7 +387,6 @@ public class GaugeExtraction {
         Mat out = Mat.zeros(input.size(), input.type());
         Imgproc.ellipse(out, ellipse, WHITE, -1);
 
-
         for (int i = 0; i < input.width(); i++) {
             for (int j = 0; j < input.height(); j++) {
                 if (out.get(j, i)[0] == 255) {
@@ -357,10 +397,5 @@ public class GaugeExtraction {
         return out;
     }
 
-    public static void main(String[] args) {
-        nu.pattern.OpenCV.loadLocally();
-        extract(Imgcodecs.imread("data/example/temp.jpg"));
-//        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
-//        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
-    }
+
 }

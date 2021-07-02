@@ -199,8 +199,6 @@ public class EllipseDetector {
     }
 
     public void process() {
-        long start = System.currentTimeMillis();
-        System.out.println("Starting process() : " + start);
         if (sourceImage == null && edgeImage == null) {
             throw new NullPointerException("source and edge image are both null");
         }
@@ -209,28 +207,28 @@ public class EllipseDetector {
             edgeImage.setSourceImage(sourceImage);
             edgeImage.process();
         }
-        System.out.println("Finished detecting edges : " + (System.currentTimeMillis() - start));
+
         findConnectedArcSameGradient();
-        System.out.println("Finished finding arcs with same gradients : " + (System.currentTimeMillis() - start));
+
         findArcConvexity();
-        System.out.println("Finished calculating convexity : " + (System.currentTimeMillis() - start));
+
         ellipseSharedCenterList = findArcTripletsQ1Q2Q3();
         ellipseSharedCenterList.addAll(findArcTripletsQ2Q3Q4());
         ellipseSharedCenterList.addAll(findArcTripletsQ3Q4Q1());
         ellipseSharedCenterList.addAll(findArcTripletsQ4Q1Q2());
-        System.out.println("Finished finding matching triples : " + (System.currentTimeMillis() - start));
+
 
         parameterEstimation(ellipseSharedCenterList);
-        System.out.println("Finished parameter estimation : " + (System.currentTimeMillis() - start));
+
 
         // calculate points on ellipse and somethign called reliability
         // return on the ones that meet the threshold
         ellipseOnEdgePointList = calculatePointsOnEllipse(ellipseSharedCenterList);
-        System.out.println("Finished scoring triplets : " + (System.currentTimeMillis() - start));
+
 
         // merge/deduplicate ellipses
         ellipseOnEdgedPointDeduplicatedList = clusterEllipse(ellipseOnEdgePointList);
-        System.out.println("Finished clustering triplets : " + (System.currentTimeMillis() - start));
+
 
     }
 
@@ -1087,10 +1085,10 @@ public class EllipseDetector {
                     triplet.ellipseScore = (score + reliability) * 0.5f;
                     newTripletList.add(triplet);
                 } else {
-                    System.out.println("Failed Angular Circumference Ratio:" + reliability);
+
                 }
             } else {
-                System.out.println("Failed pointOnEdge score:" + score);
+
             }
         }
         return newTripletList;
@@ -1394,7 +1392,7 @@ public class EllipseDetector {
         }
         val m = new MatOfPoint2f();
         m.fromList(points);
-        return Imgproc.minAreaRect(m);
+        return Imgproc.fitEllipse(m);
     }
 
     ;

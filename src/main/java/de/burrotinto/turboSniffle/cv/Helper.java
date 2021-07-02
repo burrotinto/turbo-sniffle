@@ -5,8 +5,11 @@ import de.burrotinto.popeye.transformation.PointPair;
 import lombok.AllArgsConstructor;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -24,6 +27,14 @@ public class Helper {
 
     static public double calculateDistanceBetweenPointsWithPoint2D(Pair<Point, Point> pair) {
         return calculateDistanceBetweenPointsWithPoint2D(pair.p1, pair.p2);
+    }
+
+    static public double maxDistance(List<Point> fromPoints, Point toPoint){
+        double max = 0;
+        for (int i = 0; i < fromPoints.size(); i++) {
+            max = Math.max(max,calculateDistanceBetweenPointsWithPoint2D(toPoint,fromPoints.get(i)));
+        }
+        return max;
     }
 
     static public PointPair maxDistance(List<Point> points) {
@@ -62,16 +73,16 @@ public class Helper {
     }
 
     static Rect cangeRectForFittingMat(Mat mat, Rect rect) {
-        return new Rect(Math.max(0, Math.min(rect.x, mat.width()-rect.width)),
-                Math.max(0, Math.min(rect.y, mat.height()-rect.height)),
+        return new Rect(Math.max(0, Math.min(rect.x, mat.width() - rect.width)),
+                Math.max(0, Math.min(rect.y, mat.height() - rect.height)),
                 rect.width, rect.height);
     }
 
-    static Mat rotateMat(Mat src, double angle){
+    static Mat rotateMat(Mat src, double angle) {
         //Creating destination matrix
         Mat dst = new Mat(src.rows(), src.cols(), src.type());
         // Creating a Point object
-        Point point = new Point(src.rows()/2,  src.cols()/2);
+        Point point = new Point(src.rows() / 2, src.cols() / 2);
         //Creating the transformation matrix
         Mat rotationMatrix = Imgproc.getRotationMatrix2D(point, angle, 1);
         // Creating the object of the class Size
@@ -80,5 +91,17 @@ public class Helper {
         Imgproc.warpAffine(src, dst, rotationMatrix, size);
 
         return rotationMatrix;
+    }
+
+    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect) {
+        Scalar color = new Scalar(255.0, 255.0, 255.0); // white
+
+        Point[] points = new Point[4];
+        rotatedRect.points(points);
+
+        // Now we can fill the rotated rectangle with our specified color
+        Imgproc.fillConvexPoly(src,
+                new MatOfPoint(points),
+                color, 4);
     }
 }

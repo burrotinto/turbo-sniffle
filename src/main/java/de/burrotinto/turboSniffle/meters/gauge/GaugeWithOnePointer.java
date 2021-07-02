@@ -26,16 +26,16 @@ public class GaugeWithOnePointer extends Gauge {
         pointerAngel = Optional.ofNullable(angel);
     }
 
-    public PointPair getPointer(){
-        double angle = getPointerAngel() -90;
-        double length = getSource().size().width/2;
-        Point p1 = new Point (length,length);
-        Point p2 = new Point();
-
-        double x =  Math.round(p1.x + length * Math.cos(angle * Math.PI / 180.0));
-        double y =  Math.round(p1.y + length * Math.sin(angle * Math.PI / 180.0));
-
-        return new PointPair(p1,new Point(x,y));
-    }
+//    public PointPair getPointer(){
+//        double angle = getPointerAngel() -90;
+//        double length = getSource().size().width/2;
+//        Point p1 = new Point (length,length);
+//        Point p2 = new Point();
+//
+//        double x =  Math.round(p1.x + length * Math.cos(angle * Math.PI / 180.0));
+//        double y =  Math.round(p1.y + length * Math.sin(angle * Math.PI / 180.0));
+//
+//        return new PointPair(p1,new Point(x,y));
+//    }
 
 }

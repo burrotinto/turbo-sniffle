@@ -1,5 +1,7 @@
 package de.burrotinto.turboSniffle.meters.gauge.impl;
 
+import boofcv.alg.filter.binary.Contour;
+import de.burrotinto.popeye.transformation.Pair;
 import de.burrotinto.turboSniffle.booleanAutoEncoder.BooleanAutoencoder;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
@@ -23,126 +25,132 @@ import java.util.stream.Collectors;
 
 public class ScaleMarkExtraction {
 
-    public static void extract(Gauge gauge) {
-        val canny = gauge.getCanny();
+    public static Mat autoExtract(Mat canny, Mat greyMat) {
+        int esp = 1;
+        return null;
+    }
 
-        Imgproc.circle(canny, gauge.getCenter(), (int) gauge.getRadius() / 2, new Scalar(0, 0, 0), -1);
-        Imgproc.circle(canny, gauge.getCenter(), (int) gauge.getRadius(), new Scalar(0, 0, 0), 50);
-
-        val g = gauge.getSource().clone();
-        Imgproc.resize(g, g, new Size(512, 512));
+    public static Pair<Mat, List<Point>> extract(Mat canny, Mat greyMat, int esp) {
 
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        Imgproc.findContours(canny, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(canny, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
 
-        List<RechteckCluster> rotatedRects = contours.stream()
-                .map(matOfPoint -> new RechteckCluster(Imgproc.minAreaRect(
-                        new MatOfPoint2f(matOfPoint.toArray()))
-                        , gauge)).collect(Collectors.toList());
+        List<RechteckCluster> rotatedRects = new ArrayList<>();
+        for (int i = 0; i < contours.size(); i++) {
 
-        DBSCANClusterer<RechteckCluster> dbscanClusterer = new DBSCANClusterer<>(50, 5);
+            val rect = Imgproc.minAreaRect(
+                    new MatOfPoint2f(contours.get(i).toArray()));
+
+            if (rect.size.area() > 25) {
+                Mat mask = Mat.zeros(greyMat.size(), CvType.CV_8U);
+                List<MatOfPoint> l = new ArrayList<>();
+                l.add(contours.get(i));
+                Imgproc.drawContours(mask, l, 0, new Scalar(255, 255, 255), -1);
+
+                double color = Core.mean(greyMat, mask).val[0];
+
+
+                rotatedRects.add(new RechteckCluster(rect
+                        , new Point(canny.width() / 2, canny.rows() / 2), color, contours.get(i).toList()));
+            }
+        }
+
+        DBSCANClusterer<RechteckCluster> dbscanClusterer = new DBSCANClusterer<>(esp, 10);
         List<Cluster<RechteckCluster>> cluster = dbscanClusterer.cluster(rotatedRects);
-        HighGui.imshow("canny", canny);
 
+
+        Mat out = Mat.zeros(canny.size(), canny.type());
+        int maxPoint = 0;
 
         for (int i = 0; i < cluster.size(); i++) {
-            Mat draw = Mat.zeros(canny.size(), canny.type());
+
             List<MatOfPoint> l = new ArrayList<>();
             cluster.get(i).getPoints().forEach(rechteckCluster -> {
                 Point[] p = new Point[4];
                 rechteckCluster.rotatedRect.points(p);
                 MatOfPoint m = new MatOfPoint(p);
-                if (rechteckCluster.rotatedRect.size.area() > 25) {
-                    l.add(m);
-                }
-
+                l.add(m);
             });
 
-            Imgproc.drawContours(draw, l, -1, new Scalar(255, 255, 255), -1);
-            Imgproc.drawContours(g, l, -1, new Scalar(255, 255, 255), -1);
-            Imgproc.drawContours(g, l, -1, new Scalar(255, 255, 255), 3);
-            HighGui.imshow("" + i, draw);
-        }
-
-        val draw = Mat.zeros(canny.size(), canny.type());
-        Imgproc.drawContours(draw, contours, -1, new Scalar(255, 255, 255), 1);
-
-
-        TextDedection td = new TextDedection();
-        List<MatOfPoint> l = new ArrayList<>();
-        td.getTextAreas(gauge.getSource()).forEach(rotatedRect -> {
-            Point[] p = new Point[4];
-            rotatedRect.points(p);
-            MatOfPoint m = new MatOfPoint(p);
-            l.add(m);
-        });
-        Imgproc.drawContours(g,l,-1,new Scalar(255,255,255),-1);
-        autoencoder(g);
-
-
-        HighGui.imshow("final", g);
-        HighGui.waitKey();
-        System.out.println("");
-        return;
-    }
-
-
-    private static void autoencoder(Mat gauge){
-        val train = GaugeOnePointerLearningDataset.getTrainingset(Gauge.DEFAULT_SIZE, 1);
-
-        long min = Long.MAX_VALUE;
-        int iMin = 0;
-        for (int i = 0; i < train.size(); i++) {
-            val dist = BooleanAutoencoder.DISTANZ(train.get(i).getSource(), gauge, 85,min);
-            if (dist < min) {
-                min = dist;
-                iMin = i;
+            if (cluster.get(maxPoint).getPoints().size() <= cluster.get(i).getPoints().size()) {
+                maxPoint = i;
+                out = Mat.zeros(canny.size(), canny.type());
+                for (int j = 0; j < cluster.get(i).getPoints().size(); j++) {
+                    Helper.drawRotatedRectangle(out, cluster.get(i).getPoints().get(j).getRotatedRect());
+                }
+                Imgproc.drawContours(out, l, -1, new Scalar(255, 255, 255), -1);
             }
         }
 
-        HighGui.imshow("AUTOENCODDER 123",gauge);
-        HighGui.imshow("AUTOENCODDER", train.get(iMin).getSource());
+        ArrayList<Point> points = new ArrayList<>();
+        cluster.get(maxPoint).getPoints().stream().forEach(rechteckCluster -> points.addAll(rechteckCluster.contour));
+
+        return new Pair<Mat, List<Point>>(out, points);
     }
+
+
+//    private static void autoencoder(Mat gauge){
+//        val train = GaugeOnePointerLearningDataset.getTrainingset(Gauge.DEFAULT_SIZE, 1);
+//
+//        long min = Long.MAX_VALUE;
+//        int iMin = 0;
+//        for (int i = 0; i < train.size(); i++) {
+//            val dist = BooleanAutoencoder.DISTANZ(train.get(i).getSource(), gauge, 85,min);
+//            if (dist < min) {
+//                min = dist;
+//                iMin = i;
+//            }
+//        }
+//
+//        HighGui.imshow("AUTOENCODDER 123",gauge);
+//        HighGui.imshow("AUTOENCODDER", train.get(iMin).getSource());
+//    }
 
     @Getter
     @AllArgsConstructor
     private static class RechteckCluster implements Clusterable {
         public RotatedRect rotatedRect;
-        public Gauge gauge;
-
+        public Point center;
+        public double color;
+        public List<Point> contour;
 
         @Override
         public double[] getPoint() {
-            val d = new double[5];
-            d[0] = Helper.calculateDistanceBetweenPointsWithPoint2D(gauge.getCenter(), rotatedRect.center)*2;
-            d[1] = rotatedRect.size.area();
-            d[2] = rotatedRect.angle;
-            d[3] = (rotatedRect.size.height / rotatedRect.size.width);
-            d[4] = gauge.getSource().get((int)rotatedRect.center.x,(int)rotatedRect.center.y)[0];
+            val d = new double[2];
+//            d[0] = Helper.calculateDistanceBetweenPointsWithPoint2D(center, rotatedRect.center);
+            d[0] = Helper.maxDistance(contour, center);
+            d[1] = Math.min(rotatedRect.size.height, rotatedRect.size.width);
+//            d[3] = rotatedRect.center.y;
+//            d[4] = rotatedRect.center.x;
+//            d[1] = rotatedRect.size.width * rotatedRect.size.height;
+
+//            d[2] = (Math.max(rotatedRect.size.height, rotatedRect.size.width) / Math.min(rotatedRect.size.height, rotatedRect.size.width));
+//            d[4] = gauge.getSource().get((int)rotatedRect.center.x,(int)rotatedRect.center.y)[0];
             return d;
         }
     }
 
-    @Getter
-    @AllArgsConstructor
-    private static class Pixel implements Clusterable {
-        public Point point;
-        public int color;
-
-        @Override
-        public double[] getPoint() {
-            val d = new double[3];
-            d[0] = color;
-            d[1] = point.x;
-            d[2] = point.y;
-            return d;
-        }
-    }
+//    @Getter
+//    @AllArgsConstructor
+//    private static class Pixel implements Clusterable {
+//        public Point point;
+//        public int color;
+//
+//        @Override
+//        public double[] getPoint() {
+//            val d = new double[3];
+//            d[0] = color;
+//            d[1] = point.x;
+//            d[2] = point.y;
+//            return d;
+//        }
+//    }
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        extract(GaugeExtraction.extract(Imgcodecs.imread("data/example/temp.jpg")));
+
+//        extract(GaugeExtraction.extract(Imgcodecs.imread("data/example/testTemp.jpg"), "").getAusgerolltCanny());
     }
 }
 

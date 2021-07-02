@@ -26,14 +26,12 @@ public class GaugeOnePointerLearningDataset {
 
             for (int j = 0; j < m.size().width / 2; j++) {
                 double[] x = rMap.get(j+(int) rMap.size().height / 2,(int) rMap.size().height / 2);
-                System.out.println(x[0]);
                 out.put((int) rMap.size().height / 2-j, nextcol, x);
             }
             nextcol++;
 
         }
 
-        HighGui.imshow("as",out);
         return out;
 
     }
@@ -70,7 +68,7 @@ public class GaugeOnePointerLearningDataset {
         val size = new Size(512, 512);
         val train = GaugeOnePointerLearningDataset.getTrainingset(size, 2);
 
-        GaugeWithOnePointer g = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/temp.jpg")).getSource());
+        GaugeWithOnePointer g = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/temp.jpg"),"").getSource());
 //        GaugeWithOnePointer g = new GaugeWithOnePointer(GaugeExtraction.extract(Imgcodecs.imread("data/example/Li_Example_1.png")).getSource());
 
         HighGui.imshow("", AUFROLLEN(g.getSource(), 720));
@@ -111,7 +109,7 @@ public class GaugeOnePointerLearningDataset {
 
         System.out.println(train.get(iMin).getPointerAngel() + " ");
         g.setPointerAngel(train.get(iMin).getPointerAngel());
-        Imgproc.line(g.getSource(), g.getPointer().p1, g.getPointer().p2, new Scalar(0, 0, 0), 2);
+        Imgproc.line(g.getSource(), g.getPointer()[0].getBottom(), g.getPointer()[0].getArrow(), new Scalar(0, 0, 0), 2);
         HighGui.imshow("eq", train.get(iMin).getSource());
         HighGui.imshow("ga", g.getSource());
         HighGui.waitKey();
