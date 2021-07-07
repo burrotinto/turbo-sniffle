@@ -8,6 +8,8 @@ import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.AutoBrightness;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Clustering;
+import de.burrotinto.turboSniffle.meters.gauge.impl.GrowingMethod;
+import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
 import de.burrotinto.turboSniffle.meters.gauge.test.CirceGaugeOnePointer;
 import lombok.SneakyThrows;
@@ -58,39 +60,73 @@ public class GaugeExtraction {
 
         //3. Alles ausserhalb der Ellipse Entfernen
         val maskiert = removeAllOutsideEllpipse(input, biggestEllipse);
-
+        val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
 
         //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
         val transponiert = transponiere(maskiert, biggestEllipse);
-
+        val cannyTransponiert = transponiere(cannyMask, biggestEllipse);
 
         //5. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
         val rotate = Imgproc.getRotationMatrix2D(new Point(transponiert.width() / 2.0, transponiert.height() / 2.0), 90 - biggestEllipse.angle, 1.0);
         val gedreht = Mat.zeros(transponiert.size(), transponiert.type());
         Imgproc.warpAffine(transponiert, gedreht, rotate, transponiert.size());
-
-
-        //Gauge Constuctor
-        val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
-        val cannyTransponiert = transponiere(cannyMask, biggestEllipse);
+        //5.1
         val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
         Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
-
-        val maxCircle = greatestCircle(cannyGedreht);
-
-
-        Gauge gauge = new Gauge(
-                gedreht, cannyGedreht);
 
 
         HighGui.imshow("0. Input", input);
         HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
         HighGui.imshow("2 + 3. maskiert", maskiert);
         HighGui.imshow("4. transponiert", transponiert);
-        HighGui.imshow("5. Gedreht", gauge.getSource());
-        HighGui.imshow("5a. Gedreht Canny", gauge.getCanny());
-        HighGui.imshow("6a. Aufrollen Src", gauge.getAusgerolltSource());
-        HighGui.imshow("6b. Aufrollen Canny", gauge.getAusgerolltBW());
+        HighGui.imshow("5. Gedreht", gedreht);
+        HighGui.imshow("5.1. Gedreht Canny", cannyGedreht);
+
+//        //Gauge Konstruktor
+//        Gauge gauge = new Gauge(
+//                gedreht, cannyGedreht,null);
+
+
+
+//        6. Erkennung der Skala
+        val x = ScaleMarkExtraction.extract(cannyGedreht, gedreht, 4);
+        val m = new MatOfPoint2f();
+        m.fromList(x);
+
+        val e = Imgproc.fitEllipse(m);
+        //6.1 Alles ausserhalb der Ellipse Entfernen
+        val maskiertSkala = removeAllOutsideEllpipse(gedreht, e);
+        val cannyMaskSkala = removeAllOutsideEllpipse(cannyGedreht, e);
+
+        //6.2. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
+        val transponiertSkala = transponiere(maskiertSkala, e);
+        val cannyTransponiertSkala = transponiere(cannyMaskSkala, e);
+
+        //6.3. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
+        val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
+        val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
+        Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
+        val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
+        Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
+
+        Gauge gauge = new Gauge(
+                gedrehtSkala, cannyGedrehtSkala, new TextDedection());
+
+//        Imgproc.ellipse(sc, e, WHITE, 5);
+//        Imgproc.arrowedLine(sc, e.center, gauge.getPointer()[0].getArrow(), WHITE, 2, Imgproc.LINE_AA);
+//        HighGui.imshow("7. Zeiger", gauge.getPointerOnlyMat());
+
+
+//HighGui.imshow("GROWING", );
+        HighGui.imshow("6.1 Maskiert", maskiertSkala);
+        HighGui.imshow("6.1. Maskiert Canny",cannyMaskSkala);
+        HighGui.imshow("6.2. transponiert", transponiertSkala);
+        HighGui.imshow("6.2. transponiert Canny", cannyTransponiertSkala);
+        HighGui.imshow("6.3. Gedreht", gedrehtSkala);
+        HighGui.imshow("6.3. Gedreht Canny", cannyGedrehtSkala);
+//        HighGui.imshow("Gemalt", gauge.getCalcMat());
+//        HighGui.imshow("6a. Aufrollen Src", gauge.getAusgerolltSource());
+//        HighGui.imshow("6b. Aufrollen Canny", gauge.getAusgerolltBW());
 //
 //        Imgcodecs.imwrite("data/out/" + prefix + "_input.png", input);
 //        Imgcodecs.imwrite("data/out/" + prefix + "_canny.png", cannyEdgeDetector.getEdgeMat());
@@ -101,19 +137,10 @@ public class GaugeExtraction {
 //        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenSRC.png", gauge.getAusgerolltSource());
 //        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenCANNY.png", gauge.getAusgerolltBW());
 //
+//        System.out.println(gauge.getValue());
 
-//
+        HighGui.imshow("OTSU", gauge.getScaleMarks());
 
-        val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
-        val m = new MatOfPoint2f();
-        m.fromList(x.p2);
-        Mat sc = x.p1;
-        val e = Imgproc.fitEllipse(m);
-        Imgproc.ellipse(sc, e, WHITE, 5);
-        Imgproc.arrowedLine(sc, e.center, gauge.getPointer()[0].getArrow(), WHITE, 2, Imgproc.LINE_AA);
-        HighGui.imshow("7. Zeiger", gauge.getPointerOnlyMat());
-
-        HighGui.imshow("sc", sc);
         HighGui.waitKey();
 
         return gauge;

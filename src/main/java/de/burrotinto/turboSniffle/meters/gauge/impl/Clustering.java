@@ -41,18 +41,3 @@ public class Clustering {
 }
 
 
-@Getter
-@AllArgsConstructor
-class Pixel implements Clusterable {
-    public Point point;
-    public int color;
-
-    @Override
-    public double[] getPoint() {
-        val d = new double[3];
-        d[0] = color/10;
-        d[1] = point.x;
-        d[2] = point.y;
-        return d;
-    }
-}

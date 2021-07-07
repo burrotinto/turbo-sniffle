@@ -35,7 +35,10 @@ public class TextDedection {
         tesseract.setDatapath("data");
 
         tesseractNumbers.setDatapath("data");
-        tesseractNumbers.setLanguage("digits_comma");
+//        tesseractNumbers.setLanguage("digits_comma");
+        tesseractNumbers.setLanguage("engrestrict_best_int");
+
+        tesseractNumbers.setOcrEngineMode(1);
     }
 
     private void initDNN() {

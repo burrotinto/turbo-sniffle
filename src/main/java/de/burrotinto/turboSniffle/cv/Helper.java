@@ -2,6 +2,7 @@ package de.burrotinto.turboSniffle.cv;
 
 import de.burrotinto.popeye.transformation.Pair;
 import de.burrotinto.popeye.transformation.PointPair;
+import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import lombok.AllArgsConstructor;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -18,9 +19,13 @@ import javax.imageio.ImageIO;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Helper {
+    public static final Scalar WHITE = new Scalar(255, 255, 255);
+    public static final Scalar BLACK = new Scalar(0, 0, 0);
+
     static public double calculateDistanceBetweenPointsWithPoint2D(Point x, Point y) {
         return Point2D.distance(x.x, x.y, y.x, y.y);
     }
@@ -29,10 +34,10 @@ public class Helper {
         return calculateDistanceBetweenPointsWithPoint2D(pair.p1, pair.p2);
     }
 
-    static public double maxDistance(List<Point> fromPoints, Point toPoint){
+    static public double maxDistance(List<Point> fromPoints, Point toPoint) {
         double max = 0;
         for (int i = 0; i < fromPoints.size(); i++) {
-            max = Math.max(max,calculateDistanceBetweenPointsWithPoint2D(toPoint,fromPoints.get(i)));
+            max = Math.max(max, calculateDistanceBetweenPointsWithPoint2D(toPoint, fromPoints.get(i)));
         }
         return max;
     }
@@ -103,5 +108,27 @@ public class Helper {
         Imgproc.fillConvexPoly(src,
                 new MatOfPoint(points),
                 color, 4);
+    }
+
+    public static List<Pixel> getAllPixel(Mat mat) {
+        LinkedList<Pixel> pixels = new LinkedList<>();
+        for (int i = 0; i < mat.rows(); i++) {
+            for (int j = 0; j < mat.cols(); j++) {
+                pixels.add(new Pixel(j, i, mat.get(i, j)[0]));
+            }
+        }
+        return pixels;
+    }
+
+    public static List<Pixel> getAllPixel(Mat mat, Mat mask) {
+        LinkedList<Pixel> pixels = new LinkedList<>();
+        for (int i = 0; i < mat.rows(); i++) {
+            for (int j = 0; j < mat.cols(); j++) {
+                if (mask.get(i, j)[0] > 0) {
+                    pixels.add(new Pixel(j, i, mat.get(i, j)[0]));
+                }
+            }
+        }
+        return pixels;
     }
 }

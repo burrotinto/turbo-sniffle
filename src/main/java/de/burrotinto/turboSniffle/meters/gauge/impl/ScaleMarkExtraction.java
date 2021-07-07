@@ -1,13 +1,7 @@
 package de.burrotinto.turboSniffle.meters.gauge.impl;
 
-import boofcv.alg.filter.binary.Contour;
-import de.burrotinto.popeye.transformation.Pair;
-import de.burrotinto.turboSniffle.booleanAutoEncoder.BooleanAutoencoder;
+
 import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.cv.TextDedection;
-import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeExtraction;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeOnePointerLearningDataset;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
@@ -15,13 +9,10 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
 import org.opencv.core.*;
-import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ScaleMarkExtraction {
 
@@ -30,7 +21,7 @@ public class ScaleMarkExtraction {
         return null;
     }
 
-    public static Pair<Mat, List<Point>> extract(Mat canny, Mat greyMat, int esp) {
+    public static List<Point> extract(Mat canny, Mat greyMat, int esp) {
 
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -86,26 +77,9 @@ public class ScaleMarkExtraction {
         ArrayList<Point> points = new ArrayList<>();
         cluster.get(maxPoint).getPoints().stream().forEach(rechteckCluster -> points.addAll(rechteckCluster.contour));
 
-        return new Pair<Mat, List<Point>>(out, points);
+        return points;
     }
 
-
-//    private static void autoencoder(Mat gauge){
-//        val train = GaugeOnePointerLearningDataset.getTrainingset(Gauge.DEFAULT_SIZE, 1);
-//
-//        long min = Long.MAX_VALUE;
-//        int iMin = 0;
-//        for (int i = 0; i < train.size(); i++) {
-//            val dist = BooleanAutoencoder.DISTANZ(train.get(i).getSource(), gauge, 85,min);
-//            if (dist < min) {
-//                min = dist;
-//                iMin = i;
-//            }
-//        }
-//
-//        HighGui.imshow("AUTOENCODDER 123",gauge);
-//        HighGui.imshow("AUTOENCODDER", train.get(iMin).getSource());
-//    }
 
     @Getter
     @AllArgsConstructor
