@@ -68,7 +68,7 @@ public class ScaleMarkExtraction {
                 maxPoint = i;
                 out = Mat.zeros(canny.size(), canny.type());
                 for (int j = 0; j < cluster.get(i).getPoints().size(); j++) {
-                    Helper.drawRotatedRectangle(out, cluster.get(i).getPoints().get(j).getRotatedRect());
+                    Helper.drawRotatedRectangle(out, cluster.get(i).getPoints().get(j).getRotatedRect(),Helper.WHITE);
                 }
                 Imgproc.drawContours(out, l, -1, new Scalar(255, 255, 255), -1);
             }

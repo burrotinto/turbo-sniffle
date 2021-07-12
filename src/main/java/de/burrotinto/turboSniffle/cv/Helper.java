@@ -62,7 +62,7 @@ public class Helper {
 
     static public BufferedImage Mat2BufferedImage(Mat matrix) throws Exception {
         MatOfByte mob = new MatOfByte();
-        Imgcodecs.imencode(".jpg", matrix, mob);
+        Imgcodecs.imencode(".png", matrix, mob);
         byte ba[] = mob.toArray();
 
         BufferedImage bi = ImageIO.read(new ByteArrayInputStream(ba));
@@ -98,9 +98,7 @@ public class Helper {
         return rotationMatrix;
     }
 
-    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect) {
-        Scalar color = new Scalar(255.0, 255.0, 255.0); // white
-
+    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect, Scalar color) {
         Point[] points = new Point[4];
         rotatedRect.points(points);
 

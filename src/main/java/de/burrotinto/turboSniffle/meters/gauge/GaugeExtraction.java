@@ -34,7 +34,8 @@ public class GaugeExtraction {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        extract(Imgcodecs.imread("data/example/testTemp.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
+        extract(Imgcodecs.imread("data/example/temp.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
+//        extract(Imgcodecs.imread("data/example/eingabe.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
 //        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
 //        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
     }
@@ -44,22 +45,18 @@ public class GaugeExtraction {
     static public Gauge extract(Mat input, String prefix) {
         val cannyEdgeDetector = getCanny();
 
+        Mat otsu = new Mat();
+        Imgproc.threshold(input, otsu, 0, 255, Imgproc.THRESH_OTSU);
+
         //1. Canny Edge Dedection mit auto Threashold
         cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(input));
         cannyEdgeDetector.process();
-
-
-        //TestEllipse
-//        HighGui.imshow("c",cannyEdgeDetector.getEdgeMat());
-
-//        val biggestEllipse = getGreatestElipse(sc);
-
 
         //2. Finden der größten Ellipse mit einem Ellipse Score über 0.8
         val biggestEllipse = getGreatestEllipseII(cannyEdgeDetector);
 
         //3. Alles ausserhalb der Ellipse Entfernen
-        val maskiert = removeAllOutsideEllpipse(input, biggestEllipse);
+        val maskiert = removeAllOutsideEllpipse(otsu, biggestEllipse);
         val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
 
         //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
@@ -75,17 +72,14 @@ public class GaugeExtraction {
         Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
 
 
-        HighGui.imshow("0. Input", input);
-        HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
-        HighGui.imshow("2 + 3. maskiert", maskiert);
-        HighGui.imshow("4. transponiert", transponiert);
-        HighGui.imshow("5. Gedreht", gedreht);
-        HighGui.imshow("5.1. Gedreht Canny", cannyGedreht);
-
-//        //Gauge Konstruktor
-//        Gauge gauge = new Gauge(
-//                gedreht, cannyGedreht,null);
-
+//        HighGui.imshow("0. Input", input);
+//        HighGui.imshow("0. OTSU", otsu);
+//
+//        HighGui.imshow("1. Canny", cannyEdgeDetector.getEdgeMat());
+//        HighGui.imshow("2 + 3. maskiert", maskiert);
+//        HighGui.imshow("4. transponiert", transponiert);
+//        HighGui.imshow("5. Gedreht", gedreht);
+//        HighGui.imshow("5.1. Gedreht Canny", cannyGedreht);
 
 
 //        6. Erkennung der Skala
@@ -112,34 +106,18 @@ public class GaugeExtraction {
         Gauge gauge = new Gauge(
                 gedrehtSkala, cannyGedrehtSkala, new TextDedection());
 
-//        Imgproc.ellipse(sc, e, WHITE, 5);
-//        Imgproc.arrowedLine(sc, e.center, gauge.getPointer()[0].getArrow(), WHITE, 2, Imgproc.LINE_AA);
-//        HighGui.imshow("7. Zeiger", gauge.getPointerOnlyMat());
+//        HighGui.imshow("6.1 Maskiert", maskiertSkala);
+//        HighGui.imshow("6.1. Maskiert Canny", cannyMaskSkala);
+//        HighGui.imshow("6.2. transponiert", transponiertSkala);
+//        HighGui.imshow("6.2. transponiert Canny", cannyTransponiertSkala);
+//        HighGui.imshow("6.3. Gedreht", gedrehtSkala);
+//        HighGui.imshow("6.3. Gedreht Canny", cannyGedrehtSkala);
 
+        HighGui.imshow("FINAL", gauge.getFinalDedectedGauge());
 
-//HighGui.imshow("GROWING", );
-        HighGui.imshow("6.1 Maskiert", maskiertSkala);
-        HighGui.imshow("6.1. Maskiert Canny",cannyMaskSkala);
-        HighGui.imshow("6.2. transponiert", transponiertSkala);
-        HighGui.imshow("6.2. transponiert Canny", cannyTransponiertSkala);
-        HighGui.imshow("6.3. Gedreht", gedrehtSkala);
-        HighGui.imshow("6.3. Gedreht Canny", cannyGedrehtSkala);
-//        HighGui.imshow("Gemalt", gauge.getCalcMat());
-//        HighGui.imshow("6a. Aufrollen Src", gauge.getAusgerolltSource());
-//        HighGui.imshow("6b. Aufrollen Canny", gauge.getAusgerolltBW());
-//
-//        Imgcodecs.imwrite("data/out/" + prefix + "_input.png", input);
-//        Imgcodecs.imwrite("data/out/" + prefix + "_canny.png", cannyEdgeDetector.getEdgeMat());
-//        Imgcodecs.imwrite("data/out/" + prefix + "_maskiert.png", maskiert);
-//        Imgcodecs.imwrite("data/out/" + prefix + "_transponiert.png", transponiert);
-//        Imgcodecs.imwrite("data/out/" + prefix + "_gedreht.png", gauge.getSource());
-//        Imgcodecs.imwrite("data/out/" + prefix + "_gedrehtCanny.png", gauge.getCanny());
-//        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenSRC.png", gauge.getAusgerolltSource());
-//        Imgcodecs.imwrite("data/out/" + prefix + "_aufrollenCANNY.png", gauge.getAusgerolltBW());
-//
-//        System.out.println(gauge.getValue());
+        gauge.testObanhandVOndenErkanntenSkalenBeschriftungenDerBereichExportiertWerdenKann();
 
-        HighGui.imshow("OTSU", gauge.getScaleMarks());
+        System.out.println(gauge.getValue());
 
         HighGui.waitKey();
 
