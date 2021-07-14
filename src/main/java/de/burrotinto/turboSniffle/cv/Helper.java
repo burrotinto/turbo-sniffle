@@ -25,6 +25,7 @@ import java.util.List;
 public class Helper {
     public static final Scalar WHITE = new Scalar(255, 255, 255);
     public static final Scalar BLACK = new Scalar(0, 0, 0);
+    public static final Scalar GREY = new Scalar(128, 128, 128);
 
     static public double calculateDistanceBetweenPointsWithPoint2D(Point x, Point y) {
         return Point2D.distance(x.x, x.y, y.x, y.y);
@@ -109,24 +110,50 @@ public class Helper {
     }
 
     public static List<Pixel> getAllPixel(Mat mat) {
-        LinkedList<Pixel> pixels = new LinkedList<>();
-        for (int i = 0; i < mat.rows(); i++) {
-            for (int j = 0; j < mat.cols(); j++) {
-                pixels.add(new Pixel(j, i, mat.get(i, j)[0]));
-            }
-        }
-        return pixels;
+        return getAllPixel(mat,Mat.ones(mat.size(),mat.type()));
     }
 
     public static List<Pixel> getAllPixel(Mat mat, Mat mask) {
+        return getAllPixel(mat,mask,null);
+    }
+
+    /**
+     * Gibt nur Pixel in der gewünschten Farbe zurück
+     * @param mat
+     * @param mask
+     * @param color
+     * @return
+     */
+    public static List<Pixel> getAllPixel(Mat mat, Mat mask,Scalar color) {
         LinkedList<Pixel> pixels = new LinkedList<>();
         for (int i = 0; i < mat.rows(); i++) {
             for (int j = 0; j < mat.cols(); j++) {
-                if (mask.get(i, j)[0] > 0) {
+                if (mask.get(i, j)[0] > 0 && ( color == null || mat.get(i, j)[0] == color.val[0])) {
                     pixels.add(new Pixel(j, i, mat.get(i, j)[0]));
                 }
             }
         }
         return pixels;
     }
+
+    /**
+     * Zählt Pixel im Bereich
+     * @param mat
+     * @param mask
+     * @param color
+     * @return
+     */
+    public static int countPixel(Mat mat, Mat mask,Scalar color) {
+        int x = 0;
+        for (int i = 0; i < mat.rows(); i++) {
+            for (int j = 0; j < mat.cols(); j++) {
+                if (mask.get(i, j)[0] > 0 && ( color == null || mat.get(i, j)[0] == color.val[0])) {
+                    x++;
+                }
+            }
+        }
+        return x;
+    }
+
+
 }

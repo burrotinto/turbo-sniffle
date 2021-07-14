@@ -3,7 +3,7 @@
 //
 //import de.burrotinto.popeye.transformation.CircleExtractor;
 //import de.burrotinto.turboSniffle.cv.Helper;
-//import de.burrotinto.turboSniffle.meters.AnalogOneArrow;
+//import de.burrotinto.turboSniffle.meters.gauge.AnalogOneArrow;
 //import org.opencv.core.CvType;
 //import org.opencv.core.Mat;
 //import org.opencv.core.RotatedRect;

@@ -26,7 +26,7 @@ public class DistanceToPointClusterer {
         DBSCANClusterer<DistanceCluster> dbscanClusterer = new DBSCANClusterer<>(esp, minPts);
         List<Cluster<DistanceCluster>> cluster = dbscanClusterer.cluster(distance);
 
-        cluster.sort((o1, o2) -> o1.getPoints().size() - o2.getPoints().size());
+        cluster.sort((o1, o2) -> o2.getPoints().size() - o1.getPoints().size());
 
         return cluster.get(0).getPoints().stream().map(distanceCluster -> distanceCluster.rotatedRect).collect(Collectors.toList());
 
@@ -43,6 +43,7 @@ public class DistanceToPointClusterer {
         public double[] getPoint() {
             val d = new double[1];
             d[0] = Helper.calculateDistanceBetweenPointsWithPoint2D(center, rotatedRect.center);
+//            d[0] = rotatedRect.size.height;
             return d;
         }
     }

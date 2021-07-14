@@ -3,7 +3,7 @@ package de.burrotinto.turboSniffle.meters.gauge.test;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.popeye.transformation.Pair;
-import de.burrotinto.turboSniffle.meters.Measuring;
+import de.burrotinto.turboSniffle.meters.gauge.Measuring;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;

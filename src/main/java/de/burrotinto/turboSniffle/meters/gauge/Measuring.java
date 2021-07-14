@@ -1,4 +1,4 @@
-package de.burrotinto.turboSniffle.meters;
+package de.burrotinto.turboSniffle.meters.gauge;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;

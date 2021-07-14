@@ -1,6 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge.test;
 
-import de.burrotinto.turboSniffle.meters.Measuring;
+import de.burrotinto.turboSniffle.meters.gauge.Measuring;
 import lombok.val;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
