@@ -13,6 +13,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScaleMarkExtraction {
 
@@ -21,7 +22,7 @@ public class ScaleMarkExtraction {
         return null;
     }
 
-    public static List<Point> extract(Mat canny, Mat greyMat, int esp) {
+    public static List<RotatedRect> extract(Mat canny, Mat greyMat, int esp) {
 
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -68,16 +69,17 @@ public class ScaleMarkExtraction {
                 maxPoint = i;
                 out = Mat.zeros(canny.size(), canny.type());
                 for (int j = 0; j < cluster.get(i).getPoints().size(); j++) {
-                    Helper.drawRotatedRectangle(out, cluster.get(i).getPoints().get(j).getRotatedRect(),Helper.WHITE);
+                    Helper.drawRotatedRectangle(out, cluster.get(i).getPoints().get(j).getRotatedRect(), Helper.WHITE);
                 }
                 Imgproc.drawContours(out, l, -1, new Scalar(255, 255, 255), -1);
             }
         }
 
-        ArrayList<Point> points = new ArrayList<>();
-        cluster.get(maxPoint).getPoints().stream().forEach(rechteckCluster -> points.addAll(rechteckCluster.contour));
-
-        return points;
+        return cluster.get(maxPoint).getPoints().stream().map(rechteckCluster -> rechteckCluster.rotatedRect).collect(Collectors.toList());
+//        ArrayList<Point> points = new ArrayList<>();
+//        cluster.get(maxPoint).getPoints().stream().forEach(rechteckCluster -> points.addAll(rechteckCluster.contour));
+//
+//        return points;
     }
 
 

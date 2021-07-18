@@ -1,9 +1,6 @@
 package de.burrotinto.turboSniffle.cv;
 
-import de.burrotinto.popeye.transformation.Pair;
-import de.burrotinto.popeye.transformation.PointPair;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
-import lombok.AllArgsConstructor;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
@@ -33,6 +30,14 @@ public class Helper {
 
     static public double calculateDistanceBetweenPointsWithPoint2D(Pair<Point, Point> pair) {
         return calculateDistanceBetweenPointsWithPoint2D(pair.p1, pair.p2);
+    }
+
+    static public double durchschnittsDistanz(List<Point> fromPoints, Point toPoint) {
+        double sum = 0;
+        for (int i = 0; i < fromPoints.size(); i++) {
+            sum += calculateDistanceBetweenPointsWithPoint2D(toPoint, fromPoints.get(i));
+        }
+        return sum / fromPoints.size();
     }
 
     static public double maxDistance(List<Point> fromPoints, Point toPoint) {
@@ -110,25 +115,26 @@ public class Helper {
     }
 
     public static List<Pixel> getAllPixel(Mat mat) {
-        return getAllPixel(mat,Mat.ones(mat.size(),mat.type()));
+        return getAllPixel(mat, Mat.ones(mat.size(), mat.type()));
     }
 
     public static List<Pixel> getAllPixel(Mat mat, Mat mask) {
-        return getAllPixel(mat,mask,null);
+        return getAllPixel(mat, mask, null);
     }
 
     /**
      * Gibt nur Pixel in der gewünschten Farbe zurück
+     *
      * @param mat
      * @param mask
      * @param color
      * @return
      */
-    public static List<Pixel> getAllPixel(Mat mat, Mat mask,Scalar color) {
+    public static List<Pixel> getAllPixel(Mat mat, Mat mask, Scalar color) {
         LinkedList<Pixel> pixels = new LinkedList<>();
         for (int i = 0; i < mat.rows(); i++) {
             for (int j = 0; j < mat.cols(); j++) {
-                if (mask.get(i, j)[0] > 0 && ( color == null || mat.get(i, j)[0] == color.val[0])) {
+                if (mask.get(i, j)[0] > 0 && (color == null || mat.get(i, j)[0] == color.val[0])) {
                     pixels.add(new Pixel(j, i, mat.get(i, j)[0]));
                 }
             }
@@ -138,16 +144,17 @@ public class Helper {
 
     /**
      * Zählt Pixel im Bereich
+     *
      * @param mat
      * @param mask
      * @param color
      * @return
      */
-    public static int countPixel(Mat mat, Mat mask,Scalar color) {
+    public static int countPixel(Mat mat, Mat mask, Scalar color) {
         int x = 0;
         for (int i = 0; i < mat.rows(); i++) {
             for (int j = 0; j < mat.cols(); j++) {
-                if (mask.get(i, j)[0] > 0 && ( color == null || mat.get(i, j)[0] == color.val[0])) {
+                if (mask.get(i, j)[0] > 0 && (color == null || mat.get(i, j)[0] == color.val[0])) {
                     x++;
                 }
             }
@@ -155,5 +162,10 @@ public class Helper {
         return x;
     }
 
+    public static void drawLineInMat(Mat mat, Point p1, double length, double angle, Scalar scalar, int thickness) {
+        double x = p1.x + length * Math.cos(Math.toRadians(angle));
+        double y = p1.y + length * Math.sin(Math.toRadians(angle));
 
+        Imgproc.line(mat, p1, new Point(x, y), scalar, thickness);
+    }
 }

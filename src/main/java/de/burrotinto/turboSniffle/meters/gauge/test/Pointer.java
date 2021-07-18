@@ -1,7 +1,7 @@
 package de.burrotinto.turboSniffle.meters.gauge.test;
 
 import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.popeye.transformation.PointPair;
+import de.burrotinto.turboSniffle.cv.PointPair;
 import lombok.Getter;
 import lombok.Setter;
 import org.opencv.core.Mat;

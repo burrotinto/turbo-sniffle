@@ -5,6 +5,7 @@ import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
+import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -17,25 +18,25 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
-
 public class GaugeFactory {
 
-    private static final String NAME = "XXX";
-        @SneakyThrows
-        public static void main(String[] args) {
+    private static final String FILE = "data/example/temp.jpg";
+    //    private static final String FILE = "data/example/testBild1.jpg";
+    private static final String NAME = FILE.split("/")[FILE.split("/").length - 1].split("\\.")[0];
+
+    @SneakyThrows
+    public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
+
 //        extract(Imgcodecs.imread("data/example/temp.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
-        AnalogOnePointer g = getGaugeWithOnePointer(Imgcodecs.imread("data/example/temp.jpg", Imgcodecs.IMREAD_GRAYSCALE));
+        AnalogOnePointer g = getGaugeWithOnePointer(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
 
-//        HighGui.imshow("gauge",g.getSource());
-//        extract(Imgcodecs.imread("data/example/testBild1.jpg"));
-//        extract(Imgcodecs.imread("data/example/Li_Example_1.png"));
-
-            System.out.println(g.getValue()+"");
+        System.out.println(g.getValue() + "");
 //            HighGui.waitKey();
     }
 
@@ -50,6 +51,7 @@ public class GaugeFactory {
         cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(src));
         cannyEdgeDetector.process();
 
+
         //2. Finden der größten Ellipse mit einem Ellipse Score über 0.8
         val biggestEllipse = getGreatestEllipse(cannyEdgeDetector);
 
@@ -58,8 +60,8 @@ public class GaugeFactory {
         val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
 
         //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-        val transponiert = transponiere(maskiert, biggestEllipse);
-        val cannyTransponiert = transponiere(cannyMask, biggestEllipse);
+        val transponiert = transformieren(maskiert, biggestEllipse);
+        val cannyTransponiert = transformieren(cannyMask, biggestEllipse);
 
         //5. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
         val rotate = Imgproc.getRotationMatrix2D(new Point(transponiert.width() / 2.0, transponiert.height() / 2.0), 90 - biggestEllipse.angle, 1.0);
@@ -69,55 +71,115 @@ public class GaugeFactory {
         val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
         Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
 
-        Imgcodecs.imwrite("data/out/" +NAME+ "_1_source.png",src);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_2_canny.png",cannyEdgeDetector.getEdgeMat());
-        Imgcodecs.imwrite("data/out/" +NAME+ "_3_ellipse.png",maskiert);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_4_transponiert.png",transponiert);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_5_gedreht.png",gedreht);
-
         Gauge gauge = new Gauge(
                 gedreht, cannyGedreht, null);
+
+        Imgcodecs.imwrite("data/out/" + NAME + "_1_source.png", src);
+        Imgcodecs.imwrite("data/out/" + NAME + "_2_canny.png", cannyEdgeDetector.getEdgeMat());
+        Imgcodecs.imwrite("data/out/" + NAME + "_3_ellipse.png", maskiert);
+        Imgcodecs.imwrite("data/out/" + NAME + "_4_transponiert.png", transponiert);
+        Imgcodecs.imwrite("data/out/" + NAME + "_5_gedreht.png", gedreht);
+        Imgcodecs.imwrite("data/out/" + NAME + "_8_otsu.png", gauge.otsu);
         return gauge;
     }
+
+//    public static AnalogOnePointer getGaugeWithOnePointer2(Mat src) throws NotGaugeWithPointerException {
+//        Gauge gauge = getGauge(src);
+//
+//        HeatMap heatMap = new HeatMap(gauge.getCanny());
+//
+////        Mat draw = Mat.zeros(Gauge.DEFAULT_SIZE,Gauge.TYPE);
+//        Mat draw = gauge.getSource();
+//        val connected = heatMap.getAllConnectedWithCenter();
+////        connected.forEach(rotatedRect -> Imgproc.line(draw, rotatedRect.center, heatMap.getCenter(), Helper.WHITE));
+////        double radius = Helper.durchschnittsDistanz(connected.stream().map(rotatedRect -> rotatedRect.center).collect(Collectors.toList()), heatMap.getCenter());
+//        double radius = connected.stream().map(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, heatMap.getCenter())).sorted().collect(Collectors.toList()).get(connected.size() / 2);
+////        Imgproc.drawMarker(draw, heatMap.getCenter(), Helper.WHITE);
+////        Imgproc.circle(draw, heatMap.getCenter(), (int) radius, Helper.WHITE);
+//
+//
+//        val center = heatMap.getCenter();
+////        val x = draw.submat((int) (center.y - radius), (int) (center.y + radius), (int) (center.x - radius), (int) (center.x + radius));
+////        HighGui.imshow("HEAT", x);
+////        HighGui.waitKey();
+//
+//        RotatedRect rg = new RotatedRect();
+//        Point[] points = new Point[4];
+//        points[0] = new Point(center.x - radius, (int) (center.y - radius));
+//        points[2] = new Point(center.x - radius, (int) (center.y + radius));
+//        points[1] = new Point(center.x + radius, (int) (center.y - radius));
+//        points[3] = new Point(center.x + radius, (int) (center.y + radius));
+//        rg.points(points);
+//
+//        Mat xxx = gauge.getSource().clone();
+//
+//        val out = removeAllOutsideEllpipse(xxx, rg);
+//        Imgproc.rectangle(out, rg.boundingRect(), Helper.WHITE);
+//
+//        HighGui.imshow("HEAT", out);
+//        HighGui.waitKey();
+//
+//        AnalogOnePointer g = new AnalogOnePointer(new Gauge(gauge.source.submat((int) (center.y - radius), (int) (center.y + radius), (int) (center.x - radius), (int) (center.x + radius)),
+//                gauge.canny.submat((int) (center.y - radius), (int) (center.y + radius), (int) (center.x - radius), (int) (center.x + radius)),
+//                gauge.otsu.submat((int) (center.y - radius), (int) (center.y + radius), (int) (center.x - radius), (int) (center.x + radius))), new TextDedection());
+//
+//        Imgcodecs.imwrite("data/out/" + NAME + "_9_idealisiert.png", g.getIdealisierteDarstellung());
+//        Imgcodecs.imwrite("data/out/" + NAME + "_10_dedected.png", g.getDrawing(g.source.clone()));
+//        return g;
+//    }
+
 
     public static AnalogOnePointer getGaugeWithOnePointer(Mat src) throws NotGaugeWithPointerException {
         Gauge gauge = getGauge(src);
 
+        Mat drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
+
         //1. Erkennung der Skala
         val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
+
+        ArrayList<Point> points = new ArrayList<>();
+        x.stream().forEach(rechteckCluster -> {
+            Point[] p = new Point[4];
+            rechteckCluster.points(p);
+            points.addAll(Arrays.asList(rechteckCluster.center));
+        });
+
         val m = new MatOfPoint2f();
-        m.fromList(x);
+        m.fromList(points);
 
 
         //2. Alles ausserhalb der Ellipse Entfernen
+        Mat sr = gauge.getSource().clone();
         val e = Imgproc.fitEllipse(m);
-        val maskiertSkala = removeAllOutsideEllpipse(gauge.getSource(), e);
+
+//        x.forEach(rotatedRect -> Helper.drawRotatedRectangle(sr,rotatedRect,Helper.BLACK));
+
+        val maskiertSkala = removeAllOutsideEllpipse(sr, e);
         val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
 
         //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-        val transponiertSkala = transponiere(maskiertSkala, e);
-        val cannyTransponiertSkala = transponiere(cannyMaskSkala, e);
+        val transponiertSkala = transformieren(maskiertSkala, e);
+        val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
 
         //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
         val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
+//        val rotateSkala = Imgproc.getRotationMatrix2D(pixels.get().point, 90 - e.angle, 1.0);
         val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
         Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
         val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
         Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
 
+        Imgcodecs.imwrite("data/out/" + NAME + "_6_skala.png", maskiertSkala);
+        Imgcodecs.imwrite("data/out/" + NAME + "_7_skalaRotiert.png", gedrehtSkala);
 
-        AnalogOnePointer g = new AnalogOnePointer(new Gauge(gedrehtSkala, cannyGedrehtSkala, null),new TextDedection());
+        AnalogOnePointer g = new AnalogOnePointer(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), new TextDedection());
 
 
-        Imgcodecs.imwrite("data/out/" +NAME+ "_6_skala.png",maskiertSkala);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_7_skalaRotiert.png",gedrehtSkala);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_8_otsu.png",g.otsu);
-        Imgcodecs.imwrite("data/out/" +NAME+ "_9_dedected.png",g.getDrawing(g.source.clone()));
+        Imgcodecs.imwrite("data/out/" + NAME + "_8_otsu.png", g.otsu);
+        Imgcodecs.imwrite("data/out/" + NAME + "_9_idealisiert.png", g.getIdealisierteDarstellung());
+        Imgcodecs.imwrite("data/out/" + NAME + "_10_dedected.png", g.getDrawing(g.source.clone()));
         return g;
     }
-
-
-
 
 
     public static CannyEdgeDetector getCanny() {
@@ -177,13 +239,13 @@ public class GaugeFactory {
     }
 
 
-    public static Mat transponiere(Mat mat, RotatedRect ellipse) {
+    public static Mat transformieren(Mat mat, RotatedRect ellipse) {
         Point[] pts = new Point[4];
         ellipse.points(pts);
-        return transponiere(mat, Arrays.stream(pts).collect(Collectors.toList()));
+        return transformieren(mat, Arrays.stream(pts).collect(Collectors.toList()));
     }
 
-    public static Mat transponiere(Mat mat, List<Point> corner) {
+    public static Mat transformieren(Mat mat, List<Point> corner) {
 
         List<Point> target = new ArrayList<Point>();
         target.add(new Point(0, 0));

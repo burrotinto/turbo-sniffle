@@ -46,7 +46,7 @@ public class Gauge {
             Imgproc.resize(otsu, this.otsu, DEFAULT_SIZE);
         }
 
-        //Wenn Wenn es mehr Schwarz als weiß gibt müssen faren getauscht werden
+        //Wenn Wenn es mehr Schwarz als weiß gibt müssen farben getauscht werden
         Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
         Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
 
@@ -89,35 +89,35 @@ public class Gauge {
     }
 
 
-    /**
-     * Chi et al.
-     * Machine Vision Based Automatic Detection Method of
-     * Indicating Values of a Pointer Gauge
-     * <p>
-     * Step 4
-     */
-    public Mat getScaleMarks() {
-        Mat otsu = new Mat();
-        Imgproc.threshold(source, otsu, 0, 255, Imgproc.THRESH_OTSU);
-
-        Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
-        Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
-
-        List<Pixel> pixels = Helper.getAllPixel(otsu, mask).stream().filter(pixel -> pixel.color == 0).collect(Collectors.toList());
-
-        Mat draw = Mat.zeros(DEFAULT_SIZE, TYPE);
-
-        pixels.forEach(pixel -> Imgproc.line(draw, pixel.point, getCenter(), Helper.WHITE));
-
-        HashMap<Double, ArrayList<Pixel>> map = new HashMap<>();
-        pixels.forEach(pixel -> {
-            double angle = ((int) (calculateWinkel(pixel.point) * 10)) * 0.1;
-            map.putIfAbsent(angle, new ArrayList<>());
-            map.get(angle).add(pixel);
-        });
-
-        return draw;
-    }
+//    /**
+//     * Chi et al.
+//     * Machine Vision Based Automatic Detection Method of
+//     * Indicating Values of a Pointer Gauge
+//     * <p>
+//     * Step 4
+//     */
+//    public Mat getScaleMarks() {
+//        Mat otsu = new Mat();
+//        Imgproc.threshold(source, otsu, 0, 255, Imgproc.THRESH_OTSU);
+//
+//        Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
+//        Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
+//
+//        List<Pixel> pixels = Helper.getAllPixel(otsu, mask).stream().filter(pixel -> pixel.color == 0).collect(Collectors.toList());
+//
+//        Mat draw = Mat.zeros(DEFAULT_SIZE, TYPE);
+//
+//        pixels.forEach(pixel -> Imgproc.line(draw, pixel.point, getCenter(), Helper.WHITE));
+//
+//        HashMap<Double, ArrayList<Pixel>> map = new HashMap<>();
+//        pixels.forEach(pixel -> {
+//            double angle = ((int) (calculateWinkel(pixel.point) * 10)) * 0.1;
+//            map.putIfAbsent(angle, new ArrayList<>());
+//            map.get(angle).add(pixel);
+//        });
+//
+//        return draw;
+//    }
 
 
     public Point poolarZuKartesisch(double winkel, double r) {

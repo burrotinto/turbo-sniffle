@@ -1,6 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
-import de.burrotinto.popeye.transformation.Pair;
+import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
@@ -11,6 +11,7 @@ import org.nd4j.linalg.primitives.AtomicDouble;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.awt.image.BufferedImage;
@@ -21,55 +22,61 @@ import java.util.stream.Collectors;
 
 
 public class AnalogOnePointer extends Gauge {
-    private final int GENAUIGKEIT = 1;
+    private final double GENAUIGKEIT = 0.1;
+    private final Size AUTOENCODER_INPUT_SIZE = new Size(64, 64);
+
 
     private final TextDedection textDedection;
     private final HashMap<RotatedRect, Double> labelScale = new HashMap<>();
 
     private Optional<Double> pointerAngel = Optional.empty();
+    private Optional<Mat> idealisierteDarstellung = Optional.empty();
 
     AnalogOnePointer(Gauge gauge, TextDedection textDedection) throws NotGaugeWithPointerException {
         super(gauge.source, gauge.canny, gauge.otsu);
         this.textDedection = textDedection;
 
-//        HighGui.imshow("Source", source);
-//        HighGui.imshow("Canny", canny);
-//        HighGui.imshow("Otsu", otsu);
         // Beschriftung erkennung
         val textAreas = DistanceToPointClusterer.extract(textDedection.getTextAreas(otsu), getCenter(), (int) (DEFAULT_SIZE.height / 20), 2);
-//        textAreas.addAll(DistanceToPointClusterer.extract(textDedection.getTextAreas(source), getCenter(), (int) (DEFAULT_SIZE.height / 20), 2));
 
-        Mat drawMat = getSource().clone();
-
+        Mat ideal = otsu.clone();
 
         for (RotatedRect r : textAreas) {
             try {
-                Helper.drawRotatedRectangle(drawMat, r, Helper.GREY);
-                Imgproc.putText(drawMat, r.angle + "", r.center, 0, 1.0, Helper.WHITE);
-
                 BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
+                Helper.drawRotatedRectangle(ideal, r, Helper.WHITE);
                 String str = textDedection.doOCRNumbers(sub);
                 Double i = Double.parseDouble(str);
                 labelScale.put(r, i);
-                System.out.println("" + i);
+                System.out.println("OTSU_OCR =" + i);
             } catch (Exception e) {
-                try {
-                    BufferedImage sub2 = Helper.Mat2BufferedImage(source.submat(r.boundingRect()));
-                    String str2 = textDedection.doOCRNumbers(sub2);
-                    Double i2 = Double.parseDouble(str2);
-                    labelScale.put(r, i2);
-                    System.out.println("2=" + i2);
-                } catch (Exception e2) {
-                }
+//                try {
+//                    BufferedImage sub2 = Helper.Mat2BufferedImage(source.submat(r.boundingRect()));
+//                    String str2 = textDedection.doOCRNumbers(sub2);
+//                    Double i2 = Double.parseDouble(str2);
+//                    labelScale.put(r, i2);
+//                    System.out.println("GREYSCAKLE_OCR=" + i2);
+//                } catch (Exception e2) {
+//                }
             }
 
         }
         if (labelScale.size() < 1) {
             throw new NotGaugeWithPointerException();
         }
+        idealisierteDarstellung = Optional.ofNullable(ideal);
 //        HighGui.imshow("DRAW",drawMat);
 //        HighGui.waitKey();
     }
+
+
+
+
+//    private void calculateCenter() {
+//        val pixels = Helper.getAllPixel(getHeatmap()).stream().max((o1, o2) -> o1.color - o2.color);
+//        center = pixels.get().point;
+//    }
+
 
     /**
      * Unsupervised learning
@@ -79,15 +86,12 @@ public class AnalogOnePointer extends Gauge {
     public double getPointerAngel() {
         if (pointerAngel.isEmpty()) {
             //Zuerst alles innerhalb der Skalenbeschriftung maskieren
+
             AtomicDouble sum = new AtomicDouble(0);
-
-            Mat otsuClone = otsu.clone();
-
             labelScale.forEach((rotatedRect, integer) -> {
                 double dist = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), rotatedRect.center);
-
                 sum.addAndGet(dist);
-                Helper.drawRotatedRectangle(otsuClone, rotatedRect, Helper.WHITE);
+
             });
 
             Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
@@ -97,8 +101,17 @@ public class AnalogOnePointer extends Gauge {
 
             //Todo Parallelisieren
             AtomicReference<Pair<Double, Integer>> max = new AtomicReference<>(new Pair<>(0.0, 0));
-            GaugeOnePointerLearningDataset.getTrainingset(Gauge.DEFAULT_SIZE, GENAUIGKEIT).forEach((aDouble, mat) -> {
-                int p = Helper.countPixel(otsuClone, mat, Helper.BLACK);
+
+            Mat autoencoderInput = new Mat();
+            Imgproc.resize(getIdealisierteDarstellung(), autoencoderInput, AUTOENCODER_INPUT_SIZE);
+
+            // Zentrum Skalieren
+            double faktorH = AUTOENCODER_INPUT_SIZE.height / Gauge.DEFAULT_SIZE.height;
+            double faktorW = AUTOENCODER_INPUT_SIZE.width / Gauge.DEFAULT_SIZE.width;
+            Point centerR = new Point(getCenter().x * faktorW, getCenter().y * faktorH);
+
+            GaugeOnePointerLearningDataset.getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT).forEach((aDouble, mat) -> {
+                int p = Helper.countPixel(autoencoderInput, mat, Helper.BLACK);
                 if (max.get().p2 < p) {
                     max.set(new Pair<>(aDouble, p));
                 }
@@ -225,4 +238,16 @@ of Pointer Meters Based on Text Detection
         System.out.println("AAAAAAAAAAAAAAAAAAAAA");
         return angle.get();
     }
+
+    public Mat getIdealisierteDarstellung() {
+        if (idealisierteDarstellung.isEmpty()) {
+            Mat ideal = otsu.clone();
+            labelScale.forEach((rotatedRect, integer) -> {
+                Helper.drawRotatedRectangle(ideal, rotatedRect, Helper.WHITE);
+            });
+            idealisierteDarstellung = Optional.ofNullable(ideal);
+        }
+        return idealisierteDarstellung.get();
+    }
+
 }

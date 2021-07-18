@@ -1,6 +1,6 @@
 package de.burrotinto.turboSniffle.booleanAutoEncoder;
 
-import de.burrotinto.popeye.transformation.Pair;
+import de.burrotinto.turboSniffle.cv.Pair;
 import lombok.val;
 
 import java.util.HashMap;
