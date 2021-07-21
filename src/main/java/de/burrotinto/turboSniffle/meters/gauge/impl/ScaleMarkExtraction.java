@@ -126,7 +126,7 @@ public class ScaleMarkExtraction {
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
 
-//        extract(GaugeExtraction.extract(Imgcodecs.imread("data/example/testTemp.jpg"), "").getAusgerolltCanny());
+//        extract(GaugeExtraction.extract(Imgcodecs.imread("data/example/20,5_C_I.jpg"), "").getAusgerolltCanny());
     }
 }
 

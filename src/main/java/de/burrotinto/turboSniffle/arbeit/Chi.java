@@ -18,7 +18,7 @@ public class Chi implements Arbeit {
     public void machDeinDing() {
         nu.pattern.OpenCV.loadLocally();
 
-        Mat bild = Imgcodecs.imread("data/example/testTemp1.jpg", Imgcodecs.IMREAD_GRAYSCALE);
+        Mat bild = Imgcodecs.imread("data/example/20,5_C.jpg", Imgcodecs.IMREAD_GRAYSCALE);
         Point hp = GrowingMethod.getHighestGray(bild);
 
         for (int i = 0; i < 255 ; i+=5) {

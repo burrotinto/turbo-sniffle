@@ -48,6 +48,14 @@ public class Helper {
         return max;
     }
 
+    static public double minDistance(List<Point> fromPoints, Point toPoint) {
+        double min = calculateDistanceBetweenPointsWithPoint2D(toPoint, fromPoints.get(0));
+        for (int i = 1; i < fromPoints.size(); i++) {
+            min = Math.min(min, calculateDistanceBetweenPointsWithPoint2D(toPoint, fromPoints.get(i)));
+        }
+        return min;
+    }
+
     static public PointPair maxDistance(List<Point> points) {
         PointPair max = new PointPair(points.get(0), points.get(0));
         for (int i = 0; i < points.size(); i++) {
