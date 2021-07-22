@@ -50,7 +50,7 @@ public class GaugeOnePointerLearningDataset {
 //    }
 
     public String generateKey(Size size, double angleSteps) {
-        return size.height + "*" + size.width + "*" + angleSteps;
+        return size.height + "|" + size.width + "|" + angleSteps;
     }
 
     public Map<Double, Mat> getTrainingset(Size size, double angleSteps) {
@@ -59,7 +59,13 @@ public class GaugeOnePointerLearningDataset {
             Mat white = Mat.zeros(size, CvType.CV_8UC3);
             white.setTo(Helper.BLACK);
             Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, BLACK, -1);
+            //Zeiger
             Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 3))), 2));
+            //Gegengewicht
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) - (size.width / 6), size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 3))), 2) * 4);
+
+//            HighGui.imshow("", white);
+//            HighGui.waitKey();
 
             HashMap<Double, Mat> map = new HashMap<>();
             for (double i = 0; i < 360; i += angleSteps) {

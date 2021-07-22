@@ -30,6 +30,8 @@ public class GaugeFactory {
     //    private static final String FILE = "data/example/0_bar_I.jpg";
     private static final String NAME = FILE.split("/")[FILE.split("/").length - 1].split("\\.")[0];
 
+    public static final TextDedection TEXT_DEDECTION = new TextDedection();
+
     @SneakyThrows
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
@@ -37,22 +39,17 @@ public class GaugeFactory {
 //        extract(Imgcodecs.imread("data/example/21_C.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
         AnalogOnePointer g = getGaugeWithOnePointer(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
 
-        System.out.println(g.getValue() + "");
-//            HighGui.waitKey();
     }
-
-    private final TextDedection TEXT_DEDECTION = new TextDedection();
 
 
     public static Gauge getGauge(Mat src) {
         val cannyEdgeDetector = getCanny();
         Mat gaus = new Mat();
 
+        //Rauschen mittels einen bilateralen Filter entfernen
         val d = 20;
-        Imgproc.bilateralFilter(src,gaus,d,d*2.0,d*0.5);
+        Imgproc.bilateralFilter(src, gaus, d, d * 2.0, d * 0.5);
 
-        HighGui.imshow("",gaus);
-        HighGui.waitKey(1);
         //1. Canny Edge Dedection mit auto Threashold
         cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(gaus));
         cannyEdgeDetector.process();
@@ -88,50 +85,54 @@ public class GaugeFactory {
         Mat drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
 
         //1. Erkennung der Skala
-        val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
+        try {
+            val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
 
-        ArrayList<Point> points = new ArrayList<>();
-        x.stream().forEach(rechteckCluster -> {
-            Point[] p = new Point[4];
-            rechteckCluster.points(p);
-            points.addAll(Arrays.asList(rechteckCluster.center));
-        });
+            ArrayList<Point> points = new ArrayList<>();
+            x.stream().forEach(rechteckCluster -> {
+                Point[] p = new Point[4];
+                rechteckCluster.points(p);
+                points.addAll(Arrays.asList(rechteckCluster.center));
+            });
 
-        val m = new MatOfPoint2f();
-        m.fromList(points);
+            val m = new MatOfPoint2f();
+            m.fromList(points);
 
 
-        //2. Alles ausserhalb der Ellipse Entfernen
-        Mat sr = gauge.getSource().clone();
-        val e = Imgproc.fitEllipse(m);
+            //2. Alles ausserhalb der Ellipse Entfernen
+            Mat sr = gauge.getSource().clone();
+            val e = Imgproc.fitEllipse(m);
 
 //        x.forEach(rotatedRect -> Helper.drawRotatedRectangle(sr,rotatedRect,Helper.BLACK));
 
-        val maskiertSkala = removeAllOutsideEllpipse(sr, e);
-        val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
+            val maskiertSkala = removeAllOutsideEllpipse(sr, e);
+            val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
 
-        //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-        val transponiertSkala = transformieren(maskiertSkala, e);
-        val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
+            //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
+            val transponiertSkala = transformieren(maskiertSkala, e);
+            val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
 
-        //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
-        val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
+            //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
+            val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
 //        val rotateSkala = Imgproc.getRotationMatrix2D(pixels.get().point, 90 - e.angle, 1.0);
-        val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
-        Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
-        val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
-        Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
+            val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
+            Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
+            val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
+            Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
 
 //        Imgcodecs.imwrite("data/out/" + NAME + "_6_skala.png", maskiertSkala);
 //        Imgcodecs.imwrite("data/out/" + NAME + "_7_skalaRotiert.png", gedrehtSkala);
 
-        AnalogOnePointer g = new AnalogOnePointer(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), new TextDedection(),steps,min,max);
+            AnalogOnePointer g = new AnalogOnePointer(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
 
-        return g;
+            return g;
+        } catch (Exception e){
+            return new AnalogOnePointer(gauge,TEXT_DEDECTION,steps,min,max);
+        }
     }
 
     public static AnalogOnePointer getGaugeWithOnePointer(Mat src) throws NotGaugeWithPointerException {
-        return getGaugeWithOnePointer(getGauge(src),Optional.empty(),Optional.empty(),Optional.empty());
+        return getGaugeWithOnePointer(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
 

@@ -1,6 +1,7 @@
 package de.burrotinto.turboSniffle.cv;
 
 import lombok.SneakyThrows;
+import lombok.Synchronized;
 import net.sourceforge.tess4j.Tesseract;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
@@ -137,6 +138,7 @@ public class TextDedection {
     }
 
     @SneakyThrows
+    @Synchronized
     public String doOCRNumbers(BufferedImage sub) {
         return tesseractNumbers.doOCR(sub);
     }

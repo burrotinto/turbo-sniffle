@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 
 public class AnalogOnePointer extends Gauge {
-    private final double GENAUIGKEIT = 2;
+    private final double GENAUIGKEIT = 0.5;
     private final Size AUTOENCODER_INPUT_SIZE = new Size(128, 128);
 
 
@@ -54,7 +54,8 @@ public class AnalogOnePointer extends Gauge {
 
         Mat ideal = otsu.clone();
 
-        for (RotatedRect r : textAreas) {
+        //Alle erkannten TExxtfelder die sich in der Äusseren Hälfte befinden
+        for (RotatedRect r : textAreas.stream().filter(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) >= getRadius() / 2).collect(Collectors.toList())) {
             try {
                 BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
 //                Helper.drawRotatedRectangle(ideal, r, Helper.WHITE);
@@ -76,29 +77,29 @@ public class AnalogOnePointer extends Gauge {
                 } catch (Exception e2) {
                 }
             }
-//            Skalenbeschriftung entfernen
-
         }
 
-        if (labelScale.size() < 1) {
-            throw new NotGaugeWithPointerException();
+        //Check ob über MIN/MAX etwas ermittelt werden kann
+        if (labelScale.size() <= 1) {
+            if (min.isPresent() && max.isPresent()) {
+                addToScaleMark(new RotatedRect(poolarZuKartesisch(225, getRadius()), new Size(10, 10), 0), min.get());
+                addToScaleMark(new RotatedRect(poolarZuKartesisch(315, getRadius()), new Size(10, 10), 0), max.get());
+                labelScale.put(new RotatedRect(poolarZuKartesisch(90, getRadius()), new Size(10, 10), 0), (max.get() + min.get()) / 2);
+            } else {
+                //Keine Möglichkeit etwas zu generieren
+                throw new NotGaugeWithPointerException();
+            }
         }
 
-        //Alles innerhalb der Skalenbeschriftung maskieren
-        AtomicDouble sum = new AtomicDouble(0);
-        labelScale.forEach((rotatedRect, integer) -> {
-
-//            double dist = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), rotatedRect.center);
-//            sum.addAndGet(dist);
-
-        });
-        val mindist = labelScale.keySet().stream().map(rotatedRect -> {
-            Point[] p = new Point[4];
-            rotatedRect.points(p);
-            return Helper.minDistance(Arrays.asList(p), getCenter());
-        }).min(Double::compareTo);
-        Imgproc.circle(ideal, getCenter(), mindist.orElse(getRadius() / 2).intValue(), Helper.WHITE, -1);
-//        Imgproc.circle(ideal, getCenter(), (int) getRadius() / 2, Helper.WHITE, -1);
+        // Anhand von MAX auf MIN schließen
+        if (min.isPresent() && max.isPresent() && !labelScale.containsValue(min.get()) && labelScale.containsValue(max.get())) {
+            double maxW = calculateWinkel(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
+            if (maxW > 0 && maxW < 180) {
+                addToScaleMark(new RotatedRect(poolarZuKartesisch(maxW + 90, getRadius()), new Size(10, 10), 0), min.get());
+            } else {
+                addToScaleMark(new RotatedRect(poolarZuKartesisch(maxW - 90, getRadius()), new Size(10, 10), 0), min.get());
+            }
+        }
         idealisierteDarstellung = Optional.ofNullable(ideal);
     }
 
@@ -156,9 +157,28 @@ public class AnalogOnePointer extends Gauge {
         return pixels.stream().filter(pixel -> Math.abs(Precision.round(calculateWinkel(pixel.point), nk) % 360 - Precision.round(angle, nk) % 360) < Math.pow(10, -nk)).collect(Collectors.toList());
     }
 
-    public double getValue() {
-        double pointer = getPointerAngel();
+    public double getValue(double angle) {
 
+        val min = labelScale.entrySet().stream().min((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
+        val max = labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
+
+        double minW = calculateWinkel(min.getKey().center);
+        double maxW = calculateWinkel(max.getKey().center);
+
+        double xPP = (max.getValue() - min.getValue()) / (Math.abs((minW - maxW) % 360));
+
+        double delta = minW - angle;
+
+        AtomicDouble value = new AtomicDouble(delta * xPP + min.getValue());
+        this.min.ifPresent(aDouble -> value.set(Math.max(aDouble, value.get())));
+        this.max.ifPresent(aDouble -> value.set(Math.min(aDouble, value.get())));
+        return value.get();
+
+    }
+
+    public double getValue() {
+
+        double pointer = getPointerAngel();
 
         LinkedList<Pair<Double, Map.Entry<RotatedRect, Double>>> pairs = new LinkedList<>();
         labelScale.entrySet().stream().forEach(e -> {
@@ -178,24 +198,11 @@ public class AnalogOnePointer extends Gauge {
         double xPP = Math.abs(pairs.get(0).p2.getValue() - pairs.get(1).p2.getValue()) / (Math.abs((minW - maxW) % 360));
         //Delta zum Zähler
         double deltaMin = minW - pointer;
-        double deltaMax = maxW - pointer;
 
         //Min / Max respektieren
         Double value = pairs.get(0).p2.getValue() + (deltaMin * xPP);
-        Double valueMax = pairs.get(1).p2.getValue() + (deltaMax * xPP);
 
-        Double richtungskorrigiert = value;
-        if (max.isPresent() && value > max.get() && min.isPresent()) {
-            richtungskorrigiert = Math.abs(value - max.get()) <= Math.abs(valueMax - min.get()) ? value : valueMax;
-        } else if (min.isPresent() && value < min.get() && max.isPresent()) {
-            richtungskorrigiert = Math.abs(value - min.get()) <= Math.abs(valueMax - max.get()) ? value : valueMax;
-        }
-
-        AtomicDouble rK = new AtomicDouble(richtungskorrigiert);
-        min.ifPresent(aDouble -> rK.set(Math.max(aDouble, rK.get())));
-        max.ifPresent(aDouble -> rK.set(Math.min(aDouble, rK.get())));
-
-        return rK.get();
+        return value;
     }
 
 //    public Mat getFinalDedectedGauge() {
@@ -222,8 +229,14 @@ public class AnalogOnePointer extends Gauge {
         }
         Mat finalDrawing = drawing;
         labelScale.forEach((rotatedRect, aDouble) -> {
-            Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_STAR);
-            Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+            //Automatisch generierte Punkte Sollen anders Mrkiert werden
+            if (Math.abs(Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) - getRadius()) <= Gauge.DEFAULT_SIZE.width / 10) {
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_CROSS);
+                Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+            } else {
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_STAR);
+                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+            }
         });
 
         Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuKartesisch(getPointerAngel(), getRadius() - 10), Helper.WHITE);
@@ -231,58 +244,6 @@ public class AnalogOnePointer extends Gauge {
         Imgproc.putText(finalDrawing, "Erkannter Wert: " + Precision.round(getValue(), 2), new Point(0, 30), Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
         return finalDrawing;
     }
-
-
-//    /*+
-//A High-Robust Automatic Reading Algorithm
-//of Pointer Meters Based on Text Detection
-// */
-//    public double getPointerAngelRobustPaper() {
-//
-//        //Zuerst alles innerhalb der Skalenbeschriftung maskieren
-//        AtomicDouble sum = new AtomicDouble(0);
-//
-//        Mat otsuClone = otsu.clone();
-//
-//        labelScale.forEach((rotatedRect, integer) -> {
-//            double dist = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), rotatedRect.center);
-//
-//            sum.addAndGet(dist);
-//            Helper.drawRotatedRectangle(otsuClone, rotatedRect, Helper.WHITE);
-//        });
-//
-//        Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
-//        Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
-//        Imgproc.circle(mask, getCenter(), (int) sum.get() / labelScale.size(), Helper.BLACK, -1);
-////        Imgproc.circle(mask, getCenter(), (int) sum.get(), Helper.BLACK, -1);
-//
-//
-//        //Pixel auf Winkel aufteilen
-//        List<Pixel> pixels = Helper.getAllPixel(otsuClone, mask).stream().filter(pixel -> pixel.color == 0).collect(Collectors.toList());
-//
-//        HashMap<Double, ArrayList<Pixel>> map = new HashMap<>();
-//        pixels.forEach(pixel -> {
-//            double angle = Precision.round(calculateWinkel(pixel.point), 0) % 360;
-//            map.putIfAbsent(angle, new ArrayList<>());
-//            map.get(angle).add(pixel);
-//
-//        });
-//
-//
-//        //Zählern welcher Winkel die meisten Pixel enthält
-//        AtomicReference<Double> angle = new AtomicReference<>();
-//
-//        map.forEach((aDouble, pixels1) -> {
-//            if (angle.get() == null || pixels1.size() > map.get(angle.get()).size()) {
-//                pixels1.forEach(pixel -> mask.put((int) pixel.point.y, (int) pixel.point.x, pixel.color));
-//
-//                angle.set(aDouble);
-//            }
-//        });
-//
-//        System.out.println("AAAAAAAAAAAAAAAAAAAAA");
-//        return angle.get();
-//    }
 
     public Mat getIdealisierteDarstellung() {
         return idealisierteDarstellung.get();
