@@ -1,22 +1,18 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.AnalogOnePointer;
+import de.burrotinto.turboSniffle.meters.gauge.GaugeOnePointer;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,7 +41,7 @@ public class OnePointerErkennungBilder implements Arbeit {
             new Thread(() -> {
 
                 try {
-                    AnalogOnePointer analogOnePointer = GaugeFactory.getGaugeWithOnePointer(gauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
+                    GaugeOnePointer analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(gauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
 
 //                Imgcodecs.imwrite("data/out/" + name + "_3_ellipse.png", maskiert);
 //                Imgcodecs.imwrite("data/out/" + name + "_4_transponiert.png", transponiert);

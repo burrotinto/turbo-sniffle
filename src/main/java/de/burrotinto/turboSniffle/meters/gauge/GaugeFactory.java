@@ -5,7 +5,6 @@ import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
-import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -18,7 +17,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,7 +35,7 @@ public class GaugeFactory {
         nu.pattern.OpenCV.loadLocally();
 
 //        extract(Imgcodecs.imread("data/example/21_C.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
-        AnalogOnePointer g = getGaugeWithOnePointer(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
+        GaugeOnePointer g = getGaugeWithOnePointerAutoScale(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
 
     }
 
@@ -81,7 +79,7 @@ public class GaugeFactory {
     }
 
 
-    public static AnalogOnePointer getGaugeWithOnePointer(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         Mat drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
 
         //1. Erkennung der Skala
@@ -123,16 +121,16 @@ public class GaugeFactory {
 //        Imgcodecs.imwrite("data/out/" + NAME + "_6_skala.png", maskiertSkala);
 //        Imgcodecs.imwrite("data/out/" + NAME + "_7_skalaRotiert.png", gedrehtSkala);
 
-            AnalogOnePointer g = new AnalogOnePointer(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
+            GaugeOnePointer g = new GaugeOnePointerAutoSkale(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
 
             return g;
         } catch (Exception e){
-            return new AnalogOnePointer(gauge,TEXT_DEDECTION,steps,min,max);
+            return new GaugeOnePointerAutoSkale(gauge,TEXT_DEDECTION,steps,min,max);
         }
     }
 
-    public static AnalogOnePointer getGaugeWithOnePointer(Mat src) throws NotGaugeWithPointerException {
-        return getGaugeWithOnePointer(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
+    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
+        return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
 
