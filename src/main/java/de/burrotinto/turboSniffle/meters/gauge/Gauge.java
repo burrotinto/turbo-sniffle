@@ -73,57 +73,26 @@ public class Gauge {
     }
 
 
-    protected double calculateWinkel(Point point) {
-        double hypotenuse = Helper.calculateDistanceBetweenPointsWithPoint2D(point, getCenter());
-        double ankathete = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), new Point(point.x, getCenter().y));
-        double w = (180 / Math.PI) * Math.acos(ankathete / hypotenuse);
-        if (point.x < getCenter().x && point.y < getCenter().y) {
-            return 180 - w;
-        } else if (point.x < getCenter().x && point.y > getCenter().y) {
-            return 180 + w;
-        } else if (point.x > getCenter().x && point.y > getCenter().y) {
-            return 360 - w;
-        } else {
-            return w;
-        }
+    protected double bildkoordinatenZuPoolar(Point point) {
+        double w = Math.toDegrees(Math.atan2(point.y - getCenter().y, point.x - getCenter().x));
+        return Math.abs(360 - w) % 360;
+//        double hypotenuse = Helper.calculateDistanceBetweenPointsWithPoint2D(point, getCenter());
+//        double ankathete = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), new Point(point.x, getCenter().y));
+//        double w = (180 / Math.PI) * Math.acos(ankathete / hypotenuse);
+//        if (point.x < getCenter().x && point.y < getCenter().y) {
+//            return 180 - w;
+//        } else if (point.x < getCenter().x && point.y > getCenter().y) {
+//            return 180 + w;
+//        } else if (point.x > getCenter().x && point.y > getCenter().y) {
+//            return 360 - w;
+//        } else {
+//            return w;
+//        }
     }
 
-
-//    /**
-//     * Chi et al.
-//     * Machine Vision Based Automatic Detection Method of
-//     * Indicating Values of a Pointer Gauge
-//     * <p>
-//     * Step 4
-//     */
-//    public Mat getScaleMarks() {
-//        Mat otsu = new Mat();
-//        Imgproc.threshold(source, otsu, 0, 255, Imgproc.THRESH_OTSU);
-//
-//        Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
-//        Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
-//
-//        List<Pixel> pixels = Helper.getAllPixel(otsu, mask).stream().filter(pixel -> pixel.color == 0).collect(Collectors.toList());
-//
-//        Mat draw = Mat.zeros(DEFAULT_SIZE, TYPE);
-//
-//        pixels.forEach(pixel -> Imgproc.line(draw, pixel.point, getCenter(), Helper.WHITE));
-//
-//        HashMap<Double, ArrayList<Pixel>> map = new HashMap<>();
-//        pixels.forEach(pixel -> {
-//            double angle = ((int) (calculateWinkel(pixel.point) * 10)) * 0.1;
-//            map.putIfAbsent(angle, new ArrayList<>());
-//            map.get(angle).add(pixel);
-//        });
-//
-//        return draw;
-//    }
-
-
-    public Point poolarZuKartesisch(double winkel, double r) {
+    protected Point poolarZuBildkoordinaten(double winkel, double r) {
         double x = r * Math.cos(Math.toRadians(winkel));
         double y = r * Math.sin(Math.toRadians(winkel));
-        System.out.println("x=" + x + "; y=" + y);
         return new Point(x + getCenter().x, getCenter().y - y);
 
     }

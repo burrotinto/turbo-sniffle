@@ -12,11 +12,11 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class GaugeOnePointerAutoSkale extends GaugeOnePointer {
+public class GaugeOnePointerAutoScale extends GaugeOnePointer {
 
     private final TextDedection textDedection;
 
-    GaugeOnePointerAutoSkale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+    GaugeOnePointerAutoScale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         super(gauge, steps, min, max);
         this.textDedection = textDedection;
 
@@ -54,9 +54,9 @@ public class GaugeOnePointerAutoSkale extends GaugeOnePointer {
         //Check ob über MIN/MAX etwas ermittelt werden kann
         if (labelScale.size() <= 1) {
             if (min.isPresent() && max.isPresent()) {
-                addToScaleMark(new RotatedRect(poolarZuKartesisch(225, getRadius()), new Size(10, 10), 0), min.get());
-                addToScaleMark(new RotatedRect(poolarZuKartesisch(315, getRadius()), new Size(10, 10), 0), max.get());
-                addToScaleMarkFORCE(new RotatedRect(poolarZuKartesisch(90, getRadius()), new Size(10, 10), 0), (max.get() + min.get()) / 2); //Kann SEIN Das WERT nicht EXISTIERT
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), min.get());
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), max.get());
+                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(90, getRadius()), new Size(10, 10), 0), (max.get() + min.get()) / 2); //Kann SEIN Das WERT nicht EXISTIERT
             } else {
                 //Keine Möglichkeit etwas zu generieren
                 throw new NotGaugeWithPointerException();
@@ -65,11 +65,11 @@ public class GaugeOnePointerAutoSkale extends GaugeOnePointer {
 
         // Anhand von MAX auf MIN schließen
         if (min.isPresent() && max.isPresent() && !labelScale.containsValue(min.get()) && labelScale.containsValue(max.get())) {
-            double maxW = calculateWinkel(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
+            double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
             if (maxW > 0 && maxW < 180) {
-                addToScaleMark(new RotatedRect(poolarZuKartesisch(maxW + 90, getRadius()), new Size(10, 10), 0), min.get());
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW + 90, getRadius()), new Size(10, 10), 0), min.get());
             } else {
-                addToScaleMark(new RotatedRect(poolarZuKartesisch(maxW - 90, getRadius()), new Size(10, 10), 0), min.get());
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), min.get());
             }
         }
 

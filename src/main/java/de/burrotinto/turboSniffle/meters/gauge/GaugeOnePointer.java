@@ -102,7 +102,7 @@ public abstract class GaugeOnePointer extends Gauge {
 
 
     private List<Pixel> getPixelsForAngle(List<Pixel> pixels, double angle, int nk) {
-        return pixels.stream().filter(pixel -> Math.abs(Precision.round(calculateWinkel(pixel.point), nk) % 360 - Precision.round(angle, nk) % 360) < Math.pow(10, -nk)).collect(Collectors.toList());
+        return pixels.stream().filter(pixel -> Math.abs(Precision.round(bildkoordinatenZuPoolar(pixel.point), nk) % 360 - Precision.round(angle, nk) % 360) < Math.pow(10, -nk)).collect(Collectors.toList());
     }
 
     public double getValue(double angle) {
@@ -110,8 +110,8 @@ public abstract class GaugeOnePointer extends Gauge {
         val min = labelScale.entrySet().stream().min((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
         val max = labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
 
-        double minW = calculateWinkel(min.getKey().center);
-        double maxW = calculateWinkel(max.getKey().center);
+        double minW = bildkoordinatenZuPoolar(min.getKey().center);
+        double maxW = bildkoordinatenZuPoolar(max.getKey().center);
 
         double xPP = (max.getValue() - min.getValue()) / (Math.abs((minW - maxW) % 360));
 
@@ -130,7 +130,7 @@ public abstract class GaugeOnePointer extends Gauge {
 
         LinkedList<Pair<Double, Map.Entry<RotatedRect, Double>>> pairs = new LinkedList<>();
         labelScale.entrySet().stream().forEach(e -> {
-            Double x = Math.abs(calculateWinkel(e.getKey().center) - pointer);
+            Double x = Math.abs(bildkoordinatenZuPoolar(e.getKey().center) - pointer);
             pairs.add(new Pair<>(x, e));
             pairs.add(new Pair<>(360 - x, e));
         });
@@ -138,8 +138,8 @@ public abstract class GaugeOnePointer extends Gauge {
         //Sortierung nach entfernung zum Zeiger
         pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
 
-        double minW = calculateWinkel(pairs.get(0).p2.getKey().center);
-        double maxW = calculateWinkel(pairs.get(1).p2.getKey().center);
+        double minW = bildkoordinatenZuPoolar(pairs.get(0).p2.getKey().center);
+        double maxW = bildkoordinatenZuPoolar(pairs.get(1).p2.getKey().center);
 
 
         //Bestimmen eines Wertes pro Prozent
@@ -175,7 +175,7 @@ public abstract class GaugeOnePointer extends Gauge {
             }
         });
 
-        Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuKartesisch(getPointerAngel(), getRadius() - 10), Helper.WHITE);
+        Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10), Helper.WHITE);
 
         Imgproc.putText(finalDrawing, "Erkannter Wert: " + Precision.round(getValue(), 2), new Point(0, 30), Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
         return finalDrawing;

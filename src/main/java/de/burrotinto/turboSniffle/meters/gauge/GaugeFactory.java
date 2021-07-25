@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 
 public class GaugeFactory {
-
+    private static final int BILATERAL_D = 20;
     private static final String FILE = "data/example/21_C.jpg";
     //    private static final String FILE = "data/example/0_bar_I.jpg";
     private static final String NAME = FILE.split("/")[FILE.split("/").length - 1].split("\\.")[0];
@@ -45,8 +45,7 @@ public class GaugeFactory {
         Mat gaus = new Mat();
 
         //Rauschen mittels einen bilateralen Filter entfernen
-        val d = 20;
-        Imgproc.bilateralFilter(src, gaus, d, d * 2.0, d * 0.5);
+        Imgproc.bilateralFilter(src, gaus, BILATERAL_D, BILATERAL_D * 2.0, BILATERAL_D * 0.5);
 
         //1. Canny Edge Dedection mit auto Threashold
         cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(gaus));
@@ -121,11 +120,11 @@ public class GaugeFactory {
 //        Imgcodecs.imwrite("data/out/" + NAME + "_6_skala.png", maskiertSkala);
 //        Imgcodecs.imwrite("data/out/" + NAME + "_7_skalaRotiert.png", gedrehtSkala);
 
-            GaugeOnePointer g = new GaugeOnePointerAutoSkale(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
+            GaugeOnePointer g = new GaugeOnePointerAutoScale(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
 
             return g;
-        } catch (Exception e){
-            return new GaugeOnePointerAutoSkale(gauge,TEXT_DEDECTION,steps,min,max);
+        } catch (Exception e) {
+            return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
         }
     }
 
