@@ -49,6 +49,7 @@ public class TextDedection {
     }
 
     public List<RotatedRect> getTextAreas(Mat src) {
+
         // input image
         Mat frame = src.clone();
         Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2RGB);

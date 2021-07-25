@@ -3,6 +3,7 @@ package de.burrotinto.turboSniffle.meters.gauge;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
+import lombok.Getter;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;
 import org.nd4j.linalg.primitives.AtomicDouble;
@@ -26,6 +27,8 @@ public abstract class GaugeOnePointer extends Gauge {
 
     private Optional<Double> pointerAngel = Optional.empty();
     private Mat idealisierteDarstellung;
+
+    @Getter
     private Optional<Double> skalemarkSteps, min, max;
 
 

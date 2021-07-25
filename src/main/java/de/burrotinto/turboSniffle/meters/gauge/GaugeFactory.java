@@ -132,6 +132,14 @@ public class GaugeFactory {
         return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
+    public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
+//        Mat otsu = new Mat();
+//        Imgproc.threshold(src, otsu, 0, 255, Imgproc.THRESH_OTSU);
+//        HighGui.imshow("",otsu);
+//        HighGui.waitKey();
+        return new Cessna172AirspeedIndecator(getGauge(src), TEXT_DEDECTION);
+    }
+
 
     public static CannyEdgeDetector getCanny() {
         CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
@@ -141,7 +149,7 @@ public class GaugeFactory {
         // 2 is default for CannyEdgeDetector but 1 is setting from Ellipse reference code
         cannyEdgeDetector.setGaussianKernelRadius(1f); // 2
         // 16 is default for Canny Edge Detector, but 5 is setting from ellipse reference code.
-        cannyEdgeDetector.setGaussianKernelWidth(10); // 16
+        cannyEdgeDetector.setGaussianKernelWidth(5); // 16
 
         return cannyEdgeDetector;
     }
@@ -163,7 +171,7 @@ public class GaugeFactory {
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
                     if (
-                            radius > 128 &&
+//                            radius > 128 &&
                                     e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
