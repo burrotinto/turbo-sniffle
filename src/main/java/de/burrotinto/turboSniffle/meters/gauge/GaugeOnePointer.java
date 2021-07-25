@@ -171,13 +171,13 @@ public abstract class GaugeOnePointer extends Gauge {
                 Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
             } else {
                 Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_STAR);
-                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
             }
         });
 
         Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10), Helper.WHITE);
 
-        Imgproc.putText(finalDrawing, "Erkannter Wert: " + Precision.round(getValue(), 2), new Point(0, 30), Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 2), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
         return finalDrawing;
     }
 

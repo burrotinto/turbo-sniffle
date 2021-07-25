@@ -67,7 +67,7 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
         if (min.isPresent() && max.isPresent() && !labelScale.containsValue(min.get()) && labelScale.containsValue(max.get())) {
             double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
             if (maxW > 0 && maxW < 180) {
-                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW + 90, getRadius()), new Size(10, 10), 0), min.get());
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), min.get());
             } else {
                 addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), min.get());
             }
