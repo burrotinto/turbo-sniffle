@@ -3,13 +3,19 @@ package de.burrotinto.turboSniffle.meters.gauge;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearningDataset;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
+import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;
 import org.nd4j.linalg.primitives.AtomicDouble;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
@@ -18,28 +24,62 @@ import java.util.stream.Collectors;
 
 
 public abstract class GaugeOnePointer extends Gauge {
-    private final double GENAUIGKEIT = 0.5; //Genauigkeit des verwendeten Autoencoders
-    private final Size AUTOENCODER_INPUT_SIZE = new Size(128, 128); //Eingabeschicht Autoencoder
+    private final double GENAUIGKEIT = 0.2; //Genauigkeit des verwendeten Autoencoders
+    private final Size AUTOENCODER_INPUT_SIZE = Gauge.DEFAULT_SIZE; //Eingabeschicht Autoencoder
 
 
     protected final HashMap<RotatedRect, Double> labelScale = new HashMap<>();
 
     private Optional<Double> pointerAngel = Optional.empty();
     private Mat idealisierteDarstellung;
+
+    private boolean isInit = false;
+    @Getter
     private Optional<Double> skalemarkSteps, min, max;
 
+    private TrainingSet trainingSet;
 
     GaugeOnePointer(Gauge gauge) throws NotGaugeWithPointerException {
-        this(gauge, Optional.empty(), Optional.empty(), Optional.empty());
+        this(gauge, Optional.empty(), Optional.empty(), Optional.empty(), GaugeOnePointerLearningDataset.get());
     }
 
-    GaugeOnePointer(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+    GaugeOnePointer(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
         super(gauge.source, gauge.canny, gauge.otsu);
         this.skalemarkSteps = steps;
         this.min = min;
         this.max = max;
 
+        this.trainingSet = trainingSet;
+
         setIdealisierteDarstellung(otsu);
+
+    }
+
+    public void autosetMinMaxMiddle() throws NotGaugeWithPointerException {
+        if (isInit == false) {
+            //Check ob über MIN/MAX etwas ermittelt werden kann
+            if (labelScale.size() <= 1) {
+                if (getMin().isPresent() && getMax().isPresent()) {
+                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
+                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
+                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(90, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 2); //Kann SEIN Das WERT nicht EXISTIERT
+                } else {
+                    //Keine Möglichkeit etwas zu generieren
+                    throw new NotGaugeWithPointerException();
+                }
+            }
+
+            // Anhand von MAX auf MIN schließen
+            if (getMin().isPresent() && getMax().isPresent() && !labelScale.containsValue(getMin().get()) && labelScale.containsValue(getMax().get())) {
+                double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
+                if (maxW > 0 && maxW < 180) {
+                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+                } else {
+                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+                }
+            }
+        }
+        isInit = true;
     }
 
     protected void setIdealisierteDarstellung(Mat idealisierteDarstellung) {
@@ -80,21 +120,23 @@ public abstract class GaugeOnePointer extends Gauge {
     public double getPointerAngel() {
         if (pointerAngel.isEmpty()) {
 
-            //Todo Parallelisieren
-            AtomicReference<Pair<Double, Integer>> max = new AtomicReference<>(new Pair<>(0.0, 0));
 
-            Mat autoencoderInput = getIdealisierteDarstellung().clone();
+            Pair<Double, Integer> min = null;
+            Mat eingangsVektor = new Mat();
 
-            Imgproc.resize(autoencoderInput, autoencoderInput, AUTOENCODER_INPUT_SIZE);
+            Imgproc.resize(getIdealisierteDarstellung(), eingangsVektor, AUTOENCODER_INPUT_SIZE);
 
-            GaugeOnePointerLearningDataset.get().getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT).forEach((aDouble, mat) -> {
-                int p = Helper.countPixel(autoencoderInput, mat, Helper.BLACK);
-                if (max.get().p2 < p) {
-                    max.set(new Pair<>(aDouble, p));
+            List<Pair<Mat, Double>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT);
+            for (int i = 0; i < ausgangsVektoren.size(); i++) {
+                Mat konjunktion = new Mat();
+                Core.bitwise_and(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
+                int p = Core.countNonZero(konjunktion);
+                if (min == null || min.p2 > p) {
+                    min = new Pair<>(ausgangsVektoren.get(i).p2, p);
                 }
-            });
+            }
 
-            pointerAngel = Optional.ofNullable(max.get().p1);
+            pointerAngel = Optional.ofNullable(min.p1);
         }
         return pointerAngel.get();
 
@@ -106,6 +148,7 @@ public abstract class GaugeOnePointer extends Gauge {
     }
 
     public double getValue(double angle) {
+
 
         val min = labelScale.entrySet().stream().min((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
         val max = labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
@@ -124,7 +167,12 @@ public abstract class GaugeOnePointer extends Gauge {
 
     }
 
+    @SneakyThrows
     public double getValue() {
+        //Lazy Initialization
+        if (!isInit) {
+            autosetMinMaxMiddle();
+        }
 
         double pointer = getPointerAngel();
 
@@ -138,17 +186,10 @@ public abstract class GaugeOnePointer extends Gauge {
         //Sortierung nach entfernung zum Zeiger
         pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
 
-        double minW = bildkoordinatenZuPoolar(pairs.get(0).p2.getKey().center);
-        double maxW = bildkoordinatenZuPoolar(pairs.get(1).p2.getKey().center);
+        //Berechnen der Wertes pro Grad
+        double xPP = Math.abs(pairs.get(0).p2.getValue() - pairs.get(1).p2.getValue()) / (pairs.get(0).p1 + pairs.get(1).p1);
 
-
-        //Bestimmen eines Wertes pro Prozent
-        double xPP = Math.abs(pairs.get(0).p2.getValue() - pairs.get(1).p2.getValue()) / (Math.abs((minW - maxW) % 360));
-        //Delta zum Zähler
-        double deltaMin = minW - pointer;
-
-        //Min / Max respektieren
-        Double value = pairs.get(0).p2.getValue() + (deltaMin * xPP);
+        Double value = pairs.get(0).p2.getValue() + (pairs.get(0).p1 * xPP);
 
         return value;
     }
@@ -171,17 +212,18 @@ public abstract class GaugeOnePointer extends Gauge {
                 Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
             } else {
                 Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_STAR);
-                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
             }
         });
 
         Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10), Helper.WHITE);
 
-        Imgproc.putText(finalDrawing, "Erkannter Wert: " + Precision.round(getValue(), 2), new Point(0, 30), Imgproc.FONT_HERSHEY_DUPLEX, 1.0, Helper.WHITE);
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 2), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
         return finalDrawing;
     }
 
     public Mat getIdealisierteDarstellung() {
         return idealisierteDarstellung;
     }
+
 }

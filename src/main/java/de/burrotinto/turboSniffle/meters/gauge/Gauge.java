@@ -58,12 +58,6 @@ public class Gauge {
 
     }
 
-    public Mat toSize(Size size) {
-        Mat out = new Mat();
-        Imgproc.resize(source, out, size);
-        return out;
-    }
-
     public Point getCenter() {
         return new Point(source.size().width / 2, source.size().height / 2);
     }
@@ -72,29 +66,15 @@ public class Gauge {
         return source.size().width / 2;
     }
 
-
     protected double bildkoordinatenZuPoolar(Point point) {
         double w = Math.toDegrees(Math.atan2(point.y - getCenter().y, point.x - getCenter().x));
         return Math.abs(360 - w) % 360;
-//        double hypotenuse = Helper.calculateDistanceBetweenPointsWithPoint2D(point, getCenter());
-//        double ankathete = Helper.calculateDistanceBetweenPointsWithPoint2D(getCenter(), new Point(point.x, getCenter().y));
-//        double w = (180 / Math.PI) * Math.acos(ankathete / hypotenuse);
-//        if (point.x < getCenter().x && point.y < getCenter().y) {
-//            return 180 - w;
-//        } else if (point.x < getCenter().x && point.y > getCenter().y) {
-//            return 180 + w;
-//        } else if (point.x > getCenter().x && point.y > getCenter().y) {
-//            return 360 - w;
-//        } else {
-//            return w;
-//        }
     }
 
-    protected Point poolarZuBildkoordinaten(double winkel, double r) {
-        double x = r * Math.cos(Math.toRadians(winkel));
-        double y = r * Math.sin(Math.toRadians(winkel));
+    protected Point poolarZuBildkoordinaten(double angel, double r) {
+        double x = r * Math.cos(Math.toRadians(angel));
+        double y = r * Math.sin(Math.toRadians(angel));
         return new Point(x + getCenter().x, getCenter().y - y);
-
     }
 
 

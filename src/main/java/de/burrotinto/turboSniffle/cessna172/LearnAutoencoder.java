@@ -1,4 +1,4 @@
-//package de.burrotinto.turboSniffle.cessna172;
+package de.burrotinto.turboSniffle.cessna172;//package de.burrotinto.turboSniffle.cessna172;
 //
 //import de.burrotinto.turboSniffle.booleanAutoEncoder.BooleanAutoencoder;
 //import de.burrotinto.turboSniffle.booleanAutoEncoder.BooleanAutoencoder2;

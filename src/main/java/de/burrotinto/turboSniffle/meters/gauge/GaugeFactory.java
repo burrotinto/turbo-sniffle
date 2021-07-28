@@ -7,6 +7,7 @@ import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.nd4j.linalg.primitives.AtomicDouble;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -23,8 +24,8 @@ import java.util.stream.Collectors;
 
 
 public class GaugeFactory {
-    private static final int BILATERAL_D = 20;
-    private static final String FILE = "data/example/21_C.jpg";
+    private static final int BILATERAL_D = 20; //20
+    private static final String FILE = "data/example/gauge/value=38_min=0_max=100_step=20_id=0.jpg";
     //    private static final String FILE = "data/example/0_bar_I.jpg";
     private static final String NAME = FILE.split("/")[FILE.split("/").length - 1].split("\\.")[0];
 
@@ -35,28 +36,55 @@ public class GaugeFactory {
         nu.pattern.OpenCV.loadLocally();
 
 //        extract(Imgcodecs.imread("data/example/21_C.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
-        GaugeOnePointer g = getGaugeWithOnePointerAutoScale(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
+        Mat x = Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE);
+        Imgcodecs.imwrite("data/out/CLAHE_org.png", x);
 
+        Imgproc.createCLAHE().apply(x, x);
+        Imgcodecs.imwrite("data/out/CLAHE_filter.png", x);
     }
 
-
     public static Gauge getGauge(Mat src) {
-        val cannyEdgeDetector = getCanny();
-        Mat gaus = new Mat();
+        return getGauge(src, BILATERAL_D);
+    }
+
+    public static Gauge getGauge(Mat src, int bilateralD) {
+        CannyEdgeDetector cannyEdgeDetector = null;
+        Mat bilateral = new Mat();
+
 
         //Rauschen mittels einen bilateralen Filter entfernen
-        Imgproc.bilateralFilter(src, gaus, BILATERAL_D, BILATERAL_D * 2.0, BILATERAL_D * 0.5);
+        if (bilateralD > 0) {
+            Imgproc.bilateralFilter(src, bilateral, bilateralD, bilateralD * 2.0, bilateralD * 0.5);
+        } else {
+            bilateral = src.clone();
+        }
+        double i = 0;
+        RotatedRect biggestEllipse = null;
 
-        //1. Canny Edge Dedection mit auto Threashold
-        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(gaus));
-        cannyEdgeDetector.process();
+
+        //https://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html
+        Imgproc.createCLAHE(2.0, new Size(8, 8)).apply(bilateral, bilateral);
 
 
-        //2. Finden der größten Ellipse mit einem Ellipse Score über 0.8
-        val biggestEllipse = getGreatestEllipse(cannyEdgeDetector);
+        while (biggestEllipse == null && i < 100) {
+            Mat e = new Mat();
+            Core.convertScaleAbs(bilateral, e, i);
+            i += 0.5;
+            //1. Canny Edge Dedection mit auto Threashold
+            cannyEdgeDetector = getCanny();
+            cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(e));
+            cannyEdgeDetector.process();
 
+            try {
+                //2. Finden der größten Ellipse mit einem Ellipse Score über 0.8
+                biggestEllipse = getGreatestEllipse(cannyEdgeDetector);
+            } catch (Exception ex) {
+//                System.out.println(i);
+            }
+
+        }
         //3. Alles ausserhalb der Ellipse Entfernen
-        val maskiert = removeAllOutsideEllpipse(gaus, biggestEllipse);
+        val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
         val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
 
         //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
@@ -132,6 +160,10 @@ public class GaugeFactory {
         return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
+    public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
+        return new Cessna172AirspeedIndecator(getGauge(src, -1), TEXT_DEDECTION);
+    }
+
 
     public static CannyEdgeDetector getCanny() {
         CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
@@ -141,7 +173,7 @@ public class GaugeFactory {
         // 2 is default for CannyEdgeDetector but 1 is setting from Ellipse reference code
         cannyEdgeDetector.setGaussianKernelRadius(1f); // 2
         // 16 is default for Canny Edge Detector, but 5 is setting from ellipse reference code.
-        cannyEdgeDetector.setGaussianKernelWidth(10); // 16
+        cannyEdgeDetector.setGaussianKernelWidth(5); // 16
 
         return cannyEdgeDetector;
     }
@@ -163,7 +195,7 @@ public class GaugeFactory {
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
                     if (
-                            radius > 128 &&
+                            radius > 64 &&
                                     e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
@@ -176,6 +208,7 @@ public class GaugeFactory {
                 }
 
         ).sorted((o1, o2) -> (o2.ellipseScore > o1.ellipseScore) ? 1 : 0);
+
 
         return EllipseDetector.createContour(ellipsInside.findFirst().get());
     }
@@ -232,13 +265,14 @@ public class GaugeFactory {
         Mat out = Mat.zeros(input.size(), input.type());
         Imgproc.ellipse(out, ellipse, Helper.WHITE, -1);
 
-        for (int i = 0; i < input.width(); i++) {
-            for (int j = 0; j < input.height(); j++) {
-                if (out.get(j, i)[0] == 255) {
-                    out.put(j, i, input.get(j, i));
-                }
-            }
-        }
+        Core.bitwise_and(input, out, out);
+//        for (int i = 0; i < input.width(); i++) {
+//            for (int j = 0; j < input.height(); j++) {
+//                if (out.get(j, i)[0] == 255) {
+//                    out.put(j, i, input.get(j, i));
+//                }
+//            }
+//        }
         return out;
     }
 
