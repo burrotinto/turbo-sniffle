@@ -195,7 +195,7 @@ public class GaugeFactory {
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
                     if (
-                            radius > 64 &&
+                            radius > (int) Math.min(e.size.width, e.size.height) / 2 &&
                                     e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
