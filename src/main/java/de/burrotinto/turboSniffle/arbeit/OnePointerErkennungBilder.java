@@ -35,9 +35,9 @@ public class OnePointerErkennungBilder implements Arbeit {
             val exampleFile = new ExampleFile(name);
 
             val gauge = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
-            Imgcodecs.imwrite("data/out/" + name + "_1_source.png", gauge.getSource());
-            Imgcodecs.imwrite("data/out/" + name + "_2_canny.png", gauge.getCanny());
-            Imgcodecs.imwrite("data/out/" + name + "_3_otsu.png", gauge.getOtsu());
+//            Imgcodecs.imwrite("data/out/" + name + "_1_source.png", gauge.getSource());
+//            Imgcodecs.imwrite("data/out/" + name + "_2_canny.png", gauge.getCanny());
+//            Imgcodecs.imwrite("data/out/" + name + "_3_otsu.png", gauge.getOtsu());
             new Thread(() -> {
 
                 try {
@@ -48,8 +48,9 @@ public class OnePointerErkennungBilder implements Arbeit {
 //                Imgcodecs.imwrite("data/out/" + name + "_5_gedreht.png", gedreht);
 
 //                Imgcodecs.imwrite("data/out/" + name + "_8_otsu.png", gauge.getSource());
-                    Imgcodecs.imwrite("data/out/" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
-                    Imgcodecs.imwrite("data/out/" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
+
+//                    Imgcodecs.imwrite("data/out/" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
+//                    Imgcodecs.imwrite("data/out/" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
                     Imgcodecs.imwrite("data/out/" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));
                 } catch (NotGaugeWithPointerException e) {
                     e.printStackTrace();

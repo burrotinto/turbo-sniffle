@@ -83,6 +83,10 @@ public class GaugeFactory {
             }
 
         }
+//        Helper.drawRotatedRectangle(bilateral,biggestEllipse,new Scalar(125,125,125),10);
+//        Imgproc.ellipse(bilateral,biggestEllipse,Helper.WHITE,10);
+//        Imgcodecs.imwrite("data/out/ELLIPSE.png", bilateral);
+
         //3. Alles ausserhalb der Ellipse Entfernen
         val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
         val cannyMask = removeAllOutsideEllpipse(cannyEdgeDetector.getEdgeMat(), biggestEllipse);
@@ -195,7 +199,7 @@ public class GaugeFactory {
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
                     if (
-                             e.size.area() > Gauge.DEFAULT_SIZE.area()/2 &&
+                            e.size.area() > Gauge.DEFAULT_SIZE.area() / 2 &&
                                     e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
@@ -207,8 +211,8 @@ public class GaugeFactory {
                     }
                 }
 
-//        ).sorted((o1, o2) -> (o2.ellipseScore > o1.ellipseScore) ? 1 : 0);
-        ).sorted((o1, o2) -> Double.compare(EllipseDetector.createContour(o2).size.area() ,EllipseDetector.createContour(o1).size.area()));
+        ).sorted((o1, o2) -> (Double.compare(o2.ellipseScore, o1.ellipseScore)));
+//        ).sorted((o1, o2) -> Double.compare(EllipseDetector.createContour(o2).size.area() ,EllipseDetector.createContour(o1).size.area()));
 
         return EllipseDetector.createContour(ellipsInside.findFirst().get());
     }
@@ -266,13 +270,7 @@ public class GaugeFactory {
         Imgproc.ellipse(out, ellipse, Helper.WHITE, -1);
 
         Core.bitwise_and(input, out, out);
-//        for (int i = 0; i < input.width(); i++) {
-//            for (int j = 0; j < input.height(); j++) {
-//                if (out.get(j, i)[0] == 255) {
-//                    out.put(j, i, input.get(j, i));
-//                }
-//            }
-//        }
+
         return out;
     }
 

@@ -27,7 +27,7 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
     }
 
     @Override
-    public void autosetMinMaxMiddle() throws NotGaugeWithPointerException {
+    public void autosetMinMaxMiddle() {
         Mat ideal = otsu.clone();
         // Beschriftung erkennung
         try {

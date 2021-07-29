@@ -51,5 +51,7 @@ public class CLAHE implements Arbeit {
         cannyORG.setSourceImage((BufferedImage) HighGui.toBufferedImage(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE)));
         cannyORG.process();
         Imgcodecs.imwrite("data/out/CANNY_ohne_clahe.png", cannyORG.getEdgeMat());
+
+        GaugeFactory.getGauge(Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE));
     }
 }

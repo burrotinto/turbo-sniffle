@@ -1384,9 +1384,7 @@ public class EllipseDetector {
             float y = (float) (-1 * ellipse.aAxis * Math.cos(radians) * Math.sin(ellipse.rho) + ellipse.bAxis * Math.sin(radians) * Math.cos(ellipse.rho));
             x = Math.round(ellipse.center[0] + x);
             y = Math.round(ellipse.center[1] - y);
-            if (x >= 0 && y >= 0
-//                    && x < writeImage.getWidth() && y < writeImage.getHeight()
-            ) {
+            if (x >= 0 && y >= 0) {
                 points.add(new Point(x, y));
             }
         }

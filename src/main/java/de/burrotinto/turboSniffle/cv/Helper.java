@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -120,6 +121,16 @@ public class Helper {
         Imgproc.fillConvexPoly(src,
                 new MatOfPoint(points),
                 color, 4);
+    }
+
+    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect, Scalar color,int thickness) {
+        Point[] points = new Point[4];
+        rotatedRect.points(points);
+
+        List<MatOfPoint> pointsL = new ArrayList<>();
+        pointsL.add(new MatOfPoint(points));
+        Imgproc.drawContours(src,pointsL,-1,color,thickness);
+
     }
 
     public static List<Pixel> getAllPixel(Mat mat) {

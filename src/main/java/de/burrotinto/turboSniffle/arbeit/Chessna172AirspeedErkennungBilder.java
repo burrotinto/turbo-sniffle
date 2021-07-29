@@ -23,8 +23,8 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
     @SneakyThrows
     @Override
     public void machDeinDing() {
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
-//                .stream().filter(path -> path.toString().contains("cessna172_00451")).collect(Collectors.toList());
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"))
+                .stream().filter(path -> path.toString().contains("cessna172_017")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();

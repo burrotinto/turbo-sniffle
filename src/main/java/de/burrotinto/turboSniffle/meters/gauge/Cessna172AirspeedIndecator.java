@@ -1,24 +1,43 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
+import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaSpeedTraingSet;
+import lombok.val;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
+    // Value / Winkeldelta zu 200er
+    private Map<Double, Double> idealScaleMarks = new HashMap<>();
+
     Cessna172AirspeedIndecator(Gauge gauge, TextDedection textDedection) throws NotGaugeWithPointerException {
         super(gauge, textDedection, Optional.ofNullable(20.0), Optional.ofNullable(40.0), Optional.ofNullable(200.0), CessnaSpeedTraingSet.get());
+
+        //Annäherungswerte an Perfekte Skalenscheibe
+        idealScaleMarks.put(40.0, -70.0);
+        idealScaleMarks.put(60.0, -118.0);
+        idealScaleMarks.put(80.0, 205.0);
+        idealScaleMarks.put(100.0, 160.0);
+        idealScaleMarks.put(120.0, 120.0);
+        idealScaleMarks.put(140.0, 85.0);
+        idealScaleMarks.put(160.0, 50.0);
+        idealScaleMarks.put(180.0, 25.0);
+        idealScaleMarks.put(200.0, 0.0);
     }
 
     @Override
     public boolean addToScaleMark(RotatedRect rect, Double scale) {
-        super.addToScaleMark(rect,scale);
+        super.addToScaleMark(rect, scale);
         //Check ob im bereich des TAS
         Double durchschnitt = Helper.durchschnittsDistanz(labelScale.keySet().stream().map(rotatedRect -> rotatedRect.center).collect(Collectors.toList()), getCenter());
         List<Map.Entry<RotatedRect, Double>> prop = new ArrayList<>(labelScale.entrySet());
@@ -31,8 +50,19 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
     }
 
     @Override
-    public void autosetMinMaxMiddle() throws NotGaugeWithPointerException {
+    public void autosetMinMaxMiddle() {
         super.autosetMinMaxMiddle();
+
+        if (!labelScale.isEmpty()) {
+            val value = labelScale.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getValue)).findFirst().get();
+            Double winkel = bildkoordinatenZuPoolar(value.getKey().center);
+            super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(winkel - idealScaleMarks.get(value.getValue()), getRadius()), new Size(10, 10), 0), 200.0);
+
+            val zeihundert = bildkoordinatenZuPoolar(labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(200.0)).findFirst().get().getKey().center);
+
+            idealScaleMarks.forEach((v, w) -> super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(zeihundert + w, getRadius()), new Size(10, 10), 0), v));
+
+        }
 
 
 //        if (!labelScale.values().contains(200.0)) {

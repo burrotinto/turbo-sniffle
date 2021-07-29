@@ -33,7 +33,7 @@ public abstract class GaugeOnePointer extends Gauge {
     private Optional<Double> pointerAngel = Optional.empty();
     private Mat idealisierteDarstellung;
 
-    private boolean isInit = false;
+    protected boolean isInit = false;
     @Getter
     private Optional<Double> skalemarkSteps, min, max;
 
@@ -55,17 +55,17 @@ public abstract class GaugeOnePointer extends Gauge {
 
     }
 
-    public void autosetMinMaxMiddle() throws NotGaugeWithPointerException {
+    public void autosetMinMaxMiddle(){
         if (isInit == false) {
             //Check ob über MIN/MAX etwas ermittelt werden kann
             if (labelScale.size() <= 1) {
                 if (getMin().isPresent() && getMax().isPresent()) {
                     addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
                     addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
-                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(90, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 2); //Kann SEIN Das WERT nicht EXISTIERT
+                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(135, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 3); //Kann SEIN Das WERT nicht EXISTIERT
+                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(45, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get())*2 / 3); //Kann SEIN Das WERT nicht EXISTIERT
                 } else {
                     //Keine Möglichkeit etwas zu generieren
-                    throw new NotGaugeWithPointerException();
                 }
             }
 
@@ -119,8 +119,6 @@ public abstract class GaugeOnePointer extends Gauge {
      */
     public double getPointerAngel() {
         if (pointerAngel.isEmpty()) {
-
-
             Pair<Double, Integer> min = null;
             Mat eingangsVektor = new Mat();
 
@@ -147,38 +145,18 @@ public abstract class GaugeOnePointer extends Gauge {
         return pixels.stream().filter(pixel -> Math.abs(Precision.round(bildkoordinatenZuPoolar(pixel.point), nk) % 360 - Precision.round(angle, nk) % 360) < Math.pow(10, -nk)).collect(Collectors.toList());
     }
 
-    public double getValue(double angle) {
 
-
-        val min = labelScale.entrySet().stream().min((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
-        val max = labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get();
-
-        double minW = bildkoordinatenZuPoolar(min.getKey().center);
-        double maxW = bildkoordinatenZuPoolar(max.getKey().center);
-
-        double xPP = (max.getValue() - min.getValue()) / (Math.abs((minW - maxW) % 360));
-
-        double delta = minW - angle;
-
-        AtomicDouble value = new AtomicDouble(delta * xPP + min.getValue());
-        this.min.ifPresent(aDouble -> value.set(Math.max(aDouble, value.get())));
-        this.max.ifPresent(aDouble -> value.set(Math.min(aDouble, value.get())));
-        return value.get();
-
-    }
-
-    @SneakyThrows
-    public double getValue() {
-        //Lazy Initialization
+    public double getValue(double angle){
         if (!isInit) {
             autosetMinMaxMiddle();
         }
-
-        double pointer = getPointerAngel();
+        if(labelScale.size() < 2){
+            return Double.NaN;
+        }
 
         LinkedList<Pair<Double, Map.Entry<RotatedRect, Double>>> pairs = new LinkedList<>();
         labelScale.entrySet().stream().forEach(e -> {
-            Double x = Math.abs(bildkoordinatenZuPoolar(e.getKey().center) - pointer);
+            Double x = Math.abs(bildkoordinatenZuPoolar(e.getKey().center) - angle);
             pairs.add(new Pair<>(x, e));
             pairs.add(new Pair<>(360 - x, e));
         });
@@ -186,12 +164,47 @@ public abstract class GaugeOnePointer extends Gauge {
         //Sortierung nach entfernung zum Zeiger
         pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
 
-        //Berechnen der Wertes pro Grad
-        double xPP = Math.abs(pairs.get(0).p2.getValue() - pairs.get(1).p2.getValue()) / (pairs.get(0).p1 + pairs.get(1).p1);
 
-        Double value = pairs.get(0).p2.getValue() + (pairs.get(0).p1 * xPP);
+        Map.Entry<RotatedRect, Double> mark1 = pairs.get(0).p2;
+        Map.Entry<RotatedRect, Double> mark2 = pairs.get(1).p2;
+
+        double delta = Math.abs(bildkoordinatenZuPoolar(mark1.getKey().center) - bildkoordinatenZuPoolar(mark2.getKey().center));
+        double deltaMax = Math.max(360 - delta, delta);
+        double deltaMin = 360 - deltaMax;
+
+        //Berechnen der Wertes pro Grad
+        double xPPDeltaMax = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMax;
+        double xPPDeltaMin = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMin;
+
+        //Bestimmen ob der Zeiger innerhalb oder ausserhalb des BEreiches ist
+        double summeDerAbstaende = pairs.get(0).p1 + pairs.get(1).p1;
+        double value = 0;
+        if (Math.abs(summeDerAbstaende - deltaMin) <= 0.1) {
+            //Fall 1 Zeiger Innerhalb des Bereiches
+
+            //Interpolation je nachdem ob auf oder absteigend
+            if(mark1.getValue() > mark2.getValue()){
+                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+            } else {
+                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+            }
+
+        } else {
+            // Fall 2 Zeiger außerhalb des Bereiches
+            if(mark1.getValue() > mark2.getValue()){
+                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+            } else {
+                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+            }
+        }
 
         return value;
+
+    }
+
+
+    public double getValue() {
+        return getValue(getPointerAngel());
     }
 
     /**
