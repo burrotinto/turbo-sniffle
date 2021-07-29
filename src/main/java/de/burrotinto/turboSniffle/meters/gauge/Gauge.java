@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class Gauge {
     public final static int TYPE = CvType.CV_8U;
-    public final static Size DEFAULT_SIZE = new Size(512, 512);
+    public final static Size DEFAULT_SIZE = new Size(256, 256);
     public final static int AUFROLL_STEPS = 720;
 
     @Getter
