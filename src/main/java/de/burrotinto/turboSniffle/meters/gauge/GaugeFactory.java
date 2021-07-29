@@ -195,7 +195,7 @@ public class GaugeFactory {
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
                     if (
-                            radius > (int) Math.min(e.size.width, e.size.height) / 2 &&
+                             e.size.area() > Gauge.DEFAULT_SIZE.area()/2 &&
                                     e.center.x - radius >= 0
                                     && e.center.y - radius >= 0
                                     && e.center.x + radius < mat.width()
@@ -207,8 +207,8 @@ public class GaugeFactory {
                     }
                 }
 
-        ).sorted((o1, o2) -> (o2.ellipseScore > o1.ellipseScore) ? 1 : 0);
-
+//        ).sorted((o1, o2) -> (o2.ellipseScore > o1.ellipseScore) ? 1 : 0);
+        ).sorted((o1, o2) -> Double.compare(EllipseDetector.createContour(o2).size.area() ,EllipseDetector.createContour(o1).size.area()));
 
         return EllipseDetector.createContour(ellipsInside.findFirst().get());
     }
