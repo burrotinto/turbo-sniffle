@@ -53,16 +53,19 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
     public void autosetMinMaxMiddle() {
         super.autosetMinMaxMiddle();
 
-        if (!labelScale.isEmpty()) {
-            val value = labelScale.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getValue)).findFirst().get();
-            Double winkel = bildkoordinatenZuPoolar(value.getKey().center);
-            super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(winkel - idealScaleMarks.get(value.getValue()), getRadius()), new Size(10, 10), 0), 200.0);
-
-            val zeihundert = bildkoordinatenZuPoolar(labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(200.0)).findFirst().get().getKey().center);
-
-            idealScaleMarks.forEach((v, w) -> super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(zeihundert + w, getRadius()), new Size(10, 10), 0), v));
-
-        }
+//        if (!labelScale.isEmpty()) {
+//            val value = labelScale.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getValue)).findFirst().get();
+//            Double winkel = bildkoordinatenZuPoolar(value.getKey().center);
+//            super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(winkel - idealScaleMarks.get(value.getValue()), getRadius()), new Size(10, 10), 0), 200.0);
+//
+//            labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(200.0)).findFirst().ifPresent(rotatedRectDoubleEntry -> {
+//                val zweihundert = bildkoordinatenZuPoolar(value.getKey().center);
+//                idealScaleMarks.forEach((v, w) -> super.addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(zweihundert + w, getRadius()), new Size(10, 10), 0), v));
+//            });
+//
+//
+//
+//        }
 
 
 //        if (!labelScale.values().contains(200.0)) {

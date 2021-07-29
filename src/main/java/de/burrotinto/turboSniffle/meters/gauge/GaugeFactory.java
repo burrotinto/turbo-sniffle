@@ -7,7 +7,6 @@ import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.nd4j.linalg.primitives.AtomicDouble;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -109,9 +108,7 @@ public class GaugeFactory {
         return gauge;
     }
 
-
-    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
-        Mat drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
+    public static Gauge getGaugeScaleFocused(Gauge gauge) {
 
         //1. Erkennung der Skala
         try {
@@ -132,7 +129,53 @@ public class GaugeFactory {
             Mat sr = gauge.getSource().clone();
             val e = Imgproc.fitEllipse(m);
 
-//        x.forEach(rotatedRect -> Helper.drawRotatedRectangle(sr,rotatedRect,Helper.BLACK));
+
+            val maskiertSkala = removeAllOutsideEllpipse(sr, e);
+            val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
+
+            //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
+            val transponiertSkala = transformieren(maskiertSkala, e);
+            val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
+
+            //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
+            val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
+
+            val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
+            Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
+            val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
+            Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
+
+
+
+            Gauge g = new Gauge(gedrehtSkala, cannyGedrehtSkala, null);
+
+            return g;
+        } catch (Exception e) {
+            return gauge;
+        }
+    }
+
+    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+
+        //1. Erkennung der Skala
+        try {
+            val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
+
+            ArrayList<Point> points = new ArrayList<>();
+            x.stream().forEach(rechteckCluster -> {
+                Point[] p = new Point[4];
+                rechteckCluster.points(p);
+                points.addAll(Arrays.asList(rechteckCluster.center));
+            });
+
+            val m = new MatOfPoint2f();
+            m.fromList(points);
+
+
+            //2. Alles ausserhalb der Ellipse Entfernen
+            Mat sr = gauge.getSource().clone();
+            val e = Imgproc.fitEllipse(m);
+
 
             val maskiertSkala = removeAllOutsideEllpipse(sr, e);
             val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
@@ -165,9 +208,13 @@ public class GaugeFactory {
     }
 
     public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172AirspeedIndecator(getGauge(src, -1), TEXT_DEDECTION);
+        return new Cessna172AirspeedIndecator(getGauge(src,-1),TEXT_DEDECTION);
+//        return new Cessna172AirspeedIndecator(getGauge(src, 2), TEXT_DEDECTION);
     }
 
+    public static Cessna172VerticalSpeedIndicator getCessna172VerticalSpeedIndicator(Mat src) throws NotGaugeWithPointerException {
+        return new Cessna172VerticalSpeedIndicator(getGauge(src,-1),TEXT_DEDECTION);
+    }
 
     public static CannyEdgeDetector getCanny() {
         CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();

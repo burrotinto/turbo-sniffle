@@ -1,25 +1,19 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
-import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.Helper;
+import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearningDataset;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.val;
 import org.apache.commons.math3.util.Precision;
-import org.nd4j.linalg.primitives.AtomicDouble;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 
@@ -55,32 +49,30 @@ public abstract class GaugeOnePointer extends Gauge {
 
     }
 
-    public void autosetMinMaxMiddle(){
-        if (isInit == false) {
-            //Check ob über MIN/MAX etwas ermittelt werden kann
-            if (labelScale.size() <= 1) {
-                if (getMin().isPresent() && getMax().isPresent()) {
-                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
-                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
-                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(135, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 3); //Kann SEIN Das WERT nicht EXISTIERT
-                    addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(45, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get())*2 / 3); //Kann SEIN Das WERT nicht EXISTIERT
-                } else {
-                    //Keine Möglichkeit etwas zu generieren
-                }
-            }
-
-            // Anhand von MAX auf MIN schließen
-            if (getMin().isPresent() && getMax().isPresent() && !labelScale.containsValue(getMin().get()) && labelScale.containsValue(getMax().get())) {
-                double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
-                if (maxW > 0 && maxW < 180) {
-                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
-                } else {
-                    addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
-                }
-            }
-        }
-        isInit = true;
+    public void autosetMinMaxMiddle() {
+//        //Check ob über MIN/MAX etwas ermittelt werden kann
+//        if (labelScale.size() <= 1) {
+//            if (getMin().isPresent() && getMax().isPresent()) {
+//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
+//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
+//                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(135, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 3); //Kann SEIN Das WERT nicht EXISTIERT
+//                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(45, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) * 2 / 3); //Kann SEIN Das WERT nicht EXISTIERT
+//            } else {
+//                //Keine Möglichkeit etwas zu generieren
+//            }
+//        }
+//
+//        // Anhand von MAX auf MIN schließen
+//        if (getMin().isPresent() && getMax().isPresent() && !labelScale.containsValue(getMin().get()) && labelScale.containsValue(getMax().get())) {
+//            double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
+//            if (maxW > 0 && maxW < 180) {
+//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+//            } else {
+//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+//            }
+//        }
     }
+
 
     protected void setIdealisierteDarstellung(Mat idealisierteDarstellung) {
         this.idealisierteDarstellung = idealisierteDarstellung;
@@ -99,6 +91,7 @@ public abstract class GaugeOnePointer extends Gauge {
                 && (min.isEmpty() || min.get() <= scale) //Darf Min nicht unterschreiten
                 && (max.isEmpty() || max.get() >= scale) //Darf Max nicht überschreiten
                 && (labelScale.isEmpty() || Helper.minDistance(labelScale.keySet().stream().map(rotatedRect -> rotatedRect.center).collect(Collectors.toList()), rect.center) > Math.max(rect.size.width, rect.size.height)) //Abstand zur nächsten Zahl
+                && !labelScale.values().contains(scale)
         ) {
             labelScale.put(rect, scale);
             return true;
@@ -106,11 +99,18 @@ public abstract class GaugeOnePointer extends Gauge {
         return false;
     }
 
+    public void addDummyToScaleMark(double angle, double scale) {
+        addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(angle, getRadius()), new Size(1, 1), 0), scale);
+    }
+
     public boolean addToScaleMarkFORCE(RotatedRect rect, Double scale) {
         labelScale.put(rect, scale);
         return true;
     }
 
+    public Optional<Double> getAngelOfScaleMarkValue(Double scale){
+       return labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(scale)).map(rotatedRectDoubleEntry -> bildkoordinatenZuPoolar(rotatedRectDoubleEntry.getKey().center)).findFirst();
+    }
 
     /**
      * Unsupervised learning mit Boolean Autoencoder
@@ -146,11 +146,11 @@ public abstract class GaugeOnePointer extends Gauge {
     }
 
 
-    public double getValue(double angle){
-        if (!isInit) {
-            autosetMinMaxMiddle();
-        }
-        if(labelScale.size() < 2){
+    public double getValue(double angle) {
+
+        autosetMinMaxMiddle();
+
+        if (labelScale.size() < 2) {
             return Double.NaN;
         }
 
@@ -183,7 +183,7 @@ public abstract class GaugeOnePointer extends Gauge {
             //Fall 1 Zeiger Innerhalb des Bereiches
 
             //Interpolation je nachdem ob auf oder absteigend
-            if(mark1.getValue() > mark2.getValue()){
+            if (mark1.getValue() > mark2.getValue()) {
                 value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
             } else {
                 value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
@@ -191,7 +191,7 @@ public abstract class GaugeOnePointer extends Gauge {
 
         } else {
             // Fall 2 Zeiger außerhalb des Bereiches
-            if(mark1.getValue() > mark2.getValue()){
+            if (mark1.getValue() > mark2.getValue()) {
                 value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
             } else {
                 value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
@@ -218,6 +218,9 @@ public abstract class GaugeOnePointer extends Gauge {
             drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
         }
         Mat finalDrawing = drawing;
+
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 0), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden
             if (Math.abs(Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) - getRadius()) <= Gauge.DEFAULT_SIZE.width / 10) {
@@ -231,7 +234,6 @@ public abstract class GaugeOnePointer extends Gauge {
 
         Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10), Helper.WHITE);
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 2), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
         return finalDrawing;
     }
 

@@ -52,7 +52,7 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
                         String str2 = textDedection.doOCRNumbers(sub2).replaceAll("[\\D.]", "");
                         Double i2 = Double.parseDouble(str2);
                         if (addToScaleMark(r, i2)) {
-                            System.out.println("GREYSCAKLE_OCR=" + i2+ "; Winkel=" + bildkoordinatenZuPoolar(r.center));
+                            System.out.println("GREYSCAKLE_OCR=" + i2 + "; Winkel=" + bildkoordinatenZuPoolar(r.center));
                             Helper.drawRotatedRectangle(ideal, r, Helper.WHITE);
                         }
                     } catch (Exception e2) {
@@ -67,6 +67,8 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
 
         setIdealisierteDarstellung(ideal);
 
-        super.autosetMinMaxMiddle();
+//        if (labelScale.size() < 2) {
+//            super.autosetMinMaxMiddle();
+//        }
     }
 }
