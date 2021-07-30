@@ -50,27 +50,27 @@ public abstract class GaugeOnePointer extends Gauge {
     }
 
     public void autosetMinMaxMiddle() {
-//        //Check ob über MIN/MAX etwas ermittelt werden kann
-//        if (labelScale.size() <= 1) {
-//            if (getMin().isPresent() && getMax().isPresent()) {
-//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
-//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
-//                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(135, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 3); //Kann SEIN Das WERT nicht EXISTIERT
-//                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(45, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) * 2 / 3); //Kann SEIN Das WERT nicht EXISTIERT
-//            } else {
-//                //Keine Möglichkeit etwas zu generieren
-//            }
-//        }
-//
-//        // Anhand von MAX auf MIN schließen
-//        if (getMin().isPresent() && getMax().isPresent() && !labelScale.containsValue(getMin().get()) && labelScale.containsValue(getMax().get())) {
-//            double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
-//            if (maxW > 0 && maxW < 180) {
-//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
-//            } else {
-//                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
-//            }
-//        }
+        //Check ob über MIN/MAX etwas ermittelt werden kann
+        if (labelScale.size() <= 1) {
+            if (getMin().isPresent() && getMax().isPresent()) {
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(225, getRadius()), new Size(10, 10), 0), getMin().get());
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(315, getRadius()), new Size(10, 10), 0), getMax().get());
+                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(135, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) / 3); //Kann SEIN Das WERT nicht EXISTIERT
+                addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(45, getRadius()), new Size(10, 10), 0), (getMax().get() + getMin().get()) * 2 / 3); //Kann SEIN Das WERT nicht EXISTIERT
+            } else {
+                //Keine Möglichkeit etwas zu generieren
+            }
+        }
+
+        // Anhand von MAX auf MIN schließen
+        if (getMin().isPresent() && getMax().isPresent() && !labelScale.containsValue(getMin().get()) && labelScale.containsValue(getMax().get())) {
+            double maxW = bildkoordinatenZuPoolar(labelScale.entrySet().stream().max((o1, o2) -> o1.getValue().compareTo(o2.getValue())).get().getKey().center);
+            if (maxW > 0 && maxW < 180) {
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+            } else {
+                addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW - 90, getRadius()), new Size(10, 10), 0), getMin().get());
+            }
+        }
     }
 
 

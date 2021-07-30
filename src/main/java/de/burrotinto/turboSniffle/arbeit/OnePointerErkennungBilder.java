@@ -34,7 +34,7 @@ public class OnePointerErkennungBilder implements Arbeit {
 
             val exampleFile = new ExampleFile(name);
 
-            val gauge = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
+            val gauge = GaugeFactory.getGaugeWithHeatMap(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),20);
 //            Imgcodecs.imwrite("data/out/" + name + "_1_source.png", gauge.getSource());
 //            Imgcodecs.imwrite("data/out/" + name + "_2_canny.png", gauge.getCanny());
 //            Imgcodecs.imwrite("data/out/" + name + "_3_otsu.png", gauge.getOtsu());

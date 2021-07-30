@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class HeatMap {
+private static final Scalar scalar = new Scalar(1,1,1);
 
     @Getter
     private Mat canny;
@@ -47,11 +48,11 @@ public class HeatMap {
             val rect = Imgproc.minAreaRect(
                     new MatOfPoint2f(contours.get(i).toArray()));
             if (rect.size.area() > 50) {
-                Mat xxx = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
-                Helper.drawLineInMat(xxx, rect.center, Gauge.DEFAULT_SIZE.height, rect.angle, new Scalar(1, 1, 1), (int) rect.size.width);
-                Helper.drawLineInMat(xxx, rect.center, Gauge.DEFAULT_SIZE.height, (rect.angle + 90) % 360, new Scalar(1, 1, 1), (int) rect.size.height);
-                Helper.drawLineInMat(xxx, rect.center, Gauge.DEFAULT_SIZE.height, (rect.angle + 180) % 360, new Scalar(1, 1, 1), (int) rect.size.width);
-                Helper.drawLineInMat(xxx, rect.center, Gauge.DEFAULT_SIZE.height, (rect.angle + 270) % 360, new Scalar(1, 1, 1), (int) rect.size.height);
+                Mat xxx = Mat.zeros(canny.size(), Gauge.TYPE);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar, (int)10);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar, (int) 10);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar, (int) 10);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar, (int)10);
                 map.put(rect, xxx);
             }
         }

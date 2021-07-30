@@ -4,7 +4,9 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
+import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
+import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -146,7 +148,6 @@ public class GaugeFactory {
             Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
 
 
-
             Gauge g = new Gauge(gedrehtSkala, cannyGedrehtSkala, null);
 
             return g;
@@ -156,51 +157,7 @@ public class GaugeFactory {
     }
 
     public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
-
-        //1. Erkennung der Skala
-        try {
-            val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
-
-            ArrayList<Point> points = new ArrayList<>();
-            x.stream().forEach(rechteckCluster -> {
-                Point[] p = new Point[4];
-                rechteckCluster.points(p);
-                points.addAll(Arrays.asList(rechteckCluster.center));
-            });
-
-            val m = new MatOfPoint2f();
-            m.fromList(points);
-
-
-            //2. Alles ausserhalb der Ellipse Entfernen
-            Mat sr = gauge.getSource().clone();
-            val e = Imgproc.fitEllipse(m);
-
-
-            val maskiertSkala = removeAllOutsideEllpipse(sr, e);
-            val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
-
-            //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-            val transponiertSkala = transformieren(maskiertSkala, e);
-            val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
-
-            //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
-            val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
-//        val rotateSkala = Imgproc.getRotationMatrix2D(pixels.get().point, 90 - e.angle, 1.0);
-            val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
-            Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
-            val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
-            Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
-
-//        Imgcodecs.imwrite("data/out/" + NAME + "_6_skala.png", maskiertSkala);
-//        Imgcodecs.imwrite("data/out/" + NAME + "_7_skalaRotiert.png", gedrehtSkala);
-
-            GaugeOnePointer g = new GaugeOnePointerAutoScale(new Gauge(gedrehtSkala, cannyGedrehtSkala, null), TEXT_DEDECTION, steps, min, max);
-
-            return g;
-        } catch (Exception e) {
-            return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
-        }
+        return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
     }
 
     public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
@@ -208,12 +165,13 @@ public class GaugeFactory {
     }
 
     public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172AirspeedIndecator(getGauge(src,-1),TEXT_DEDECTION);
+
+        return new Cessna172AirspeedIndecator(getGaugeWithHeatMap(src, 10), TEXT_DEDECTION);
 //        return new Cessna172AirspeedIndecator(getGauge(src, 2), TEXT_DEDECTION);
     }
 
     public static Cessna172VerticalSpeedIndicator getCessna172VerticalSpeedIndicator(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172VerticalSpeedIndicator(getGauge(src,-1),TEXT_DEDECTION);
+        return new Cessna172VerticalSpeedIndicator(getGaugeWithHeatMap(src, 10), TEXT_DEDECTION);
     }
 
     public static CannyEdgeDetector getCanny() {
@@ -321,5 +279,57 @@ public class GaugeFactory {
         return out;
     }
 
+
+    public static Gauge getGaugeWithHeatMap(Mat src, int bilateralD) {
+
+        Mat bilateral = new Mat();
+        //Rauschen mittels einen bilateralen Filter entfernen
+        if (bilateralD > 0) {
+            Imgproc.bilateralFilter(src, bilateral, bilateralD, bilateralD * 2.0, bilateralD * 0.5);
+        } else {
+            bilateral = src.clone();
+        }
+        double i = 0;
+
+        Mat canny = new Mat(src.size(), Gauge.TYPE);
+        Imgproc.Canny(bilateral, canny, 85, 120);
+        HeatMap heatMap = new HeatMap(canny);
+        val points = new ArrayList<Point>();
+
+
+        double dist = 0;
+        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 10, 5);
+        for (int j = 0; j < cluster.size(); j++) {
+            points.add(cluster.get(j).center);
+            dist += Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter()) * (1.0 / cluster.size());
+        }
+
+
+        val m = new MatOfPoint2f();
+        m.fromList(points);
+
+        RotatedRect biggestEllipse = new RotatedRect(heatMap.getCenter(), new Size((int) dist * 2, (int) dist * 2), 0);
+
+        //3. Alles ausserhalb der Ellipse Entfernen
+        val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
+        val cannyMask = removeAllOutsideEllpipse(canny, biggestEllipse);
+
+        //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
+        val transponiert = transformieren(maskiert, biggestEllipse);
+        val cannyTransponiert = transformieren(cannyMask, biggestEllipse);
+
+        //5. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
+        val rotate = Imgproc.getRotationMatrix2D(new Point(transponiert.width() / 2.0, transponiert.height() / 2.0), 90 - biggestEllipse.angle, 1.0);
+        val gedreht = Mat.zeros(transponiert.size(), transponiert.type());
+        Imgproc.warpAffine(transponiert, gedreht, rotate, transponiert.size());
+        //5.1
+        val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
+        Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
+
+        Gauge gauge = new Gauge(
+                gedreht, cannyGedreht, null);
+
+        return gauge;
+    }
 
 }
