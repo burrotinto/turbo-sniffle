@@ -294,7 +294,15 @@ public class GaugeFactory {
 
         Mat canny = new Mat(src.size(), Gauge.TYPE);
         Imgproc.Canny(bilateral, canny, 85, 120);
+
         HeatMap heatMap = new HeatMap(canny);
+
+//        HighGui.imshow("Bi",canny);
+//        Mat x = new Mat();
+//        Core.add(bilateral,heatMap.getHeadMatSkaliert(),x);
+//        Imgproc.drawMarker(x,heatMap.getCenter(),Helper.GREY);
+//        HighGui.imshow("HEATMAP",x);
+//        HighGui.waitKey();
         val points = new ArrayList<Point>();
 
 

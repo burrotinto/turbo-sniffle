@@ -103,6 +103,9 @@ public abstract class GaugeOnePointer extends Gauge {
         addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(angle, getRadius()), new Size(1, 1), 0), scale);
     }
 
+    public void addDummyToScaleMarkFORCE(double angle, double scale) {
+        addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(angle, getRadius()), new Size(1, 1), 0), scale);
+    }
     public boolean addToScaleMarkFORCE(RotatedRect rect, Double scale) {
         labelScale.put(rect, scale);
         return true;
@@ -219,7 +222,7 @@ public abstract class GaugeOnePointer extends Gauge {
         }
         Mat finalDrawing = drawing;
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 0), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
 
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden

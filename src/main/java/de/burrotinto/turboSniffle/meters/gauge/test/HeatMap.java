@@ -4,23 +4,15 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.val;
 import org.nd4j.linalg.primitives.AtomicDouble;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class HeatMap {
@@ -34,6 +26,8 @@ public class HeatMap {
 
     @Getter
     private Point center;
+
+    private Mat heatmap;
 
     /**
      * Zeichnet ein Kreuz in jede gefundene Contour
@@ -65,12 +59,21 @@ public class HeatMap {
     }
 
     public Mat getHeadMat() {
-        Mat draw = Mat.zeros(canny.size(), canny.type());
-        getSingleHeads().forEach((rotatedRect, mat) -> Core.add(draw, mat, draw));
+        if (heatmap == null) {
+            Mat draw = Mat.zeros(canny.size(), canny.type());
+            getSingleHeads().forEach((rotatedRect, mat) -> Core.add(draw, mat, draw));
+            heatmap = draw;
+        }
+        return heatmap;
+    }
+
+    public Mat getHeadMatSkaliert() {
+        Mat draw = heatmap;
 
         double max = draw.get((int) center.y, (int) center.x)[0];
-        double scale = 255/max;
+        double scale = 255 / max;
 
+        Core.multiply(draw, new Scalar(scale), draw);
 
 
         return draw;
