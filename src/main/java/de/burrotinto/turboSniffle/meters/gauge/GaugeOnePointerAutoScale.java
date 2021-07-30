@@ -24,10 +24,10 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
     GaugeOnePointerAutoScale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
         super(gauge, steps, min, max, trainingSet);
         this.textDedection = textDedection;
+        doOCR();
     }
 
-    @Override
-    public void autosetMinMaxMiddle() {
+    protected void doOCR(){
         Mat ideal = otsu.clone();
         // Beschriftung erkennung
         try {
@@ -64,11 +64,11 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
             e.printStackTrace();
         }
 
-
         setIdealisierteDarstellung(ideal);
+    }
 
-//        if (labelScale.size() < 2) {
-//            super.autosetMinMaxMiddle();
-//        }
+    @Override
+    public void autosetMinMaxMiddle() {
+
     }
 }

@@ -24,13 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class HeatMap {
-private static final Scalar scalar = new Scalar(1,1,1);
+    private static final Scalar scalar = new Scalar(1, 1, 1);
 
     @Getter
     private Mat canny;
 
     @Getter
     private Map<RotatedRect, Mat> singleHeads;
+
+    @Getter
+    private Point center;
 
     /**
      * Zeichnet ein Kreuz in jede gefundene Contour
@@ -49,23 +52,31 @@ private static final Scalar scalar = new Scalar(1,1,1);
                     new MatOfPoint2f(contours.get(i).toArray()));
             if (rect.size.area() > 50) {
                 Mat xxx = Mat.zeros(canny.size(), Gauge.TYPE);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar, (int)10);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar, (int) 10);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar, (int) 10);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar, (int)10);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar, (int) 5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar, (int) 5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar, (int) 5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar, (int) 5);
                 map.put(rect, xxx);
             }
         }
         singleHeads = map;
+
+        calcCenter();
     }
 
     public Mat getHeadMat() {
         Mat draw = Mat.zeros(canny.size(), canny.type());
         getSingleHeads().forEach((rotatedRect, mat) -> Core.add(draw, mat, draw));
+
+        double max = draw.get((int) center.y, (int) center.x)[0];
+        double scale = 255/max;
+
+
+
         return draw;
     }
 
-    public Point getCenter() {
+    private void calcCenter() {
         List<Pixel> maxPixels = new ArrayList<>();
         List<Pixel> allPixels = Helper.getAllPixel(getHeadMat()).stream().filter(pixel -> pixel.color > 0).collect(Collectors.toList());
         for (int i = 0; i < allPixels.size(); i++) {
@@ -87,11 +98,13 @@ private static final Scalar scalar = new Scalar(1,1,1);
             y.addAndGet(pixel.point.y);
         });
 
-        return new Point(x.get() / maxPixels.size(), y.get() / maxPixels.size());
+        center = new Point(x.get() / maxPixels.size(), y.get() / maxPixels.size());
     }
+
 
     public List<RotatedRect> getAllConnectedWithCenter() {
         Point center = getCenter();
         return getSingleHeads().entrySet().stream().filter(rotatedRectMatEntry -> rotatedRectMatEntry.getValue().get((int) center.y, (int) center.x)[0] > 0).map(rotatedRectMatEntry -> rotatedRectMatEntry.getKey()).collect(Collectors.toList());
     }
+
 }

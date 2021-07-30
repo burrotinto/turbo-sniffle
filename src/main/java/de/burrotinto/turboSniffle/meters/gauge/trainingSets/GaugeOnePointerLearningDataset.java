@@ -33,7 +33,7 @@ public class GaugeOnePointerLearningDataset extends TrainingSet {
             white.setTo(Helper.BLACK);
             Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, BLACK, -1);
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width * 0.9, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 3))), 2));
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width * 0.9, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 2))), 2));
             //Gegengewicht
             Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) - (size.width / 6), size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 3))), 2) * 4);
 

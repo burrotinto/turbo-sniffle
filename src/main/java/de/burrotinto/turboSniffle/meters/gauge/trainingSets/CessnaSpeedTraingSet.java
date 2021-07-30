@@ -36,7 +36,7 @@ public class CessnaSpeedTraingSet extends TrainingSet {
             Mat white = Mat.zeros(size, Gauge.TYPE);
             white.setTo(Helper.BLACK);
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps * 2))), 2));
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps*2 ))), 2));
 
 
             List<Pair<Mat, Double>> pairs = new ArrayList<>();
