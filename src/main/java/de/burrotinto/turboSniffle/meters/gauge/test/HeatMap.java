@@ -75,11 +75,12 @@ public class HeatMap {
 
         Core.multiply(draw, new Scalar(scale), draw);
 
-
         return draw;
     }
 
     private void calcCenter() {
+
+        //Die Hellsten Pixel Finden
         List<Pixel> maxPixels = new ArrayList<>();
         List<Pixel> allPixels = Helper.getAllPixel(getHeadMat()).stream().filter(pixel -> pixel.color > 0).collect(Collectors.toList());
         for (int i = 0; i < allPixels.size(); i++) {
@@ -94,8 +95,11 @@ public class HeatMap {
             }
 
         }
+
+        //Durchschnitt der Hellsten Pixel
         AtomicDouble x = new AtomicDouble(0);
         AtomicDouble y = new AtomicDouble(0);
+
         maxPixels.forEach(pixel -> {
             x.addAndGet(pixel.point.x);
             y.addAndGet(pixel.point.y);

@@ -2,14 +2,13 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
+import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
 import lombok.Getter;
+import lombok.Setter;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class Gauge {
@@ -23,6 +22,10 @@ public class Gauge {
     protected Mat canny;
     @Getter
     protected Mat otsu = new Mat();
+
+    @Getter
+    @Setter
+    private HeatMap heatMap;
 
     Gauge(Mat source, Mat canny, Mat otsu) {
         //Convertiere in Grau

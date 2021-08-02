@@ -7,10 +7,8 @@ import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearn
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.Getter;
 import org.apache.commons.math3.util.Precision;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Size;
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
@@ -44,6 +42,8 @@ public abstract class GaugeOnePointer extends Gauge {
         this.max = max;
 
         this.trainingSet = trainingSet;
+
+        setHeatMap(gauge.getHeatMap());
 
         setIdealisierteDarstellung(otsu);
 
@@ -221,21 +221,23 @@ public abstract class GaugeOnePointer extends Gauge {
             drawing = Mat.zeros(Gauge.DEFAULT_SIZE, Gauge.TYPE);
         }
         Mat finalDrawing = drawing;
+        Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_GRAY2RGB);
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
 
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden
             if (Math.abs(Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) - getRadius()) <= Gauge.DEFAULT_SIZE.width / 10) {
-                Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_CROSS);
-                Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0,69,255), Imgproc.MARKER_CROSS);
+                Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
             } else {
-                Imgproc.drawMarker(finalDrawing, rotatedRect.center, Helper.WHITE, Imgproc.MARKER_STAR);
-                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, Helper.WHITE);
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0,69,255), Imgproc.MARKER_STAR);
+                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
             }
         });
 
-        Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10), Helper.WHITE);
+        Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10),  new Scalar(0,69,255),5);
 
         return finalDrawing;
     }

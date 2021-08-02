@@ -84,9 +84,12 @@ public class GaugeFactory {
             }
 
         }
-//        Helper.drawRotatedRectangle(bilateral,biggestEllipse,new Scalar(125,125,125),10);
-//        Imgproc.ellipse(bilateral,biggestEllipse,Helper.WHITE,10);
-//        Imgcodecs.imwrite("data/out/ELLIPSE.png", bilateral);
+
+        Mat color = new Mat();
+        Imgproc.cvtColor(bilateral, color, Imgproc.COLOR_GRAY2RGB);
+        Helper.drawRotatedRectangle(color, biggestEllipse,new Scalar(139, 0, 0), 20);
+        Imgproc.ellipse(color, biggestEllipse, new Scalar(0,69,255), 20);
+        Imgcodecs.imwrite("data/out/ELLIPSE" + biggestEllipse.size + ".png", color);
 
         //3. Alles ausserhalb der Ellipse Entfernen
         val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
@@ -308,7 +311,7 @@ public class GaugeFactory {
 
         double dist = 0;
         double min = Double.MAX_VALUE;
-        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 10, 5);
+        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 20, 1);
         for (int j = 0; j < cluster.size(); j++) {
             points.add(cluster.get(j).center);
             double toCenter = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter());
@@ -317,10 +320,10 @@ public class GaugeFactory {
         }
 
 
-        points.add(new Point(heatMap.getCenter().x-min,heatMap.getCenter().y -min));
-        points.add(new Point(heatMap.getCenter().x+min,heatMap.getCenter().y+min));
-        points.add(new Point(heatMap.getCenter().x-min,heatMap.getCenter().y+min));
-        points.add(new Point(heatMap.getCenter().x+min,heatMap.getCenter().y-min));
+        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y - min));
+        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y + min));
+        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y + min));
+        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y - min));
 
         val m = new MatOfPoint2f();
         m.fromList(points);
@@ -348,60 +351,7 @@ public class GaugeFactory {
         Gauge gauge = new Gauge(
                 gedreht, cannyGedreht, null);
 
+        gauge.setHeatMap(heatMap);
         return gauge;
     }
-
-
-//    public static Gauge getGaugeWithHeatMap(Mat src, int bilateralD) {
-//
-//        Mat bilateral = new Mat();
-//        //Rauschen mittels einen bilateralen Filter entfernen
-//        if (bilateralD > 0) {
-//            Imgproc.bilateralFilter(src, bilateral, bilateralD, bilateralD * 2.0, bilateralD * 0.5);
-//        } else {
-//            bilateral = src.clone();
-//        }
-//
-//        Imgproc.createCLAHE(2.0, new Size(8, 8)).apply(bilateral, bilateral);
-//
-//        Mat canny = new Mat(src.size(), Gauge.TYPE);
-//        Imgproc.Canny(bilateral, canny, 85, 120);
-//        HeatMap heatMap = new HeatMap(canny);
-//        val points = new ArrayList<Point>();
-//
-//
-//        double dist = 0;
-//        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 10, 5);
-//        for (int j = 0; j < cluster.size(); j++) {
-//            points.add(cluster.get(j).center);
-//            dist += Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter()) * (1.0 / cluster.size());
-//        }
-//
-//
-//        val m = new MatOfPoint2f();
-//        m.fromList(points);
-//
-//        RotatedRect biggestEllipse = new RotatedRect(heatMap.getCenter(), new Size((int) dist * 2, (int) dist * 2), 0);
-//
-//        //3. Alles ausserhalb der Ellipse Entfernen
-//        val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
-//        val cannyMask = removeAllOutsideEllpipse(canny, biggestEllipse);
-//
-//        //4. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-//        val transponiert = transformieren(maskiert, biggestEllipse);
-//        val cannyTransponiert = transformieren(cannyMask, biggestEllipse);
-//
-//        //5. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
-//        val rotate = Imgproc.getRotationMatrix2D(new Point(transponiert.width() / 2.0, transponiert.height() / 2.0), 90 - biggestEllipse.angle, 1.0);
-//        val gedreht = Mat.zeros(transponiert.size(), transponiert.type());
-//        Imgproc.warpAffine(transponiert, gedreht, rotate, transponiert.size());
-//        //5.1
-//        val cannyGedreht = Mat.zeros(transponiert.size(), transponiert.type());
-//        Imgproc.warpAffine(cannyTransponiert, cannyGedreht, rotate, transponiert.size());
-//
-//        Gauge gauge = new Gauge(
-//                gedreht, cannyGedreht, null);
-//
-//        return gauge;
-//    }
 }

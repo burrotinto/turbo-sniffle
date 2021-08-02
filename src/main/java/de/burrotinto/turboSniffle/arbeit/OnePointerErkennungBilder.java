@@ -3,9 +3,12 @@ package de.burrotinto.turboSniffle.arbeit;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeOnePointer;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
+import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.stereotype.Service;
 
@@ -34,10 +37,17 @@ public class OnePointerErkennungBilder implements Arbeit {
 
             val exampleFile = new ExampleFile(name);
 
+//            val gauge = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),20);
             val gauge = GaugeFactory.getGaugeWithHeatMap(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),20);
             Imgcodecs.imwrite("data/out/" + name + "_1_source.png", gauge.getSource());
             Imgcodecs.imwrite("data/out/" + name + "_2_canny.png", gauge.getCanny());
             Imgcodecs.imwrite("data/out/" + name + "_3_otsu.png", gauge.getOtsu());
+
+            Imgcodecs.imwrite("data/out/" + name + "_4_heatmap.png", gauge.getHeatMap().getHeadMatSkaliert());
+            Mat sum = new Mat();
+            Core.add(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),gauge.getHeatMap().getHeadMatSkaliert(),sum);
+            Imgcodecs.imwrite("data/out/" + name + "_5_heatmapSUM.png", sum);
+
             new Thread(() -> {
 
                 try {
