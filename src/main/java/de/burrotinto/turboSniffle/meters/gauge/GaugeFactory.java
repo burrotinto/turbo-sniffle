@@ -311,7 +311,7 @@ public class GaugeFactory {
 
         double dist = 0;
         double min = Double.MAX_VALUE;
-        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 20, 1);
+        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 20, 0);
         for (int j = 0; j < cluster.size(); j++) {
             points.add(cluster.get(j).center);
             double toCenter = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter());

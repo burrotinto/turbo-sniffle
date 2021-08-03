@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HeatMap {
-    private static final Scalar scalar = new Scalar(1, 1, 1);
+    private static final Scalar scalar1 = new Scalar(1, 1, 1);
+    private static final Scalar scalar5 = new Scalar(5, 5, 5);
 
     @Getter
     private Mat canny;
@@ -46,10 +47,15 @@ public class HeatMap {
                     new MatOfPoint2f(contours.get(i).toArray()));
             if (rect.size.area() > 50) {
                 Mat xxx = Mat.zeros(canny.size(), Gauge.TYPE);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar, (int) 5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar, (int) 5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar, (int) 5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar, (int) 5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar1, 5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar1,  5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar1,5);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar1,5);
+
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar5, 1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar5,  1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar5,1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar5,1);
                 map.put(rect, xxx);
             }
         }

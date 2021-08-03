@@ -12,6 +12,7 @@ import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,15 +22,18 @@ public class DistanceToPointClusterer {
 
         List<DistanceCluster> distance = new ArrayList<>();
 
-        rotatedRects.forEach(rotatedRect -> distance.add(new DistanceCluster(rotatedRect,center)));
+        rotatedRects.forEach(rotatedRect -> distance.add(new DistanceCluster(rotatedRect, center)));
 
         DBSCANClusterer<DistanceCluster> dbscanClusterer = new DBSCANClusterer<>(esp, minPts);
         List<Cluster<DistanceCluster>> cluster = dbscanClusterer.cluster(distance);
 
         cluster.sort((o1, o2) -> o2.getPoints().size() - o1.getPoints().size());
 
-        return cluster.get(0).getPoints().stream().map(distanceCluster -> distanceCluster.rotatedRect).collect(Collectors.toList());
-
+        if (cluster.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        } else {
+            return cluster.get(0).getPoints().stream().map(distanceCluster -> distanceCluster.rotatedRect).collect(Collectors.toList());
+        }
     }
 
 
