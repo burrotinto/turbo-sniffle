@@ -1,4 +1,4 @@
-package de.burrotinto.turboSniffle.meters.gauge.test;
+package de.burrotinto.turboSniffle.meters.gauge.impl;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
@@ -7,9 +7,11 @@ import lombok.Getter;
 import lombok.val;
 import org.nd4j.linalg.primitives.AtomicDouble;
 import org.opencv.core.*;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class HeatMap {
     private static final Scalar scalar1 = new Scalar(1, 1, 1);
     private static final Scalar scalar5 = new Scalar(5, 5, 5);
+    private static final Scalar scalar10 = new Scalar(10, 10, 10);
 
     @Getter
     private Mat canny;
@@ -41,24 +44,31 @@ public class HeatMap {
         Map<RotatedRect, Mat> map = new HashMap<>();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        Imgproc.findContours(getCanny(), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
+        Imgproc.findContours(getCanny(), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         for (int i = 0; i < contours.size(); i++) {
+//            //Nur Konturen ohne Kinder
+//            if (hierarchy.get(0, i)[3] == -1) {
             val rect = Imgproc.minAreaRect(
                     new MatOfPoint2f(contours.get(i).toArray()));
-            if (rect.size.area() > 50) {
+            //Die eine mindestgröße besitzen
+            if (rect.size.area() > 32) {
                 Mat xxx = Mat.zeros(canny.size(), Gauge.TYPE);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar1, 5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar1,  5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar1,5);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar1,5);
 
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar5, 1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar5,  1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar5,1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar5,1);
+                int s = (int) Math.min(10,Math.max(5, Math.min(rect.size.height, rect.size.width)));
+
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar1, s);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar1, s);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar1, s);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar1, s);
+
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar10, 1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar10, 1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar10, 1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar10, 1);
                 map.put(rect, xxx);
             }
         }
+//        }
         singleHeads = map;
 
         calcCenter();
@@ -120,4 +130,7 @@ public class HeatMap {
         return getSingleHeads().entrySet().stream().filter(rotatedRectMatEntry -> rotatedRectMatEntry.getValue().get((int) center.y, (int) center.x)[0] > 0).map(rotatedRectMatEntry -> rotatedRectMatEntry.getKey()).collect(Collectors.toList());
     }
 
+    public List<RotatedRect> getAllRect() {
+        return new ArrayList<>(singleHeads.keySet());
+    }
 }

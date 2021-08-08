@@ -2,7 +2,7 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
-import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
+import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
 import lombok.Getter;
 import lombok.Setter;
 import org.opencv.core.*;

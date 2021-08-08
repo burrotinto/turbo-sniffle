@@ -6,7 +6,7 @@ import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
-import de.burrotinto.turboSniffle.meters.gauge.test.HeatMap;
+import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -19,6 +19,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -87,8 +88,8 @@ public class GaugeFactory {
 
         Mat color = new Mat();
         Imgproc.cvtColor(bilateral, color, Imgproc.COLOR_GRAY2RGB);
-        Helper.drawRotatedRectangle(color, biggestEllipse,new Scalar(139, 0, 0), 20);
-        Imgproc.ellipse(color, biggestEllipse, new Scalar(0,69,255), 20);
+        Helper.drawRotatedRectangle(color, biggestEllipse, new Scalar(139, 0, 0), 20);
+        Imgproc.ellipse(color, biggestEllipse, new Scalar(0, 69, 255), 20);
         Imgcodecs.imwrite("data/out/ELLIPSE" + biggestEllipse.size + ".png", color);
 
         //3. Alles ausserhalb der Ellipse Entfernen
@@ -296,7 +297,7 @@ public class GaugeFactory {
         Imgproc.createCLAHE(2.0, new Size(8, 8)).apply(bilateral, bilateral);
 
         Mat canny = new Mat(src.size(), Gauge.TYPE);
-        Imgproc.Canny(bilateral, canny, 85, 120);
+        Imgproc.Canny(bilateral, canny, 255 / 3, 120);
 
         HeatMap heatMap = new HeatMap(canny);
 
@@ -311,22 +312,30 @@ public class GaugeFactory {
 
         double dist = 0;
         double min = Double.MAX_VALUE;
-        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 20, 0);
-        for (int j = 0; j < cluster.size(); j++) {
-            points.add(cluster.get(j).center);
-            double toCenter = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter());
-            dist += toCenter * (1.0 / cluster.size());
-            min = Math.min(toCenter, min);
-        }
+        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 30, 2);
+
+        //Kleinster Radius
+//        for (int j = 0; j < cluster.size(); j++) {
+//            points.add(cluster.get(j).center);
+//            double toCenter = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter());
+//            dist += toCenter * (1.0 / cluster.size());
+//            min = Math.min(toCenter, min);
+//        }
+//
+
+        //Median
+        cluster.sort(Comparator.comparingDouble(o -> Helper.calculateDistanceBetweenPointsWithPoint2D(o.center, heatMap.getCenter())));
+        dist = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(cluster.size()/2).center, heatMap.getCenter());
 
 
-        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y - min));
-        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y + min));
-        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y + min));
-        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y - min));
 
-        val m = new MatOfPoint2f();
-        m.fromList(points);
+//        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y - min));
+//        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y + min));
+//        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y + min));
+//        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y - min));
+//
+////        val m = new MatOfPoint2f();
+////        m.fromList(points);
 
 
         RotatedRect biggestEllipse = new RotatedRect(heatMap.getCenter(), new Size((int) dist * 2, (int) dist * 2), 0);

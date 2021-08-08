@@ -45,9 +45,9 @@ public class DistanceToPointClusterer {
 
         @Override
         public double[] getPoint() {
-            val d = new double[1];
+            val d = new double[2];
             d[0] = Helper.calculateDistanceBetweenPointsWithPoint2D(center, rotatedRect.center);
-//            d[0] = rotatedRect.size.height;
+            d[1] = rotatedRect.size.area();
             return d;
         }
     }
