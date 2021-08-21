@@ -127,13 +127,13 @@ public abstract class GaugeOnePointer extends Gauge {
 
             Imgproc.resize(getIdealisierteDarstellung(), eingangsVektor, AUTOENCODER_INPUT_SIZE);
 
-            List<Pair<Mat, Double>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT);
+            List<Pair<Mat, Double[]>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT);
             for (int i = 0; i < ausgangsVektoren.size(); i++) {
                 Mat konjunktion = new Mat();
                 Core.bitwise_and(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
                 int p = Core.countNonZero(konjunktion);
                 if (min == null || min.p2 > p) {
-                    min = new Pair<>(ausgangsVektoren.get(i).p2, p);
+                    min = new Pair<>(ausgangsVektoren.get(i).p2[0], p);
                 }
             }
 

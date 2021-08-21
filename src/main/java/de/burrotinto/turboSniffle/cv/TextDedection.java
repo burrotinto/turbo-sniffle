@@ -2,6 +2,8 @@ package de.burrotinto.turboSniffle.cv;
 
 import lombok.SneakyThrows;
 import lombok.Synchronized;
+import lombok.val;
+import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.Tesseract;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
@@ -18,6 +20,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,15 +148,29 @@ public class TextDedection {
     }
 
     @SneakyThrows
+    public List<RotatedRect> getTextAreasWithTess(Mat src) {
+        List<RotatedRect> out = new ArrayList<>();
+        val reg = tesseractNumbers.getSegmentedRegions(Helper.Mat2BufferedImage(src), ITessAPI.TessPageIteratorLevel.RIL_WORD);
+        for (int i = 0; i < reg.size(); ++i) {
+            Rectangle r = reg.get(i);
+            Point[] vertices = new Point[4];
+            RotatedRect rot = new RotatedRect(new Point(r.getCenterX(),r.getCenterY()), new Size(r.getWidth(),r.getHeight()),0);
+            out.add(rot);
+        }
+
+        return out;
+
+    }
+    @SneakyThrows
     public String doOCRNumbers(Mat sub) {
-        return tesseractNumbers.doOCR(Helper.Mat2BufferedImage(sub));
+        return doOCRNumbers(Helper.Mat2BufferedImage(sub));
     }
-    @SneakyThrows
-    public String doOCR(BufferedImage sub) {
-        return tesseract.doOCR(sub);
-    }
-    @SneakyThrows
-    public String doOCR(Mat sub) {
-        return tesseract.doOCR(Helper.Mat2BufferedImage(sub));
-    }
+//    @SneakyThrows
+//    public String doOCR(BufferedImage sub) {
+//        return tesseract.doOCR(sub);
+//    }
+//    @SneakyThrows
+//    public String doOCR(Mat sub) {
+//        return tesseract.doOCR(Helper.Mat2BufferedImage(sub));
+//    }
 }

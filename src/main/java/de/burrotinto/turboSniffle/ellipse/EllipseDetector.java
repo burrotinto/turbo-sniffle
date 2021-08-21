@@ -1376,6 +1376,13 @@ public class EllipseDetector {
     ;
 
     public static RotatedRect createContour(Ellipse ellipse) {
+
+        val m = new MatOfPoint2f();
+        m.fromList(getAllEllipsePoints(ellipse));
+        return Imgproc.fitEllipse(m);
+    }
+
+    public static List<Point> getAllEllipsePoints(Ellipse ellipse) {
         val points = new ArrayList<Point>();
 
         for (float angle = 0; angle < 360; angle += 0.1) {
@@ -1388,12 +1395,8 @@ public class EllipseDetector {
                 points.add(new Point(x, y));
             }
         }
-        val m = new MatOfPoint2f();
-        m.fromList(points);
-        return Imgproc.fitEllipse(m);
+        return points;
     }
-
-    ;
 
 
     private int[] getPixelARGB(int pixel) {

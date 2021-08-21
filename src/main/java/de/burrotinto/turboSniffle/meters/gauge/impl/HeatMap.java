@@ -1,5 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge.impl;
 
+import com.lowagie.text.html.simpleparser.Img;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
@@ -34,7 +35,7 @@ public class HeatMap {
     private Mat heatmap;
 
     /**
-     * Zeichnet ein Kreuz in jede gefundene Contour
+     * Zeichnet ein Kreuz in jede gefundene Kontur
      *
      * @return
      */
@@ -45,32 +46,43 @@ public class HeatMap {
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(getCanny(), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+//        Mat draw = new Mat(canny.size(), CvType.CV_8UC3);
+
         for (int i = 0; i < contours.size(); i++) {
-//            //Nur Konturen ohne Kinder
-//            if (hierarchy.get(0, i)[3] == -1) {
-            val rect = Imgproc.minAreaRect(
-                    new MatOfPoint2f(contours.get(i).toArray()));
-            //Die eine mindestgröße besitzen
-            if (rect.size.area() > 32) {
+            val rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(i).toArray()));
+
+            //Nur Konturen die eine Mindestgröße besitzen
+            if (rect.size.area() > 32 &&  Math.min(rect.size.height, rect.size.width) >= 3) {
                 Mat xxx = Mat.zeros(canny.size(), Gauge.TYPE);
 
-                int s = (int) Math.min(10,Math.max(5, Math.min(rect.size.height, rect.size.width)));
+                double angle = rect.angle;
+                if (rect.size.width < rect.size.height) {
+                    angle = 90 + angle;
+                }
 
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar1, s);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar1, s);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar1, s);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar1, s);
+                int s = (int) Math.max(5, Math.min(rect.size.height, rect.size.width));
 
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, rect.angle, scalar10, 1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 90) % 360, scalar10, 1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 180) % 360, scalar10, 1);
-                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (rect.angle + 270) % 360, scalar10, 1);
+
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, angle, scalar1, s);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (angle + 180) % 360, scalar1, s);
+
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, angle, scalar10, 1);
+                Helper.drawLineInMat(xxx, rect.center, canny.size().height, (angle + 180) % 360, scalar10, 1);
                 map.put(rect, xxx);
+
+//                //Malen
+//                Helper.drawLineInMat(draw, rect.center, canny.size().height, angle, new Scalar(0,25,0), s);
+//                Helper.drawLineInMat(draw, rect.center, canny.size().height, (angle + 180) % 360, new Scalar(0,25,0), s);
+//                Helper.drawLineInMat(draw, rect.center, canny.size().height, angle, new Scalar(0,250,0), 1);
+//                Helper.drawLineInMat(draw, rect.center, canny.size().height, (angle + 180) % 360, new Scalar(0,250,0), 1);
+//                Imgproc.drawContours(draw, contours, i, new Scalar(0, 0, 255),3);
+//                Helper.drawRotatedRectangle(draw,rect,new Scalar(255,0,0),3);
             }
         }
-//        }
         singleHeads = map;
-
+//        HighGui.imshow("", draw);
+//        HighGui.waitKey();
         calcCenter();
     }
 
@@ -127,7 +139,7 @@ public class HeatMap {
 
     public List<RotatedRect> getAllConnectedWithCenter() {
         Point center = getCenter();
-        return getSingleHeads().entrySet().stream().filter(rotatedRectMatEntry -> rotatedRectMatEntry.getValue().get((int) center.y, (int) center.x)[0] > 0).map(rotatedRectMatEntry -> rotatedRectMatEntry.getKey()).collect(Collectors.toList());
+        return getSingleHeads().entrySet().stream().filter(rotatedRectMatEntry -> rotatedRectMatEntry.getValue().get((int) center.y, (int) center.x)[0] > 0 && Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRectMatEntry.getKey().center,getCenter()) >= Math.sqrt(Gauge.DEFAULT_SIZE.area())/3).map(rotatedRectMatEntry -> rotatedRectMatEntry.getKey()).collect(Collectors.toList());
     }
 
     public List<RotatedRect> getAllRect() {

@@ -26,11 +26,11 @@ public class CessnaSpeedTraingSet extends TrainingSet {
     private static final Scalar WHITE = new Scalar(255, 255, 255);
     private static final Scalar BLACK = new Scalar(0, 0, 0);
 
-    private final Map<String, List<Pair<Mat, Double>>> training = new HashMap<>();
+    private final Map<String, List<Pair<Mat, Double[]>>> training = new HashMap<>();
 
 
 
-    public List<Pair<Mat, Double>> getTrainingset(Size size, double angleSteps) {
+    public List<Pair<Mat, Double[]>> getTrainingset(Size size, double angleSteps) {
         String key = generateKey(size, angleSteps);
         if (!training.containsKey(key)) {
             Mat white = Mat.zeros(size, Gauge.TYPE);
@@ -39,13 +39,13 @@ public class CessnaSpeedTraingSet extends TrainingSet {
             Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps*2 ))), 2));
 
 
-            List<Pair<Mat, Double>> pairs = new ArrayList<>();
+            List<Pair<Mat, Double[]>> pairs = new ArrayList<>();
 
             for (double i = 0; i < 360; i += angleSteps) {
                 Mat dstW = new Mat();
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
                 Imgproc.warpAffine(white, dstW, rotate, size);
-                pairs.add(new Pair<>(dstW,i));
+                pairs.add(new Pair<>(dstW,new Double[]{i}));
             }
 
             training.put(key, pairs);

@@ -12,5 +12,5 @@ public abstract class TrainingSet {
         return size.height + "|" + size.width + "|" + angleSteps;
     }
 
-    public abstract List<Pair<Mat,Double>> getTrainingset(Size size, double angleSteps);
+    public abstract List<Pair<Mat, Double[]>> getTrainingset(Size size, double angleSteps);
 }

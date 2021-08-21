@@ -5,7 +5,6 @@ import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
-import de.burrotinto.turboSniffle.meters.gauge.impl.ScaleMarkExtraction;
 import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -46,10 +45,25 @@ public class GaugeFactory {
     }
 
     public static Gauge getGauge(Mat src) {
-        return getGauge(src, BILATERAL_D);
+        Gauge out = null;
+        try {
+            out = getGaugeEllipseMethod(src, BILATERAL_D);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            if (out == null) {
+                out = getGaugeWithHeatMap(src, 20);
+            } else {
+                out = getGaugeWithHeatMap(out.source, -1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return out;
     }
 
-    public static Gauge getGauge(Mat src, int bilateralD) {
+    public static Gauge getGaugeEllipseMethod(Mat src, int bilateralD) {
         CannyEdgeDetector cannyEdgeDetector = null;
         Mat bilateral = new Mat();
 
@@ -86,11 +100,11 @@ public class GaugeFactory {
 
         }
 
-        Mat color = new Mat();
-        Imgproc.cvtColor(bilateral, color, Imgproc.COLOR_GRAY2RGB);
-        Helper.drawRotatedRectangle(color, biggestEllipse, new Scalar(139, 0, 0), 20);
-        Imgproc.ellipse(color, biggestEllipse, new Scalar(0, 69, 255), 20);
-        Imgcodecs.imwrite("data/out/ELLIPSE" + biggestEllipse.size + ".png", color);
+//        Mat color = new Mat();
+//        Imgproc.cvtColor(bilateral, color, Imgproc.COLOR_GRAY2RGB);
+//        Helper.drawRotatedRectangle(color, biggestEllipse, new Scalar(139, 0, 0), 20);
+//        Imgproc.ellipse(color, biggestEllipse, new Scalar(0, 69, 255), 20);
+//        Imgcodecs.imwrite("data/out/ELLIPSE" + biggestEllipse.size + ".png", color);
 
         //3. Alles ausserhalb der Ellipse Entfernen
         val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
@@ -114,51 +128,10 @@ public class GaugeFactory {
         return gauge;
     }
 
-    public static Gauge getGaugeScaleFocused(Gauge gauge) {
-
-        //1. Erkennung der Skala
-        try {
-            val x = ScaleMarkExtraction.extract(gauge.getCanny(), gauge.getSource(), 4);
-
-            ArrayList<Point> points = new ArrayList<>();
-            x.stream().forEach(rechteckCluster -> {
-                Point[] p = new Point[4];
-                rechteckCluster.points(p);
-                points.addAll(Arrays.asList(rechteckCluster.center));
-            });
-
-            val m = new MatOfPoint2f();
-            m.fromList(points);
-
-
-            //2. Alles ausserhalb der Ellipse Entfernen
-            Mat sr = gauge.getSource().clone();
-            val e = Imgproc.fitEllipse(m);
-
-
-            val maskiertSkala = removeAllOutsideEllpipse(sr, e);
-            val cannyMaskSkala = removeAllOutsideEllpipse(gauge.getCanny(), e);
-
-            //3. Gefundene Ellipse aus Bild transponieren damit ellipse im Mittelpunkt und als Kreis dargestellt wird
-            val transponiertSkala = transformieren(maskiertSkala, e);
-            val cannyTransponiertSkala = transformieren(cannyMaskSkala, e);
-
-            //4. Durch Transponieren wird das Messgerät eventuell gedreht. Hier wird das korrigiert.
-            val rotateSkala = Imgproc.getRotationMatrix2D(new Point(transponiertSkala.width() / 2.0, transponiertSkala.height() / 2.0), 90 - e.angle, 1.0);
-
-            val gedrehtSkala = Mat.zeros(transponiertSkala.size(), transponiertSkala.type());
-            Imgproc.warpAffine(transponiertSkala, gedrehtSkala, rotateSkala, transponiertSkala.size());
-            val cannyGedrehtSkala = Mat.zeros(cannyTransponiertSkala.size(), cannyTransponiertSkala.type());
-            Imgproc.warpAffine(cannyTransponiertSkala, cannyGedrehtSkala, rotateSkala, cannyTransponiertSkala.size());
-
-
-            Gauge g = new Gauge(gedrehtSkala, cannyGedrehtSkala, null);
-
-            return g;
-        } catch (Exception e) {
-            return gauge;
-        }
+    public static GaugeOnePointer getGaugeWithOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
+        return new GaugeOnePointerNoScale(gauge);
     }
+
 
     public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
@@ -166,6 +139,9 @@ public class GaugeFactory {
 
     public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
+    }
+    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
+        return getGaugeWithOnePointerAutoScale(gauge, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
@@ -204,15 +180,18 @@ public class GaugeFactory {
 
         val ellipsInside = ellipseDetector.getFinalEllipseList().stream().filter(ellipse -> {
                     val e = EllipseDetector.createContour(ellipse);
-
+                    Point[] p = new Point[4];
+                    e.points(p);
                     val radius = (int) Math.max(e.size.width, e.size.height) / 2;
 
+                    // Größe noch sinnvoll und innerhalb der MAT
                     if (
                             e.size.area() > Gauge.DEFAULT_SIZE.area() / 2 &&
-                                    e.center.x - radius >= 0
-                                    && e.center.y - radius >= 0
-                                    && e.center.x + radius < mat.width()
-                                    && e.center.y + radius < mat.height()
+                                    EllipseDetector.getAllEllipsePoints(ellipse).stream().allMatch(point ->
+                                            point.x >= 0
+                                                    && point.x < mat.width()
+                                                    && point.y >= 0
+                                                    && point.y < mat.height())
                     ) {
                         return true;
                     } else {
@@ -246,9 +225,9 @@ public class GaugeFactory {
 
         List<Point> target = new ArrayList<Point>();
         target.add(new Point(0, 0));
-        target.add(new Point(mat.cols(), 0));
-        target.add(new Point(mat.cols(), mat.rows()));
-        target.add(new Point(0, mat.rows()));
+        target.add(new Point(Gauge.DEFAULT_SIZE.width, 0));
+        target.add(new Point(Gauge.DEFAULT_SIZE.width, Gauge.DEFAULT_SIZE.height));
+        target.add(new Point(0, Gauge.DEFAULT_SIZE.height));
 
 
         Mat cornersMat = Converters.vector_Point2f_to_Mat(corner);
@@ -256,11 +235,8 @@ public class GaugeFactory {
         Mat trans = Imgproc.getPerspectiveTransform(cornersMat, targetMat);
 
         Mat proj = new Mat();
-        Imgproc.warpPerspective(mat, proj, trans, new Size(mat.cols(), mat.rows()));
+        Imgproc.warpPerspective(mat, proj, trans, Gauge.DEFAULT_SIZE);
 
-        val maxPoints = Helper.maxDistance(corner);
-        val maxDist = Helper.calculateDistanceBetweenPointsWithPoint2D(maxPoints);
-        Imgproc.resize(proj, proj, new Size(maxDist, maxDist));
         return proj;
     }
 
@@ -290,52 +266,30 @@ public class GaugeFactory {
         //Rauschen mittels einen bilateralen Filter entfernen
         if (bilateralD > 0) {
             Imgproc.bilateralFilter(src, bilateral, bilateralD, bilateralD * 2.0, bilateralD * 0.5);
+
+            Imgproc.createCLAHE(2.0, new Size(8, 8)).apply(bilateral, bilateral);
         } else {
             bilateral = src.clone();
         }
 
-        Imgproc.createCLAHE(2.0, new Size(8, 8)).apply(bilateral, bilateral);
+
 
         Mat canny = new Mat(src.size(), Gauge.TYPE);
         Imgproc.Canny(bilateral, canny, 255 / 3, 120);
 
         HeatMap heatMap = new HeatMap(canny);
 
-//        HighGui.imshow("Bi",canny);
-//        Mat x = new Mat();
-//        Core.add(bilateral,heatMap.getHeadMatSkaliert(),x);
-//        Imgproc.drawMarker(x,heatMap.getCenter(),Helper.GREY);
-//        HighGui.imshow("HEATMAP",x);
-//        HighGui.waitKey();
         val points = new ArrayList<Point>();
 
 
         double dist = 0;
         double min = Double.MAX_VALUE;
-        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 30, 2);
+        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 40, 2);
 
-        //Kleinster Radius
-//        for (int j = 0; j < cluster.size(); j++) {
-//            points.add(cluster.get(j).center);
-//            double toCenter = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(j).center, heatMap.getCenter());
-//            dist += toCenter * (1.0 / cluster.size());
-//            min = Math.min(toCenter, min);
-//        }
-//
 
         //Median
         cluster.sort(Comparator.comparingDouble(o -> Helper.calculateDistanceBetweenPointsWithPoint2D(o.center, heatMap.getCenter())));
-        dist = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(cluster.size()/2).center, heatMap.getCenter());
-
-
-
-//        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y - min));
-//        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y + min));
-//        points.add(new Point(heatMap.getCenter().x - min, heatMap.getCenter().y + min));
-//        points.add(new Point(heatMap.getCenter().x + min, heatMap.getCenter().y - min));
-//
-////        val m = new MatOfPoint2f();
-////        m.fromList(points);
+        dist = Helper.calculateDistanceBetweenPointsWithPoint2D(cluster.get(cluster.size() / 2).center, heatMap.getCenter());
 
 
         RotatedRect biggestEllipse = new RotatedRect(heatMap.getCenter(), new Size((int) dist * 2, (int) dist * 2), 0);
@@ -361,6 +315,7 @@ public class GaugeFactory {
                 gedreht, cannyGedreht, null);
 
         gauge.setHeatMap(heatMap);
+
         return gauge;
     }
 }
