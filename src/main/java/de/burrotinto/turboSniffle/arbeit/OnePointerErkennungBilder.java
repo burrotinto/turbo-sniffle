@@ -2,17 +2,15 @@ package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeOnePointer;
+import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
@@ -38,8 +36,8 @@ public class OnePointerErkennungBilder implements Arbeit {
 //            String prefix = "HEATMAP";
             String prefix = "KOMBO";
 
-//            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("value=0_min=0_max=6_step=1_id=SWN.jpeg")).collect(Collectors.toList());
-            val files = listFiles(Paths.get("data/example/gauge"));
+            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("value=0_min=0_max=6_step=1_id=SWN.jpeg")).collect(Collectors.toList());
+//            val files = listFiles(Paths.get("data/example/gauge"));
 
             val td = new TextDedection();
 
@@ -90,7 +88,7 @@ public class OnePointerErkennungBilder implements Arbeit {
                 new Thread(() -> {
 
                     try {
-                        GaugeOnePointer analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
+                        AutoEncoderGauge analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));

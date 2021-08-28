@@ -2,6 +2,7 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
+import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearningDataset;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.val;
@@ -9,11 +10,9 @@ import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-public class GaugeOnePointerAutoScale extends GaugeOnePointer {
+public class GaugeOnePointerAutoScale extends AutoEncoderGauge {
 
     private final TextDedection textDedection;
 
@@ -33,11 +32,13 @@ public class GaugeOnePointerAutoScale extends GaugeOnePointer {
         try {
             val textAreas = textDedection.getTextAreas(otsu);
             textAreas.addAll(textDedection.getTextAreas(source));
-            Collections.shuffle(textAreas);
 
+            val clustered = DistanceToPointClusterer.extract(textAreas, getCenter(), 60, 2);
 
             //Alle erkannten Textfelder die sich in der äusseren Hälfte befinden
-            for (RotatedRect r : textAreas.stream().filter(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) >= getRadius() / 2).collect(Collectors.toList())) {
+//            for (RotatedRect r : textAreas.stream().filter(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) >= getRadius() / 2).collect(Collectors.toList())) {
+//
+            for (RotatedRect r : clustered) {
                 try {
                     BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
                     String str = textDedection.doOCRNumbers(sub).replaceAll("[\\D.]", "");

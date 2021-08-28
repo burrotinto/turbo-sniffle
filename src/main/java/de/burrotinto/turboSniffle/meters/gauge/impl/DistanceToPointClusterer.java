@@ -19,7 +19,9 @@ import java.util.stream.Collectors;
 public class DistanceToPointClusterer {
 
     public static List<RotatedRect> extract(List<RotatedRect> rotatedRects, Point center, int esp, int minPts) {
-
+        if (rotatedRects.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
         List<DistanceCluster> distance = new ArrayList<>();
 
         rotatedRects.forEach(rotatedRect -> distance.add(new DistanceCluster(rotatedRect, center)));

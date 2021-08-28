@@ -6,6 +6,8 @@ import de.burrotinto.turboSniffle.ellipse.CannyEdgeDetector;
 import de.burrotinto.turboSniffle.ellipse.EllipseDetector;
 import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeTwoPointerLearningDataset;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -16,11 +18,7 @@ import org.opencv.utils.Converters;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -128,19 +126,20 @@ public class GaugeFactory {
         return gauge;
     }
 
-    public static GaugeOnePointer getGaugeWithOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
+    public static AutoEncoderGauge getGaugeWithOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
         return new GaugeOnePointerNoScale(gauge);
     }
 
 
-    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
     }
 
-    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
+    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
-    public static GaugeOnePointer getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
+
+    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(gauge, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
@@ -152,6 +151,19 @@ public class GaugeFactory {
 
     public static Cessna172VerticalSpeedIndicator getCessna172VerticalSpeedIndicator(Mat src) throws NotGaugeWithPointerException {
         return new Cessna172VerticalSpeedIndicator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
+    }
+
+    public static AutoEncoderGauge getCessna172Altimeter(Mat src) {
+        return getAutoencoderGauge(getGaugeWithHeatMap(src, -1), GaugeTwoPointerLearningDataset.get());
+    }
+    @SneakyThrows
+    public static AutoEncoderGauge getAutoencoderGauge(Gauge gauge, TrainingSet trainingSet) {
+        return new AutoEncoderGauge(gauge, trainingSet);
+    }
+
+    @SneakyThrows
+    public static AutoEncoderGauge getAutoencoderGauge(Mat mat, TrainingSet trainingSet) {
+        return new AutoEncoderGauge(getGauge(mat), trainingSet);
     }
 
     public static CannyEdgeDetector getCanny() {
@@ -271,7 +283,6 @@ public class GaugeFactory {
         } else {
             bilateral = src.clone();
         }
-
 
 
         Mat canny = new Mat(src.size(), Gauge.TYPE);

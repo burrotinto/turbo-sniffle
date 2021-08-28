@@ -2,16 +2,12 @@ package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeOnePointer;
-import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
+import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.apache.commons.math3.util.Precision;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
@@ -21,8 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,48 +35,50 @@ public class OnePointerErkennungBilderVergleich implements Arbeit {
 
             int maxPictures = 10;
             Mat all = new Mat(new Size(Gauge.DEFAULT_SIZE.width * 4, Gauge.DEFAULT_SIZE.height * maxPictures), CvType.CV_8UC3);
+
+
             for (int i = 0; i < files.size(); i++) {
-                if (i % maxPictures == 0 && i != 0) {
-                    Imgcodecs.imwrite("data/out/vergleich_" + i / 10 + ".png", all);
-                    all = new Mat(new Size(Gauge.DEFAULT_SIZE.width * 4, Gauge.DEFAULT_SIZE.height * maxPictures), CvType.CV_8UC3);
-                }
+
 
                 val file = files.get(i).toString();
 
                 Mat orgRezice = new Mat(Gauge.DEFAULT_SIZE, Gauge.TYPE);
                 Imgproc.resize(Imgcodecs.imread(file, Imgcodecs.IMREAD_ANYCOLOR), orgRezice, Gauge.DEFAULT_SIZE);
-                orgRezice.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i%maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i%maxPictures) + 1)).colRange(0, (int) Gauge.DEFAULT_SIZE.width));
+                orgRezice.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i % maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i % maxPictures) + 1)).colRange(0, (int) Gauge.DEFAULT_SIZE.width));
                 try {
                     Gauge g = GaugeFactory.getGaugeEllipseMethod(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
-                    GaugeOnePointer gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
+                    AutoEncoderGauge gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
                     Mat mat = gg.getDrawing(gg.getSource());
-                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i%maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i%maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width * 2));
+                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i % maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i % maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width * 2));
                 } catch (Exception e) {
 
                 }
                 try {
                     Gauge g = GaugeFactory.getGaugeWithHeatMap(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
-                    GaugeOnePointer gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
+                    AutoEncoderGauge gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
 
                     Mat mat = gg.getDrawing(gg.getSource());
-                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i%maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i%maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width * 2, (int) Gauge.DEFAULT_SIZE.width * 3));
+                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i % maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i % maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width * 2, (int) Gauge.DEFAULT_SIZE.width * 3));
                 } catch (Exception e) {
 
                 }
                 try {
                     Gauge g = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
-                    GaugeOnePointer gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
+                    AutoEncoderGauge gg = GaugeFactory.getGaugeWithOnePointerAutoScale(g);
 
                     Mat mat = gg.getDrawing(gg.getSource());
-                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i%maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i%maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width * 3, (int) Gauge.DEFAULT_SIZE.width * 4));
+                    mat.copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * (i % maxPictures), (int) Gauge.DEFAULT_SIZE.height * ((i % maxPictures) + 1)).colRange((int) Gauge.DEFAULT_SIZE.width * 3, (int) Gauge.DEFAULT_SIZE.width * 4));
                 } catch (Exception e) {
 
                 }
-                HighGui.imshow("aaa", all);
-                HighGui.waitKey(1);
-
+//                HighGui.imshow("aaa", all);
+//                HighGui.waitKey(1);
+//
+                Imgcodecs.imwrite("data/out/vergleich_" + i / 10 + ".png", all);
+                if (i % maxPictures == 0 && i != 0) {
+                    all = new Mat(new Size(Gauge.DEFAULT_SIZE.width * 4, Gauge.DEFAULT_SIZE.height * maxPictures), CvType.CV_8UC3);
+                }
                 System.out.println(file);
-
             }
 
 

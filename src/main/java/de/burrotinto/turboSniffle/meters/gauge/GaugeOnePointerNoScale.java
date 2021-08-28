@@ -1,6 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
-public class GaugeOnePointerNoScale extends GaugeOnePointer {
+public class GaugeOnePointerNoScale extends AutoEncoderGauge {
     GaugeOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
         super(gauge);
     }
@@ -11,6 +11,6 @@ public class GaugeOnePointerNoScale extends GaugeOnePointer {
      */
     @Override
     public double getValue() {
-        return getPointerAngel();
+        return getPointerAngel()[0];
     }
 }

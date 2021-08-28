@@ -8,21 +8,21 @@ import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.Getter;
 import org.apache.commons.math3.util.Precision;
 import org.opencv.core.*;
-import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 
-public abstract class GaugeOnePointer extends Gauge {
-    private final double GENAUIGKEIT = 0.2; //Genauigkeit des verwendeten Autoencoders
+public class AutoEncoderGauge extends Gauge {
+    private final int HIDDEN_LAYER = 12; //Genauigkeit des verwendeten Autoencoders
     private final Size AUTOENCODER_INPUT_SIZE = Gauge.DEFAULT_SIZE; //Eingabeschicht Autoencoder
 
 
     protected final HashMap<RotatedRect, Double> labelScale = new HashMap<>();
 
-    private Optional<Double> pointerAngel = Optional.empty();
+    private Optional<double[]> pointerAngel = Optional.empty();
     private Mat idealisierteDarstellung;
 
     protected boolean isInit = false;
@@ -31,11 +31,15 @@ public abstract class GaugeOnePointer extends Gauge {
 
     private TrainingSet trainingSet;
 
-    GaugeOnePointer(Gauge gauge) throws NotGaugeWithPointerException {
+    AutoEncoderGauge(Gauge gauge) throws NotGaugeWithPointerException {
         this(gauge, Optional.empty(), Optional.empty(), Optional.empty(), GaugeOnePointerLearningDataset.get());
     }
 
-    GaugeOnePointer(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
+    AutoEncoderGauge(Gauge gauge, TrainingSet trainingSet) throws NotGaugeWithPointerException {
+        this(gauge, Optional.empty(), Optional.empty(), Optional.empty(), trainingSet);
+    }
+
+    AutoEncoderGauge(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
         super(gauge.source, gauge.canny, gauge.otsu);
         this.skalemarkSteps = steps;
         this.min = min;
@@ -106,13 +110,14 @@ public abstract class GaugeOnePointer extends Gauge {
     public void addDummyToScaleMarkFORCE(double angle, double scale) {
         addToScaleMarkFORCE(new RotatedRect(poolarZuBildkoordinaten(angle, getRadius()), new Size(1, 1), 0), scale);
     }
+
     public boolean addToScaleMarkFORCE(RotatedRect rect, Double scale) {
         labelScale.put(rect, scale);
         return true;
     }
 
-    public Optional<Double> getAngelOfScaleMarkValue(Double scale){
-       return labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(scale)).map(rotatedRectDoubleEntry -> bildkoordinatenZuPoolar(rotatedRectDoubleEntry.getKey().center)).findFirst();
+    public Optional<Double> getAngelOfScaleMarkValue(Double scale) {
+        return labelScale.entrySet().stream().filter(rotatedRectDoubleEntry -> rotatedRectDoubleEntry.getValue().equals(scale)).map(rotatedRectDoubleEntry -> bildkoordinatenZuPoolar(rotatedRectDoubleEntry.getKey().center)).findFirst();
     }
 
     /**
@@ -120,23 +125,30 @@ public abstract class GaugeOnePointer extends Gauge {
      *
      * @return
      */
-    public double getPointerAngel() {
+    public double[] getPointerAngel() {
         if (pointerAngel.isEmpty()) {
-            Pair<Double, Integer> min = null;
+            Pair<double[], Integer> min = null;
             Mat eingangsVektor = new Mat();
 
             Imgproc.resize(getIdealisierteDarstellung(), eingangsVektor, AUTOENCODER_INPUT_SIZE);
 
-            List<Pair<Mat, Double[]>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, GENAUIGKEIT);
+            List<Pair<Mat, double[]>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, HIDDEN_LAYER);
+
             for (int i = 0; i < ausgangsVektoren.size(); i++) {
                 Mat konjunktion = new Mat();
-                Core.bitwise_and(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
+                Core.bitwise_xor(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
+//                HighGui.imshow("min", konjunktion);
+//                HighGui.waitKey();
                 int p = Core.countNonZero(konjunktion);
                 if (min == null || min.p2 > p) {
-                    min = new Pair<>(ausgangsVektoren.get(i).p2[0], p);
+                    min = new Pair<>(ausgangsVektoren.get(i).p2, p);
+                    HighGui.imshow("min", konjunktion);
+                    HighGui.waitKey(1);
                 }
             }
 
+//            HighGui.imshow("", otsu);
+//            HighGui.waitKey();
             pointerAngel = Optional.ofNullable(min.p1);
         }
         return pointerAngel.get();
@@ -207,11 +219,11 @@ public abstract class GaugeOnePointer extends Gauge {
 
 
     public double getValue() {
-        return getValue(getPointerAngel());
+        return getValue(getPointerAngel()[getPointerAngel().length - 1]);
     }
 
     /**
-     * Malt die erkannten Skalenmarkierungen und den Zeiger auf das Eingabe MAt
+     * Malt die erkannten Skalenmarkierungen und den Zeiger auf das Eingabe Mat
      *
      * @param drawing
      * @return
@@ -224,20 +236,23 @@ public abstract class GaugeOnePointer extends Gauge {
         Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_GRAY2RGB);
 
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
 
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden
             if (Math.abs(Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) - getRadius()) <= Gauge.DEFAULT_SIZE.width / 10) {
-                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0,69,255), Imgproc.MARKER_CROSS);
-                Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0, 69, 255), Imgproc.MARKER_CROSS);
+                Imgproc.putText(finalDrawing, "(" + aDouble + ")", rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
             } else {
-                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0,69,255), Imgproc.MARKER_STAR);
-                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0,69,255));
+                Imgproc.drawMarker(finalDrawing, rotatedRect.center, new Scalar(0, 69, 255), Imgproc.MARKER_STAR);
+                Imgproc.putText(finalDrawing, "" + aDouble, rotatedRect.center, Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
             }
         });
 
-        Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel(), getRadius() - 10),  new Scalar(0,69,255),5);
+        for (int i = 0; i < getPointerAngel().length; i++) {
+            Imgproc.arrowedLine(finalDrawing, getCenter(), poolarZuBildkoordinaten(getPointerAngel()[i], (getRadius() - 10) / (i + 1)), new Scalar(0, 69, 255), 5);
+
+        }
 
         return finalDrawing;
     }

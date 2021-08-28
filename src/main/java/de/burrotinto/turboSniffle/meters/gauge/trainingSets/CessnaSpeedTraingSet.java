@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -26,26 +27,28 @@ public class CessnaSpeedTraingSet extends TrainingSet {
     private static final Scalar WHITE = new Scalar(255, 255, 255);
     private static final Scalar BLACK = new Scalar(0, 0, 0);
 
-    private final Map<String, List<Pair<Mat, Double[]>>> training = new HashMap<>();
+    private final Map<String, List<Pair<Mat, double[]>>> training = new HashMap<>();
 
 
 
-    public List<Pair<Mat, Double[]>> getTrainingset(Size size, double angleSteps) {
-        String key = generateKey(size, angleSteps);
+    public List<Pair<Mat, double[]>> getTrainingset(Size size, int p) {
+        String key = generateKey(size, p);
         if (!training.containsKey(key)) {
             Mat white = Mat.zeros(size, Gauge.TYPE);
             white.setTo(Helper.BLACK);
+
+            Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, Helper.WHITE, -1);
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point(size.width, size.height / 2), WHITE, Math.max((int) (size.height / (180 / (angleSteps*2 ))), 2));
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width/2) + (size.width*4/10) , size.height / 2), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 8) );
 
+            List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
-            List<Pair<Mat, Double[]>> pairs = new ArrayList<>();
-
+            double angleSteps = 360 / Math.pow(2, p);
             for (double i = 0; i < 360; i += angleSteps) {
                 Mat dstW = new Mat();
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
                 Imgproc.warpAffine(white, dstW, rotate, size);
-                pairs.add(new Pair<>(dstW,new Double[]{i}));
+                pairs.add(new Pair<>(dstW,new double[]{i}));
             }
 
             training.put(key, pairs);
