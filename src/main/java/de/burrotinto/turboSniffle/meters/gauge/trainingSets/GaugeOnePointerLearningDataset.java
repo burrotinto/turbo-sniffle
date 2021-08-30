@@ -4,10 +4,7 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import lombok.val;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -41,10 +38,10 @@ public class GaugeOnePointerLearningDataset extends TrainingSet {
             Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, Helper.WHITE, -1);
 
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) + calcPointerLength((int) size.width), size.height / 2), Helper.BLACK, calcPointerWidth((int) size.height, Math.pow(2, p), 8));
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) + calcPointerLength((int) size.width), size.height / 2), Helper.BLACK, calcPointerWidth((int) size.height, Math.pow(2, p), 2));
 
             //Gegengewicht
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) - (calcPointerLength((int) size.width)/2.0), size.height / 2), Helper.BLACK, (int) (calcPointerWidth((int) size.height, Math.pow(2, p), 16)));
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) - (calcPointerLength((int) size.width)/4.0), size.height / 2), Helper.BLACK, (int) (calcPointerWidth((int) size.height, Math.pow(2, p), 6)));
 
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
@@ -57,6 +54,7 @@ public class GaugeOnePointerLearningDataset extends TrainingSet {
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
                 Imgproc.warpAffine(white, dstW, rotate, size);
                 pairs.add(new Pair<>(dstW, new double[]{i}));
+
             }
 
             training.put(key, pairs);

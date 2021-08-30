@@ -4,11 +4,7 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import lombok.val;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -39,16 +35,27 @@ public class CessnaSpeedTraingSet extends TrainingSet {
 
             Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, Helper.WHITE, -1);
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width/2) + (size.width*4/10) , size.height / 2), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 8) );
+            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width/2) + (size.width*4/10) , size.height / 2), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 2) );
+            Point[] points = new Point[]{new Point(size.width, size.height / 2),
+                    new Point(size.width / 2, (size.height / 2) - 12),
+                    new Point(size.width / 2, (size.height / 2) + 12)
+            };
+            List<MatOfPoint> pointsL = new ArrayList<>();
+            pointsL.add(new MatOfPoint(points));
+            Imgproc.drawContours(white, pointsL, -1, Helper.BLACK, -1);
+
 
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
-            double angleSteps = 360 / Math.pow(2, p);
+            double angleSteps = 360 / Math.pow(2, p-1);
             for (double i = 0; i < 360; i += angleSteps) {
                 Mat dstW = new Mat();
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
                 Imgproc.warpAffine(white, dstW, rotate, size);
                 pairs.add(new Pair<>(dstW,new double[]{i}));
+
+//                Core.bitwise_not(dstW,dstW);
+//                pairs.add(new Pair<>(dstW,new double[]{i}));
             }
 
             training.put(key, pairs);

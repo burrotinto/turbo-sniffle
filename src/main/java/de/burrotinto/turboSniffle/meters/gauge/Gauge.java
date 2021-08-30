@@ -1,20 +1,21 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
+import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.math3.util.Precision;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Gauge {
     public final static int TYPE = CvType.CV_8U;
     public final static Size DEFAULT_SIZE = new Size(256, 256);
-    public final static int AUFROLL_STEPS = 720;
 
     @Getter
     protected Mat source;
@@ -48,18 +49,8 @@ public class Gauge {
         } else {
             Imgproc.resize(otsu, this.otsu, DEFAULT_SIZE);
         }
-
-        //Wenn Wenn es mehr Schwarz als weiß gibt müssen farben getauscht werden
-        Mat mask = Mat.zeros(DEFAULT_SIZE, TYPE);
-        Imgproc.circle(mask, getCenter(), (int) getRadius(), Helper.WHITE, -1);
-
-        List<Pixel> pixels = Helper.getAllPixel(this.otsu, mask);
-        if (pixels.stream().filter(pixel -> pixel.color == 0).count() > pixels.size() / 2) {
-            Core.bitwise_not(this.otsu, this.otsu);
-        }
-
-
     }
+
 
     public Point getCenter() {
         return new Point(source.size().width / 2, source.size().height / 2);
@@ -80,5 +71,7 @@ public class Gauge {
         return new Point(x + getCenter().x, getCenter().y - y);
     }
 
-
+    private List<Pixel> getPixelsForAngle(List<Pixel> pixels, double angle, int nk) {
+        return pixels.stream().filter(pixel -> Math.abs(Precision.round(bildkoordinatenZuPoolar(pixel.point), nk) % 360 - Precision.round(angle, nk) % 360) < Math.pow(10, -nk)).collect(Collectors.toList());
+    }
 }

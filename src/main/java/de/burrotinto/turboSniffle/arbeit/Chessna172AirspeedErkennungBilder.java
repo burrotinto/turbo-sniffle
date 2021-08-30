@@ -37,7 +37,7 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
 
 
 
-            AutoEncoderGauge ai = GaugeFactory.getCessna172AirspeedIndecator(airspeed);
+            val ai = GaugeFactory.getCessna172AirspeedIndecator(airspeed);
             Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);

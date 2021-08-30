@@ -88,7 +88,7 @@ public class OnePointerErkennungBilder implements Arbeit {
                 new Thread(() -> {
 
                     try {
-                        AutoEncoderGauge analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
+                        val analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));

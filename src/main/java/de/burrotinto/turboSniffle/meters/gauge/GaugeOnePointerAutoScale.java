@@ -10,9 +10,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.Optional;
 
-public class GaugeOnePointerAutoScale extends AutoEncoderGauge {
+public class GaugeOnePointerAutoScale extends ValueGauge {
 
     private final TextDedection textDedection;
 
@@ -21,45 +22,54 @@ public class GaugeOnePointerAutoScale extends AutoEncoderGauge {
     }
 
     GaugeOnePointerAutoScale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
-        super(gauge, steps, min, max, trainingSet);
+        super(gauge, steps, min, max, trainingSet, 9);
         this.textDedection = textDedection;
         doOCR();
     }
 
-    protected void doOCR(){
-        Mat ideal = otsu.clone();
+    protected void doOCR() {
+        Mat ideal = getIdealisierteDarstellung();
         // Beschriftung erkennung
         try {
             val textAreas = textDedection.getTextAreas(otsu);
             textAreas.addAll(textDedection.getTextAreas(source));
+//            textAreas.addAll(textDedection.getTextAreasWithTess(source));
+//            textAreas.addAll(textDedection.getTextAreasWithTess(source));
 
-            val clustered = DistanceToPointClusterer.extract(textAreas, getCenter(), 60, 2);
+//            val clustered = DistanceToPointClusterer.extractWithOutArea(textAreas, getCenter(), 5, 2);
 
             //Alle erkannten Textfelder die sich in der äusseren Hälfte befinden
 //            for (RotatedRect r : textAreas.stream().filter(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) >= getRadius() / 2).collect(Collectors.toList())) {
 //
-            for (RotatedRect r : clustered) {
+            HashMap<RotatedRect, Double> areas = new HashMap<>();
+            for (RotatedRect r : textAreas) {
                 try {
                     BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
                     String str = textDedection.doOCRNumbers(sub).replaceAll("[\\D.]", "");
                     Double i = Double.parseDouble(str);
-                    if (addToScaleMark(r, i)) {
-                        System.out.println("OTSU_OCR =" + i + "; Winkel=" + bildkoordinatenZuPoolar(r.center));
-                        Helper.drawRotatedRectangle(ideal, r, Helper.WHITE);
-                    }
+                    areas.put(r, i);
+//                    if (addToScaleMark(r, i)) {
+//                    }
                 } catch (Exception e) {
                     try {
                         BufferedImage sub2 = Helper.Mat2BufferedImage(source.submat(r.boundingRect()));
                         String str2 = textDedection.doOCRNumbers(sub2).replaceAll("[\\D.]", "");
                         Double i2 = Double.parseDouble(str2);
-                        if (addToScaleMark(r, i2)) {
-                            System.out.println("GREYSCAKLE_OCR=" + i2 + "; Winkel=" + bildkoordinatenZuPoolar(r.center));
-                            Helper.drawRotatedRectangle(ideal, r, Helper.WHITE);
-                        }
+                        areas.put(r, i2);
+//                        if (addToScaleMark(r, i2)) {
+//
+//                        }
                     } catch (Exception e2) {
                     }
                 }
             }
+            textAreas.forEach(rotatedRect -> Helper.drawRotatedRectangle(ideal, rotatedRect, Helper.WHITE));
+
+            val clustered = DistanceToPointClusterer.extractWithOutArea(areas.keySet(), getCenter(), 5, 2);
+
+            clustered.forEach(rotatedRect -> {
+                addToScaleMark(rotatedRect, areas.get(rotatedRect));
+            });
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -12,7 +12,6 @@ import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
@@ -24,23 +23,9 @@ import java.util.stream.Collectors;
 
 public class GaugeFactory {
     private static final int BILATERAL_D = 20; //20
-    private static final String FILE = "data/example/gauge/value=38_min=0_max=100_step=20_id=0.jpg";
-    //    private static final String FILE = "data/example/0_bar_I.jpg";
-    private static final String NAME = FILE.split("/")[FILE.split("/").length - 1].split("\\.")[0];
 
     public static final TextDedection TEXT_DEDECTION = new TextDedection();
 
-    @SneakyThrows
-    public static void main(String[] args) {
-        nu.pattern.OpenCV.loadLocally();
-
-//        extract(Imgcodecs.imread("data/example/21_C.jpg", Imgcodecs.IMREAD_GRAYSCALE), "li");
-        Mat x = Imgcodecs.imread(FILE, Imgcodecs.IMREAD_GRAYSCALE);
-        Imgcodecs.imwrite("data/out/CLAHE_org.png", x);
-
-        Imgproc.createCLAHE().apply(x, x);
-        Imgcodecs.imwrite("data/out/CLAHE_filter.png", x);
-    }
 
     public static Gauge getGauge(Mat src) {
         Gauge out = null;
@@ -98,11 +83,6 @@ public class GaugeFactory {
 
         }
 
-//        Mat color = new Mat();
-//        Imgproc.cvtColor(bilateral, color, Imgproc.COLOR_GRAY2RGB);
-//        Helper.drawRotatedRectangle(color, biggestEllipse, new Scalar(139, 0, 0), 20);
-//        Imgproc.ellipse(color, biggestEllipse, new Scalar(0, 69, 255), 20);
-//        Imgcodecs.imwrite("data/out/ELLIPSE" + biggestEllipse.size + ".png", color);
 
         //3. Alles ausserhalb der Ellipse Entfernen
         val maskiert = removeAllOutsideEllpipse(bilateral, biggestEllipse);
@@ -126,27 +106,25 @@ public class GaugeFactory {
         return gauge;
     }
 
-    public static AutoEncoderGauge getGaugeWithOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
+    public static ValueGauge getGaugeWithOnePointerNoScale(Gauge gauge) throws NotGaugeWithPointerException {
         return new GaugeOnePointerNoScale(gauge);
     }
 
 
-    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
+    public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
     }
 
-    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
+    public static ValueGauge getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(getGauge(src), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    public static AutoEncoderGauge getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
+    public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(gauge, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
-
         return new Cessna172AirspeedIndecator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
-//        return new Cessna172AirspeedIndecator(getGauge(src, 2), TEXT_DEDECTION);
     }
 
     public static Cessna172VerticalSpeedIndicator getCessna172VerticalSpeedIndicator(Mat src) throws NotGaugeWithPointerException {
@@ -154,17 +132,21 @@ public class GaugeFactory {
     }
 
     public static AutoEncoderGauge getCessna172Altimeter(Mat src) {
-        return getAutoencoderGauge(getGaugeWithHeatMap(src, -1), GaugeTwoPointerLearningDataset.get());
-    }
-    @SneakyThrows
-    public static AutoEncoderGauge getAutoencoderGauge(Gauge gauge, TrainingSet trainingSet) {
-        return new AutoEncoderGauge(gauge, trainingSet);
+        return getAutoencoderGauge(getGaugeWithHeatMap(src, -1), GaugeTwoPointerLearningDataset.get(),12);
     }
 
     @SneakyThrows
-    public static AutoEncoderGauge getAutoencoderGauge(Mat mat, TrainingSet trainingSet) {
-        return new AutoEncoderGauge(getGauge(mat), trainingSet);
+    public static AutoEncoderGauge getAutoencoderGauge(Gauge gauge, TrainingSet trainingSet,int hiddenLayer) {
+        return new AutoEncoderGauge(gauge, trainingSet,hiddenLayer);
     }
+
+    @SneakyThrows
+    public static AutoEncoderGauge getAutoencoderGauge(Mat mat, TrainingSet trainingSet,int hiddenLayer) {
+        return new AutoEncoderGauge(getGauge(mat), trainingSet,hiddenLayer);
+    }
+
+
+
 
     public static CannyEdgeDetector getCanny() {
         CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
@@ -295,7 +277,7 @@ public class GaugeFactory {
 
         double dist = 0;
         double min = Double.MAX_VALUE;
-        val cluster = DistanceToPointClusterer.extract(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 40, 2);
+        val cluster = DistanceToPointClusterer.extractWithArea(heatMap.getAllConnectedWithCenter(), heatMap.getCenter(), 40, 2);
 
 
         //Median

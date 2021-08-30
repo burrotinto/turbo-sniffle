@@ -18,6 +18,6 @@ public abstract class TrainingSet {
     }
 
     public int calcPointerLength(int w) {
-        return (int) Math.ceil((w * 4.0) / 10);
+        return (int) Math.ceil((w ) / 2);
     }
 }

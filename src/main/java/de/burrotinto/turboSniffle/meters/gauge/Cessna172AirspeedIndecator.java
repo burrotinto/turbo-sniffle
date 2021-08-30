@@ -1,23 +1,17 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaSpeedTraingSet;
-import lombok.val;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
-import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
-    // Value / Winkeldelta zu 200er
     private Map<Double, Double> idealScaleMarks = new HashMap<>();
 
     Cessna172AirspeedIndecator(Gauge gauge, TextDedection textDedection) throws NotGaugeWithPointerException {
@@ -33,6 +27,10 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
         idealScaleMarks.put(160.0, 50.0);
         idealScaleMarks.put(180.0, 25.0);
         idealScaleMarks.put(200.0, 0.0);
+
+        idealisierteDarstellung = otsu.clone();
+        Core.bitwise_not(idealisierteDarstellung,idealisierteDarstellung);
+
     }
 
     @Override
@@ -47,6 +45,10 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
             }
         }
         return true;
+    }
+
+    @Override
+    protected void setIdealisierteDarstellung(Mat idealisierteDarstellung) {
     }
 
     @Override
