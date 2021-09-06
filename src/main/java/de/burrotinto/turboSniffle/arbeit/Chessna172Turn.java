@@ -1,16 +1,12 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
-import de.burrotinto.turboSniffle.meters.gauge.ValueGauge;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaTurnTrainingDataset;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;
@@ -23,7 +19,7 @@ public class Chessna172Turn implements Arbeit {
     @Override
     public void machDeinDing() {
         val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
-//                .stream().filter(path -> path.toString().contains("cessna172_017")).collect(Collectors.toList());
+//                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
@@ -36,14 +32,14 @@ public class Chessna172Turn implements Arbeit {
             Mat airspeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(350, 675, 150, 475);
 
 
+            val ai = GaugeFactory.getAutoencoderGauge(airspeed, CessnaTurnTrainingDataset.get(), 10);
+//            val x = GaugeFactory.getTwoPointerValueGauge(ai, 10);
+            HighGui.imshow("", ai.getDrawing(ai.getSource()));
 
-
-            val ai = GaugeFactory.getCessna172AirspeedIndecator(airspeed);
-            Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
-            HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
+//            Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
+//            HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);
             HighGui.waitKey(100);
-
 
 
         }

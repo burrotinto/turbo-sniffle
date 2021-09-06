@@ -28,15 +28,19 @@ public class GaugeFactory {
 
 
     public static Gauge getGauge(Mat src) {
+        return getGauge(src,BILATERAL_D);
+    }
+
+    public static Gauge getGauge(Mat src,int bilateral) {
         Gauge out = null;
         try {
-            out = getGaugeEllipseMethod(src, BILATERAL_D);
+            out = getGaugeEllipseMethod(src, bilateral);
         } catch (Exception e) {
             e.printStackTrace();
         }
         try {
             if (out == null) {
-                out = getGaugeWithHeatMap(src, 20);
+                out = getGaugeWithHeatMap(src, bilateral);
             } else {
                 out = getGaugeWithHeatMap(out.source, -1);
             }
@@ -122,6 +126,9 @@ public class GaugeFactory {
     public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge) throws NotGaugeWithPointerException {
         return getGaugeWithOnePointerAutoScale(gauge, Optional.empty(), Optional.empty(), Optional.empty());
     }
+    public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge,TrainingSet trainingSet) throws NotGaugeWithPointerException {
+        return new GaugeOnePointerAutoScale(gauge,TEXT_DEDECTION,Optional.empty(), Optional.empty(), Optional.empty(),trainingSet);
+    }
 
     public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
         return new Cessna172AirspeedIndecator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
@@ -131,21 +138,29 @@ public class GaugeFactory {
         return new Cessna172VerticalSpeedIndicator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
     }
 
-    public static AutoEncoderGauge getCessna172Altimeter(Mat src) {
-        return getAutoencoderGauge(getGaugeWithHeatMap(src, -1), GaugeTwoPointerLearningDataset.get(),12);
+    public static TwoPointerValueGauge getCessna172Altimeter(Mat src) throws NotGaugeWithPointerException {
+        return new Cessna172AltimeterIndecator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
     }
 
     @SneakyThrows
-    public static AutoEncoderGauge getAutoencoderGauge(Gauge gauge, TrainingSet trainingSet,int hiddenLayer) {
-        return new AutoEncoderGauge(gauge, trainingSet,hiddenLayer);
+    public static TwoPointerValueGauge getTwoPointerValueGauge(Gauge gauge, int rotation) {
+        return new TwoPointerValueGauge(gauge, GaugeTwoPointerLearningDataset.get(), 12, rotation);
     }
 
     @SneakyThrows
-    public static AutoEncoderGauge getAutoencoderGauge(Mat mat, TrainingSet trainingSet,int hiddenLayer) {
-        return new AutoEncoderGauge(getGauge(mat), trainingSet,hiddenLayer);
+    public static TwoPointerValueGauge getTwoPointerValueGauge(Gauge gauge, TrainingSet trainingSet, int hiddenLayer, int rotation) {
+        return new TwoPointerValueGauge(gauge, trainingSet, hiddenLayer, rotation);
     }
 
+    @SneakyThrows
+    public static AutoEncoderGauge getAutoencoderGauge(Gauge gauge, TrainingSet trainingSet, int hiddenLayer) {
+        return new AutoEncoderGauge(gauge, trainingSet, hiddenLayer);
+    }
 
+    @SneakyThrows
+    public static AutoEncoderGauge getAutoencoderGauge(Mat mat, TrainingSet trainingSet, int hiddenLayer) {
+        return new AutoEncoderGauge(getGauge(mat, -1), trainingSet, hiddenLayer);
+    }
 
 
     public static CannyEdgeDetector getCanny() {
@@ -194,7 +209,9 @@ public class GaugeFactory {
                 }
 
         ).sorted((o1, o2) -> (Double.compare(o2.ellipseScore, o1.ellipseScore)));
+//        ).sorted((o1, o2) -> (EllipseDetector.createContour(o2).size.area()Double.compare(o2., o1.ellipseScore)));
 //        ).sorted((o1, o2) -> Double.compare(EllipseDetector.createContour(o2).size.area() ,EllipseDetector.createContour(o1).size.area()));
+//).sorted((o1, o2) -> Double.compare(Math.abs(EllipseDetector.createContour(o1).size.height - EllipseDetector.createContour(o1).size.width) ,Math.abs(EllipseDetector.createContour(o2).size.height - EllipseDetector.createContour(o2).size.width)));
 
         return EllipseDetector.createContour(ellipsInside.findFirst().get());
     }

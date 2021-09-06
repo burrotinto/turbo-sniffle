@@ -11,6 +11,8 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Stack;
 
 
 public class AutoEncoderGauge extends Gauge {
@@ -72,13 +74,20 @@ public class AutoEncoderGauge extends Gauge {
 
             for (int i = 0; i < ausgangsVektoren.size(); i++) {
                 Mat konjunktion = new Mat();
-                Core.bitwise_xor(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
-                int p = Core.countNonZero(konjunktion);
+                Core.bitwise_or(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
+//                int p = Core.countNonZero(konjunktion);
+
+                int p = (int)(Core.sumElems(konjunktion).val[0] / 255);
                 if (min == null || min.p2 > p) {
                     min = new Pair<>(ausgangsVektoren.get(i).p2, p);
-//                    HighGui.imshow("min", konjunktion);
-//                    HighGui.waitKey(100);
+//                    System.out.println(konjunktion.dump());
+//                    System.out.println(p);
+                    HighGui.imshow("min", konjunktion);
+                    HighGui.waitKey(100);
                 }
+
+
+//                System.out.println(min.p2 +" " + p);
             }
 
             pointerAngel = min.p1;

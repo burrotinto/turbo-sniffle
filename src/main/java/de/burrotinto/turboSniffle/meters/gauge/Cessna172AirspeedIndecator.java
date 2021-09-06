@@ -28,8 +28,8 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
         idealScaleMarks.put(180.0, 25.0);
         idealScaleMarks.put(200.0, 0.0);
 
-        idealisierteDarstellung = otsu.clone();
-        Core.bitwise_not(idealisierteDarstellung,idealisierteDarstellung);
+//        idealisierteDarstellung = otsu.clone();
+//        Core.bitwise_not(idealisierteDarstellung,idealisierteDarstellung);
 
     }
 
@@ -47,9 +47,9 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
         return true;
     }
 
-    @Override
-    protected void setIdealisierteDarstellung(Mat idealisierteDarstellung) {
-    }
+//    @Override
+//    protected void setIdealisierteDarstellung(Mat idealisierteDarstellung) {
+//    }
 
     @Override
     public void autosetMinMaxMiddle() {

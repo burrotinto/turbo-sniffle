@@ -1,7 +1,9 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
+import de.burrotinto.turboSniffle.meters.gauge.Gauge;
+import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaKurskreiselTraingSet;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;
@@ -13,14 +15,14 @@ import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 @Service
-public class Chessna172VerticalSpeedIndicatorErkennungBilder implements Arbeit {
+public class Chessna172VerticalKurskreiselkennungBilder implements Arbeit {
 
 
     @SneakyThrows
     @Override
     public void machDeinDing() {
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"))
-                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
+//                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
@@ -28,12 +30,12 @@ public class Chessna172VerticalSpeedIndicatorErkennungBilder implements Arbeit {
             val name = file.split("\\\\")[file.split("\\\\").length - 1].split("\\.")[0];
 
 
-            Mat verticalSpeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(350, 675, 750, 1075);
+            Mat verticalSpeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(350, 675, 300, 750);
 
 
+            Gauge g = GaugeFactory.getGaugeWithHeatMap(verticalSpeed,-1);
 
-
-            AutoEncoderGauge ai = GaugeFactory.getCessna172VerticalSpeedIndicator(verticalSpeed);
+            AutoEncoderGauge ai = GaugeFactory.getGaugeWithOnePointerAutoScale(g, CessnaKurskreiselTraingSet.get());
 //            Imgproc.putText(verticalSpeed,""+Perceai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);
@@ -46,6 +48,6 @@ public class Chessna172VerticalSpeedIndicatorErkennungBilder implements Arbeit {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        new Chessna172VerticalSpeedIndicatorErkennungBilder().machDeinDing();
+        new Chessna172VerticalKurskreiselkennungBilder().machDeinDing();
     }
 }

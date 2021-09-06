@@ -10,6 +10,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 @Service
 public class Chessna172AltimeterErkennungBilder implements Arbeit {
@@ -19,7 +20,7 @@ public class Chessna172AltimeterErkennungBilder implements Arbeit {
     @Override
     public void machDeinDing() {
         val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
-//                .stream().filter(path -> path.toString().contains("cessna172_017")).collect(Collectors.toList());
+//                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
@@ -32,11 +33,10 @@ public class Chessna172AltimeterErkennungBilder implements Arbeit {
 
 
 
-            AutoEncoderGauge ai = GaugeFactory.getCessna172Altimeter(verticalSpeed);
+            val ai = GaugeFactory.getCessna172Altimeter(verticalSpeed);
 //            Imgproc.putText(verticalSpeed,""+Perceai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
-//            HighGui.imshow("xccccc", airspeed);
-            HighGui.waitKey(1000);
+            HighGui.waitKey(1);
 
 
 

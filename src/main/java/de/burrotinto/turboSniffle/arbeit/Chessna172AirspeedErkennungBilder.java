@@ -13,6 +13,7 @@ import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 @Service
 public class Chessna172AirspeedErkennungBilder implements Arbeit {
@@ -21,8 +22,8 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
     @SneakyThrows
     @Override
     public void machDeinDing() {
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
-//                .stream().filter(path -> path.toString().contains("cessna172_017")).collect(Collectors.toList());
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"))
+                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();

@@ -28,42 +28,30 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
     }
 
     protected void doOCR() {
-        Mat ideal = getIdealisierteDarstellung();
-        // Beschriftung erkennung
         try {
             val textAreas = textDedection.getTextAreas(otsu);
             textAreas.addAll(textDedection.getTextAreas(source));
-//            textAreas.addAll(textDedection.getTextAreasWithTess(source));
-//            textAreas.addAll(textDedection.getTextAreasWithTess(source));
 
-//            val clustered = DistanceToPointClusterer.extractWithOutArea(textAreas, getCenter(), 5, 2);
-
-            //Alle erkannten Textfelder die sich in der äusseren Hälfte befinden
-//            for (RotatedRect r : textAreas.stream().filter(rotatedRect -> Helper.calculateDistanceBetweenPointsWithPoint2D(rotatedRect.center, getCenter()) >= getRadius() / 2).collect(Collectors.toList())) {
-//
             HashMap<RotatedRect, Double> areas = new HashMap<>();
             for (RotatedRect r : textAreas) {
                 try {
                     BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
+                    String s = textDedection.doOCRNumbers(sub);
+                    System.out.println(s);
                     String str = textDedection.doOCRNumbers(sub).replaceAll("[\\D.]", "");
                     Double i = Double.parseDouble(str);
                     areas.put(r, i);
-//                    if (addToScaleMark(r, i)) {
-//                    }
                 } catch (Exception e) {
                     try {
                         BufferedImage sub2 = Helper.Mat2BufferedImage(source.submat(r.boundingRect()));
                         String str2 = textDedection.doOCRNumbers(sub2).replaceAll("[\\D.]", "");
                         Double i2 = Double.parseDouble(str2);
                         areas.put(r, i2);
-//                        if (addToScaleMark(r, i2)) {
-//
-//                        }
+
                     } catch (Exception e2) {
                     }
                 }
             }
-            textAreas.forEach(rotatedRect -> Helper.drawRotatedRectangle(ideal, rotatedRect, Helper.WHITE));
 
             val clustered = DistanceToPointClusterer.extractWithOutArea(areas.keySet(), getCenter(), 5, 2);
 
@@ -74,8 +62,6 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        setIdealisierteDarstellung(ideal);
     }
 
     @Override

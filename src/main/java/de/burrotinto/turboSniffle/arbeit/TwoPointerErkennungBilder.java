@@ -2,7 +2,6 @@ package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
 import lombok.SneakyThrows;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class OnePointerErkennungBilder implements Arbeit {
+public class TwoPointerErkennungBilder implements Arbeit {
 
 
     @SneakyThrows
@@ -33,11 +32,11 @@ public class OnePointerErkennungBilder implements Arbeit {
     public void machDeinDing() {
         try {
 //            String prefix = "ELLIPSE";
-            String prefix = "HEATMAP";
-//            String prefix = "KOMBO";
+//            String prefix = "HEATMAP";
+            String prefix = "KOMBO";
 
-            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("value=24_min=0_max=120_step=10_id=1.png")).collect(Collectors.toList());
-//            val files = listFiles(Paths.get("data/example/gauge"));
+//            val files = listFiles(Paths.get("data/example/gauge2Pointer")).stream().filter(path -> path.toString().contains("value=24_min=0_max=120_step=10_id=1.png")).collect(Collectors.toList());
+            val files = listFiles(Paths.get("data/example/gauge2Pointer"));
 
             val td = new TextDedection();
 
@@ -51,16 +50,16 @@ public class OnePointerErkennungBilder implements Arbeit {
 
 
                 Gauge gauge = null;
-                switch (prefix.toLowerCase(Locale.ROOT)){
+                switch (prefix.toLowerCase(Locale.ROOT)) {
                     case "heatmap": {
                         gauge = GaugeFactory.getGaugeWithHeatMap(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
                         break;
                     }
                     case "ellipse": {
-                        gauge =  GaugeFactory.getGaugeEllipseMethod(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),20);
+                        gauge = GaugeFactory.getGaugeEllipseMethod(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
                         break;
                     }
-                    default:{
+                    default: {
                         gauge = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
                     }
                 }
@@ -70,7 +69,7 @@ public class OnePointerErkennungBilder implements Arbeit {
                 Mat orgRezice = new Mat(Gauge.DEFAULT_SIZE, Gauge.TYPE);
                 Imgproc.resize(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), orgRezice, Gauge.DEFAULT_SIZE);
                 gauge.getSource().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange(0, (int) Gauge.DEFAULT_SIZE.width));
-                gauge.getCanny().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width*2));
+                gauge.getCanny().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width * 2));
 
                 Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_1_source.png", gauge.getSource());
                 Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_2_canny.png", gauge.getCanny());
@@ -88,13 +87,13 @@ public class OnePointerErkennungBilder implements Arbeit {
                 new Thread(() -> {
 
                     try {
-                        val analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
+                        val analogOnePointer = GaugeFactory.getTwoPointerValueGauge(finalGauge, exampleFile.getRotation().orElse(12.0).intValue());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
                         Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));
 
 
-                    } catch (NotGaugeWithPointerException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }).start();
@@ -123,19 +122,6 @@ public class OnePointerErkennungBilder implements Arbeit {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        new OnePointerErkennungBilder().machDeinDing();
+        new TwoPointerErkennungBilder().machDeinDing();
     }
 }
-
-//    Mat draw = new Mat(bilateral.size(), CvType.CV_8UC3);
-//                Imgproc.cvtColor(bilateral, bilateral, Imgproc.COLOR_GRAY2RGB);
-//                        Imgproc.drawMarker(bilateral, heatMap.getCenter(), new Scalar(0, 0, 255), Imgproc.MARKER_CROSS, (int) dist * 2);
-//                        Imgproc.circle(bilateral, heatMap.getCenter(), (int) dist, new Scalar(0, 0, 255), 10);
-//
-//                        Mat finalBilateral = bilateral;
-//                        cluster.forEach(rotatedRect -> Helper.drawRotatedRectangle(finalBilateral, rotatedRect, new Scalar(127, 0, 0), 8));
-//                        heatMap.getAllConnectedWithCenter().forEach(rotatedRect -> Helper.drawRotatedRectangle(finalBilateral, rotatedRect, new Scalar(127, 127, 127), 2));
-//                        Imgcodecs.imwrite("data/out/heatmap_Color.png", bilateral);
-//                        HighGui.imshow("", bilateral
-//                        );
-//                        HighGui.waitKey();

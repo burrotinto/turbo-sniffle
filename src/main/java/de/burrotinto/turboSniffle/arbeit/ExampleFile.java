@@ -14,6 +14,7 @@ public class ExampleFile {
     private Optional<Double> min = Optional.empty();
     private Optional<Double> max = Optional.empty();
     private Optional<Double> steps = Optional.empty();
+    private Optional<Double> rotation = Optional.empty();
 
     public ExampleFile(String string) {
         if (string.split("_").length > 1) {
@@ -32,6 +33,9 @@ public class ExampleFile {
                         this.max = Optional.ofNullable(Double.valueOf(value));
                         break;
                     case "step":
+                        this.steps = Optional.ofNullable(Double.valueOf(value));
+                        break;
+                    case "rotation":
                         this.steps = Optional.ofNullable(Double.valueOf(value));
                         break;
                 }

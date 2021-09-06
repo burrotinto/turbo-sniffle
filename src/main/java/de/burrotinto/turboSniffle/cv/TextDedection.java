@@ -5,18 +5,10 @@ import lombok.Synchronized;
 import lombok.val;
 import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.Tesseract;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.MatOfRotatedRect;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.dnn.Dnn;
 import org.opencv.dnn.Net;
-import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
@@ -34,16 +26,20 @@ public class TextDedection {
     private final Tesseract tesseract = new Tesseract();
     private final Tesseract tesseractNumbers = new Tesseract();
 
-    public TextDedection() {
+    public TextDedection(String language) {
         initDNN();
 
         tesseract.setDatapath("data");
 
         tesseractNumbers.setDatapath("data");
-//        tesseractNumbers.setLanguage("digits");
-        tesseractNumbers.setLanguage("engrestrict_best_int");
-
+        if (language != null && !language.equals("")) {
+            tesseractNumbers.setLanguage(language);
+        }
         tesseractNumbers.setOcrEngineMode(1);
+    }
+
+    public TextDedection() {
+        this("engrestrict_best_int");
     }
 
     private void initDNN() {
@@ -154,13 +150,14 @@ public class TextDedection {
         for (int i = 0; i < reg.size(); ++i) {
             Rectangle r = reg.get(i);
             Point[] vertices = new Point[4];
-            RotatedRect rot = new RotatedRect(new Point(r.getCenterX(),r.getCenterY()), new Size(r.getWidth(),r.getHeight()),0);
+            RotatedRect rot = new RotatedRect(new Point(r.getCenterX(), r.getCenterY()), new Size(r.getWidth(), r.getHeight()), 0);
             out.add(rot);
         }
 
         return out;
 
     }
+
     @SneakyThrows
     public String doOCRNumbers(Mat sub) {
         return doOCRNumbers(Helper.Mat2BufferedImage(sub));

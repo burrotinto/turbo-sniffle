@@ -5,10 +5,7 @@ import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.Getter;
 import org.apache.commons.math3.util.Precision;
-import org.opencv.core.Mat;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.LinkedList;
@@ -16,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ValueGauge extends AutoEncoderGauge{
+public class ValueGauge extends AutoEncoderGauge {
     @Getter
     private Optional<Double> skalemarkSteps, min, max;
 
@@ -25,11 +22,11 @@ public class ValueGauge extends AutoEncoderGauge{
     }
 
     ValueGauge(Gauge gauge, TrainingSet trainingSet) throws NotGaugeWithPointerException {
-        super(gauge, trainingSet,9);
+        super(gauge, trainingSet, 9);
     }
 
     ValueGauge(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet, int hiddenLayer) throws NotGaugeWithPointerException {
-        super(gauge, trainingSet,hiddenLayer);
+        super(gauge, trainingSet, hiddenLayer);
 
         this.skalemarkSteps = steps;
         this.min = min;
@@ -100,7 +97,6 @@ public class ValueGauge extends AutoEncoderGauge{
 
 
     public double getValue(double angle) {
-
         autosetMinMaxMiddle();
 
         if (labelScale.size() < 2) {
@@ -118,36 +114,44 @@ public class ValueGauge extends AutoEncoderGauge{
         pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
 
 
-        Map.Entry<RotatedRect, Double> mark1 = pairs.get(0).p2;
-        Map.Entry<RotatedRect, Double> mark2 = pairs.get(1).p2;
+        Map.Entry<RotatedRect, Double> next = pairs.get(0).p2;
 
-        double delta = Math.abs(bildkoordinatenZuPoolar(mark1.getKey().center) - bildkoordinatenZuPoolar(mark2.getKey().center));
-        double deltaMax = Math.max(360 - delta, delta);
-        double deltaMin = 360 - deltaMax;
+        //Anzeigewerttechnisch näherster am ersten.
+        Map.Entry<RotatedRect, Double> next2 = null;
+
+        for (int i = 0; i < pairs.size(); i++) {
+            if (pairs.get(i).p2.getValue() != next.getValue()) {
+                if (next2 == null || Math.abs(next.getValue() - next2.getValue()) > Math.abs(next.getValue() - pairs.get(i).p2.getValue())) {
+                    next2 = pairs.get(i).p2;
+                }
+            }
+        }
+
+        double deltaV =  Math.min(Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)), 360 - Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)));
 
         //Berechnen der Wertes pro Grad
-        double xPPDeltaMax = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMax;
-        double xPPDeltaMin = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMin;
+        double xPPDelta = Math.abs(next.getValue() - next2.getValue()) / deltaV;
 
-        //Bestimmen ob der Zeiger innerhalb oder ausserhalb des BEreiches ist
+
+        //Bestimmen ob der Zeiger innerhalb oder ausserhalb des Bereiches ist
         double summeDerAbstaende = pairs.get(0).p1 + pairs.get(1).p1;
         double value = 0;
-        if (Math.abs(summeDerAbstaende - deltaMin) <= 0.1) {
+        if (Math.abs(summeDerAbstaende - deltaV) <= 0.1) {
             //Fall 1 Zeiger Innerhalb des Bereiches
 
             //Interpolation je nachdem ob auf oder absteigend
-            if (mark1.getValue() > mark2.getValue()) {
-                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+            if (next.getValue() > next2.getValue()) {
+                value = next.getValue() - (pairs.get(0).p1 * xPPDelta);
             } else {
-                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+                value = next.getValue() + (pairs.get(0).p1 * xPPDelta);
             }
 
         } else {
             // Fall 2 Zeiger außerhalb des Bereiches
-            if (mark1.getValue() > mark2.getValue()) {
-                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+            if (next.getValue() > next2.getValue()) {
+                value = next.getValue() + (pairs.get(0).p1 * xPPDelta);
             } else {
-                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+                value = next.getValue() - (pairs.get(0).p1 * xPPDelta);
             }
         }
 
@@ -155,9 +159,65 @@ public class ValueGauge extends AutoEncoderGauge{
 
     }
 
+//    public double getValue(double angle) {
+//        autosetMinMaxMiddle();
+//
+//        if (labelScale.size() < 2) {
+//            return Double.NaN;
+//        }
+//
+//        LinkedList<Pair<Double, Map.Entry<RotatedRect, Double>>> pairs = new LinkedList<>();
+//        labelScale.entrySet().stream().forEach(e -> {
+//            Double x = Math.abs(bildkoordinatenZuPoolar(e.getKey().center) - angle);
+//            pairs.add(new Pair<>(x, e));
+//            pairs.add(new Pair<>(360 - x, e));
+//        });
+//
+//        //Sortierung nach entfernung zum Zeiger
+//        pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
+//
+//
+//        Map.Entry<RotatedRect, Double> mark1 = pairs.get(0).p2;
+//        Map.Entry<RotatedRect, Double> mark2 = pairs.get(1).p2;
+//
+//        double delta = Math.abs(bildkoordinatenZuPoolar(mark1.getKey().center) - bildkoordinatenZuPoolar(mark2.getKey().center));
+//        double deltaMax = Math.max(360 - delta, delta);
+//        double deltaMin = 360 - deltaMax;
+//
+//        //Berechnen der Wertes pro Grad
+//        double xPPDeltaMin = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMin;
+//
+//        //Bestimmen ob der Zeiger innerhalb oder ausserhalb des Bereiches ist
+//        double summeDerAbstaende = pairs.get(0).p1 + pairs.get(1).p1;
+//        double value = 0;
+//        if (Math.abs(summeDerAbstaende - deltaMin) <= 0.1) {
+//            //Fall 1 Zeiger Innerhalb des Bereiches
+//
+//            //Interpolation je nachdem ob auf oder absteigend
+//            if (mark1.getValue() > mark2.getValue()) {
+//                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+//            } else {
+//                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+//            }
+//
+//        } else {
+//            // Fall 2 Zeiger außerhalb des Bereiches
+//            if (mark1.getValue() > mark2.getValue()) {
+//                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
+//            } else {
+//                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
+//            }
+//        }
+//        return value;
+//    }
+
 
     public double getValue() {
         return getValue(getPointerAngel()[getPointerAngel().length - 1]);
+    }
+
+    public double getValue(int pointerNumber) {
+        return getValue(getPointerAngel()[pointerNumber]);
     }
 
     /**
@@ -174,7 +234,7 @@ public class ValueGauge extends AutoEncoderGauge{
         Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_GRAY2RGB);
 
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 1), getCenter(), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 4), new Point(10,10), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
 
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden

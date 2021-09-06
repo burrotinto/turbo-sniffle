@@ -47,14 +47,6 @@ public class GaugeTwoPointerLearningDataset extends TrainingSet {
 
             Imgproc.line(white, center, new Point((size.width / 2) + laengeDickerZeiger, size.height / 2), Helper.BLACK, breiteDickerZeiger);
 
-//            Point[] points = new Point[]{new Point((size.width / 2) + laengeDickerZeiger, size.height / 2),
-//                    new Point(size.width / 2, (size.height / 2) - 10),
-//                    new Point(size.width / 2, (size.height / 2) + 10)
-//            };
-//            List<MatOfPoint> pointsL = new ArrayList<>();
-//            pointsL.add(new MatOfPoint(points));
-//            Imgproc.drawContours(white, pointsL, -1, Helper.BLACK, -1);
-
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
             double angleSteps = 360 / Math.pow(2, (p) * 0.5);
