@@ -23,6 +23,9 @@ public class ValueGauge extends AutoEncoderGauge {
 
     ValueGauge(Gauge gauge, TrainingSet trainingSet) throws NotGaugeWithPointerException {
         super(gauge, trainingSet, 9);
+        this.skalemarkSteps = Optional.empty();
+        this.min = Optional.empty();
+        this.max = Optional.empty();
     }
 
     ValueGauge(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet, int hiddenLayer) throws NotGaugeWithPointerException {
@@ -127,7 +130,7 @@ public class ValueGauge extends AutoEncoderGauge {
             }
         }
 
-        double deltaV =  Math.min(Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)), 360 - Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)));
+        double deltaV = Math.min(Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)), 360 - Math.abs(bildkoordinatenZuPoolar(next.getKey().center) - bildkoordinatenZuPoolar(next2.getKey().center)));
 
         //Berechnen der Wertes pro Grad
         double xPPDelta = Math.abs(next.getValue() - next2.getValue()) / deltaV;
@@ -234,7 +237,7 @@ public class ValueGauge extends AutoEncoderGauge {
         Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_GRAY2RGB);
 
 
-        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 4), new Point(10,10), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
+        Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 4), new Point(10, 10), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
 
         labelScale.forEach((rotatedRect, aDouble) -> {
             //Automatisch generierte Punkte Sollen anders Mrkiert werden

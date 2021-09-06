@@ -36,8 +36,8 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
             for (RotatedRect r : textAreas) {
                 try {
                     BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
-                    String s = textDedection.doOCRNumbers(sub);
-                    System.out.println(s);
+//                    String s = textDedection.doOCRNumbers(sub);
+//                    System.out.println(s);
                     String str = textDedection.doOCRNumbers(sub).replaceAll("[\\D.]", "");
                     Double i = Double.parseDouble(str);
                     areas.put(r, i);

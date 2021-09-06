@@ -5,8 +5,11 @@ import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import lombok.val;
 import org.opencv.core.*;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,20 +32,11 @@ public class CessnaKurskreiselTraingSet extends TrainingSet {
     public List<Pair<Mat, double[]>> getTrainingset(Size size, int p) {
         String key = generateKey(size, p);
         if (!training.containsKey(key)) {
-            Mat white = Mat.zeros(size, Gauge.TYPE);
-            white.setTo(Helper.BLACK);
+            Mat north =  Imgcodecs.imread("data/ae/kurskreisel.png", Imgcodecs.IMREAD_GRAYSCALE);
+            Imgproc.threshold(north, north, 0, 255, Imgproc.THRESH_BINARY);
 
-            Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, Helper.WHITE, -1);
+            Imgproc.warpAffine(north, north, Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), -90, 1.0), size);
 
-            //Zeiger
-            //
-//            Imgproc.line(white, new Point((size.width/2) + (size.width*9/10), (size.height / 2)-5), new Point((size.width/2) +50 , (size.height / 2)-5), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 2) );
-//            Imgproc.line(white, new Point((size.width/2) + (size.width*9/10), (size.height / 2)+5), new Point((size.width/2)+50 , (size.height / 2)+5), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 2) );
-
-              Imgproc.circle(white,new Point((size.width/2) + (size.width*2/5), size.height / 2),10,Helper.BLACK,-1);
-//            Imgproc.circle(white,new Point((size.width/2) - (size.width*4/10), size.height / 2),10,Helper.BLACK,-1);
-//            Imgproc.circle(white,new Point((size.width/2) + (size.width*4/10), size.height / 2),10,Helper.BLACK,-1);
-//            Imgproc.circle(white,new Point((size.width/2) + (size.width*4/10), size.height / 2),10,Helper.BLACK,-1);
 
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
@@ -50,11 +44,8 @@ public class CessnaKurskreiselTraingSet extends TrainingSet {
             for (double i = 0; i < 360; i += angleSteps) {
                 Mat dstW = new Mat();
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
-                Imgproc.warpAffine(white, dstW, rotate, size);
+                Imgproc.warpAffine(north, dstW, rotate, size);
                 pairs.add(new Pair<>(dstW,new double[]{i}));
-
-//                Core.bitwise_not(dstW,dstW);
-//                pairs.add(new Pair<>(dstW,new double[]{i}));
             }
 
             training.put(key, pairs);

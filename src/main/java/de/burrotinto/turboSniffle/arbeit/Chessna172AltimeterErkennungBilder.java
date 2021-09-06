@@ -1,5 +1,6 @@
 package de.burrotinto.turboSniffle.arbeit;
 
+import de.burrotinto.turboSniffle.meters.gauge.Cessna172SixpackFactory;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
 import lombok.SneakyThrows;
@@ -33,7 +34,7 @@ public class Chessna172AltimeterErkennungBilder implements Arbeit {
 
 
 
-            val ai = GaugeFactory.getCessna172Altimeter(verticalSpeed);
+            val ai = Cessna172SixpackFactory.getCessna172Altimeter(verticalSpeed);
 //            Imgproc.putText(verticalSpeed,""+Perceai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
             HighGui.waitKey(1);

@@ -1,6 +1,7 @@
 package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.cv.Helper;
+import de.burrotinto.turboSniffle.meters.gauge.Cessna172SixpackFactory;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
 import lombok.SneakyThrows;
@@ -38,11 +39,11 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
 
 
 
-            val ai = GaugeFactory.getCessna172AirspeedIndecator(airspeed);
+            val ai = Cessna172SixpackFactory.getCessna172AirspeedIndecator(airspeed);
             Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);
-            HighGui.waitKey(100);
+            HighGui.waitKey(1);
 
 
 

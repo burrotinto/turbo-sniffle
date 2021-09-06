@@ -130,17 +130,7 @@ public class GaugeFactory {
         return new GaugeOnePointerAutoScale(gauge,TEXT_DEDECTION,Optional.empty(), Optional.empty(), Optional.empty(),trainingSet);
     }
 
-    public static Cessna172AirspeedIndecator getCessna172AirspeedIndecator(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172AirspeedIndecator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
-    }
 
-    public static Cessna172VerticalSpeedIndicator getCessna172VerticalSpeedIndicator(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172VerticalSpeedIndicator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
-    }
-
-    public static TwoPointerValueGauge getCessna172Altimeter(Mat src) throws NotGaugeWithPointerException {
-        return new Cessna172AltimeterIndecator(getGaugeWithHeatMap(src, -1), TEXT_DEDECTION);
-    }
 
     @SneakyThrows
     public static TwoPointerValueGauge getTwoPointerValueGauge(Gauge gauge, int rotation) {

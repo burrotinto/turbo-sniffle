@@ -1,6 +1,7 @@
 package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
+import de.burrotinto.turboSniffle.meters.gauge.Cessna172SixpackFactory;
 import de.burrotinto.turboSniffle.meters.gauge.Gauge;
 import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaKurskreiselTraingSet;
@@ -12,10 +13,9 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;
-import java.util.stream.Collectors;
 
 @Service
-public class Chessna172VerticalKurskreiselkennungBilder implements Arbeit {
+public class Chessna172KurskreiselkennungBilder implements Arbeit {
 
 
     @SneakyThrows
@@ -30,12 +30,11 @@ public class Chessna172VerticalKurskreiselkennungBilder implements Arbeit {
             val name = file.split("\\\\")[file.split("\\\\").length - 1].split("\\.")[0];
 
 
-            Mat verticalSpeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(350, 675, 300, 750);
+            Mat mat = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(350, 675, 300, 750);
 
 
-            Gauge g = GaugeFactory.getGaugeWithHeatMap(verticalSpeed,-1);
 
-            AutoEncoderGauge ai = GaugeFactory.getGaugeWithOnePointerAutoScale(g, CessnaKurskreiselTraingSet.get());
+            AutoEncoderGauge ai = Cessna172SixpackFactory.getCessna172Kurskreisel(mat);
 //            Imgproc.putText(verticalSpeed,""+Perceai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);
@@ -48,6 +47,6 @@ public class Chessna172VerticalKurskreiselkennungBilder implements Arbeit {
 
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
-        new Chessna172VerticalKurskreiselkennungBilder().machDeinDing();
+        new Chessna172KurskreiselkennungBilder().machDeinDing();
     }
 }

@@ -26,7 +26,7 @@ public class TextDedection {
     private final Tesseract tesseract = new Tesseract();
     private final Tesseract tesseractNumbers = new Tesseract();
 
-    public TextDedection(String language) {
+    public TextDedection(String language, int dpi) {
         initDNN();
 
         tesseract.setDatapath("data");
@@ -36,10 +36,11 @@ public class TextDedection {
             tesseractNumbers.setLanguage(language);
         }
         tesseractNumbers.setOcrEngineMode(1);
+        tesseractNumbers.setTessVariable("user_defined_dpi", "" + dpi);
     }
 
     public TextDedection() {
-        this("engrestrict_best_int");
+        this("engrestrict_best_int", 300);
     }
 
     private void initDNN() {

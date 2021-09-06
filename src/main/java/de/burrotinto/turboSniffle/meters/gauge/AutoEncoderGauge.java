@@ -7,6 +7,7 @@ import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearn
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.HashMap;
@@ -66,6 +67,8 @@ public class AutoEncoderGauge extends Gauge {
     public double[] getPointerAngel() {
         if (pointerAngel == null || pointerAngel.length == 0) {
             Pair<double[], Integer> min = null;
+            Mat minTV = null;
+
             Mat eingangsVektor = new Mat();
 
             Imgproc.resize(getIdealisierteDarstellung(), eingangsVektor, AUTOENCODER_INPUT_SIZE);
@@ -80,15 +83,18 @@ public class AutoEncoderGauge extends Gauge {
                 int p = (int)(Core.sumElems(konjunktion).val[0] / 255);
                 if (min == null || min.p2 > p) {
                     min = new Pair<>(ausgangsVektoren.get(i).p2, p);
+                    minTV = ausgangsVektoren.get(i).p1;
 //                    System.out.println(konjunktion.dump());
 //                    System.out.println(p);
-                    HighGui.imshow("min", konjunktion);
-                    HighGui.waitKey(100);
+//                    HighGui.imshow("min", konjunktion);
+//                    HighGui.waitKey(100);
                 }
 
 
 //                System.out.println(min.p2 +" " + p);
             }
+
+//            Imgcodecs.imwrite("data/ae/kurskreisel/"+ min.p1[0] +"_"+ System.currentTimeMillis() + ".png", eingangsVektor);
 
             pointerAngel = min.p1;
         }
