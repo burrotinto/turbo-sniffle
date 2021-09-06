@@ -25,7 +25,13 @@ public class GaugeFactory {
     private static final int BILATERAL_D = 20; //20
 
     public static final TextDedection TEXT_DEDECTION = new TextDedection();
+    public static final TextDedection TEXT_DEDECTION_Numbers = getTextDedectionNumbersOnly();
 
+    public static  TextDedection getTextDedectionNumbersOnly(){
+        TextDedection td = new TextDedection();
+        td.addOptions("tessedit_char_whitelist", "01234567890");
+        return td;
+    }
 
     public static Gauge getGauge(Mat src) {
         return getGauge(src,BILATERAL_D);
@@ -116,7 +122,7 @@ public class GaugeFactory {
 
 
     public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
-        return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION, steps, min, max);
+        return new GaugeOnePointerAutoScale(gauge, TEXT_DEDECTION_Numbers, steps, min, max);
     }
 
     public static ValueGauge getGaugeWithOnePointerAutoScale(Mat src) throws NotGaugeWithPointerException {
@@ -127,7 +133,7 @@ public class GaugeFactory {
         return getGaugeWithOnePointerAutoScale(gauge, Optional.empty(), Optional.empty(), Optional.empty());
     }
     public static ValueGauge getGaugeWithOnePointerAutoScale(Gauge gauge,TrainingSet trainingSet) throws NotGaugeWithPointerException {
-        return new GaugeOnePointerAutoScale(gauge,TEXT_DEDECTION,Optional.empty(), Optional.empty(), Optional.empty(),trainingSet);
+        return new GaugeOnePointerAutoScale(gauge,TEXT_DEDECTION_Numbers,Optional.empty(), Optional.empty(), Optional.empty(),trainingSet);
     }
 
 

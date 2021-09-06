@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TextDedection {
+    public static final String ENGRESTRICT_BEST_INT = "engrestrict_best_int";
+    public static final String ENG_BEST = "eng";
     private final float scoreThresh = 0.5f;
     private final float nmsThresh = 0.4f;
     private final Net net = Dnn.readNetFromTensorflow("frozen_east_text_detection.pb");
@@ -36,11 +38,11 @@ public class TextDedection {
             tesseractNumbers.setLanguage(language);
         }
         tesseractNumbers.setOcrEngineMode(1);
-        tesseractNumbers.setTessVariable("user_defined_dpi", "" + dpi);
+        addOptions("user_defined_dpi", "" + dpi);
     }
 
     public TextDedection() {
-        this("engrestrict_best_int", 300);
+        this(ENGRESTRICT_BEST_INT, 300);
     }
 
     private void initDNN() {
@@ -48,6 +50,9 @@ public class TextDedection {
         outNames.add("feature_fusion/concat_3");
     }
 
+    public void addOptions(String var,String x){
+        tesseractNumbers.setTessVariable(var, x);
+    }
     public List<RotatedRect> getTextAreas(Mat src) {
 
         // input image
