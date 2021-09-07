@@ -1,5 +1,6 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
+import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -8,15 +9,16 @@ import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
-import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class GarminG1000 {
     //Bei einem 12" Display ist die Länge 9,6" und die höhe 7,2" entsprich 106,666 DPI
     public static final Size SIZE = new Size(1024, 768);
     private static TextDedection textDedection = new TextDedection(TextDedection.ENGRESTRICT_BEST_INT, 107);
-    private final Mat g1000;
+    private Mat g1000;
 
 
     private final static Rect altimeter = new Rect(new Point(700, 70), new Point(810, 450));
@@ -25,9 +27,10 @@ public class GarminG1000 {
     public GarminG1000(Mat src) {
         g1000 = new Mat();
         Imgproc.resize(src, g1000, SIZE);
-//        textDedection.addOptions("psm", "6");
-//        textDedection.addOptions("oem", "0");
         textDedection.addOptions("tessedit_char_whitelist", "01234567890");
+
+        g1000 = getBestThreshAndMat(g1000).p2;
+
 //        int i = 50;
 //        while (i <= SIZE.height || i <= SIZE.width) {
 //            if (i <= SIZE.height) {
@@ -39,46 +42,74 @@ public class GarminG1000 {
 //            i += 50;
 //        }
 
-        Imgproc.threshold(g1000, g1000, 0, 255, Imgproc.THRESH_OTSU);
-        Core.bitwise_not(g1000, g1000);
+
+//        val cannyEdgeDetector = GaugeFactory.getCanny();
+//        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(g1000));
+//        cannyEdgeDetector.process();
+//
+//        Map<RotatedRect, Mat> map = new HashMap<>();
+//        ArrayList<MatOfPoint> contours = new ArrayList<>();
+//        Mat hierarchy = new Mat();
+//        Imgproc.findContours(cannyEdgeDetector.getEdgeMat(), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        HighGui.imshow("canny", cannyEdgeDetector.getEdgeMat());
+////        HighGui.waitKey();
+//
+//        for (int i = 0; i < contours.size(); i++) {
+//            val rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(i).toArray()));
+//
+//            //Nur Konturen die eine Mindestgröße besitzen
+//            if (rect.size.area() > 1000) {
+////                Mat xxx = transformieren(g1000,rect,g1000.size());
+//                try {
+//                    HighGui.imshow(i + "", g1000.submat(rect.boundingRect()));
+//                } catch (Exception e) {
+//
+//                }
+//            }
+//        }
+
         System.out.println(textDedection.doOCRNumbers(g1000.submat(altimeter)));
 
-//        Imgproc.rectangle(g1000, altimeter, Helper.BLACK);
 
-
-        val cannyEdgeDetector = GaugeFactory.getCanny();
-        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(g1000));
-        cannyEdgeDetector.process();
-
-        Map<RotatedRect, Mat> map = new HashMap<>();
-        ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(cannyEdgeDetector.getEdgeMat(), contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        HighGui.imshow("canny", cannyEdgeDetector.getEdgeMat());
-//        HighGui.waitKey();
-
-        for (int i = 0; i < contours.size(); i++) {
-            val rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(i).toArray()));
-
-            //Nur Konturen die eine Mindestgröße besitzen
-            if (rect.size.area() > 10000) {
-//                Mat xxx = transformieren(g1000,rect,g1000.size());
-                try {
-                    HighGui.imshow(i + "", g1000.submat(rect.boundingRect()));
-                } catch (Exception e) {
-
-                }
-            }
-        }
-
-
-        val kurskreisel = Cessna172SixpackFactory.getCessna172Kurskreisel(g1000);
         HighGui.imshow("", g1000);
-        HighGui.imshow("kurs", kurskreisel.getDrawing(kurskreisel.source));
         HighGui.waitKey();
     }
 
+    public static Pair<Integer, Mat> getBestThreshAndMat(Mat src) {
+        Mat w = new Mat();
+        int thresh = 200;
+        int nmbrsCount = 0;
+        boolean isReady = false;
+//        List<Pair<Integer,Pair<Integer, Mat>>> all = new ArrayList<>();
+//        for (int i = 100; i < 200; i+=5) {
+//            Imgproc.threshold(src, w, thresh, 255, Imgproc.THRESH_BINARY);
+//            Core.bitwise_not(w, w);
+//            val numbers = textDedection.doOCRNumbers(w).split("\n");
+//            all.add(new Pair<>(numbers.length,new Pair<>(thresh, w.clone())));
+//
+//        }
+//        all.sort((o1, o2) -> o2.p1 - o1.p1);
+//
+//        return all.get(0).p2;
+
+        Pair<Integer, Mat> out = null;
+        do {
+            Imgproc.threshold(src, w, thresh, 255, Imgproc.THRESH_BINARY);
+            Core.bitwise_not(w, w);
+            val numbers = textDedection.doOCRNumbers(w).split("\n");
+            System.out.println(numbers.length);
+            if (nmbrsCount < numbers.length) {
+                nmbrsCount = numbers.length;
+                out = new Pair<>(thresh, w.clone());
+            } else if (nmbrsCount > numbers.length) {
+                isReady = true;
+            }
+            thresh -= 10;
+        } while (!isReady);
+        return out;
+
+    }
 
     public static Mat transformieren(Mat mat, RotatedRect ellipse, Size size) {
         Point[] pts = new Point[4];
