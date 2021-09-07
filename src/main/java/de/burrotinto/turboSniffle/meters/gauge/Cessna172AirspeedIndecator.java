@@ -87,4 +87,14 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
 //        addToScaleMark(new RotatedRect(poolarZuBildkoordinaten(maxW + 50, getRadius()), new Size(10, 10), 0), 160.0);
 
     }
+
+    @Override
+    public double getValue() {
+        if(super.getValue() > 200 || super.getValue() < 40){
+            return Double.NaN;
+        } else {
+            return super.getValue();
+        }
+
+    }
 }

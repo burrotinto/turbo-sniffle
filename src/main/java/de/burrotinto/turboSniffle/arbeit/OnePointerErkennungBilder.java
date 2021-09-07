@@ -36,7 +36,7 @@ public class OnePointerErkennungBilder implements Arbeit {
             String prefix = "HEATMAP";
 //            String prefix = "KOMBO";
 
-            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("value=24_min=0_max=120_step=10_id=1.png")).collect(Collectors.toList());
+            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("Airspeed")).collect(Collectors.toList());
 //            val files = listFiles(Paths.get("data/example/gauge"));
 
             val td = new TextDedection();

@@ -35,7 +35,7 @@ public class CessnaSpeedTraingSet extends TrainingSet {
 
             Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) size.width / 2, Helper.WHITE, -1);
             //Zeiger
-            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width/2) + (size.width*4/10) , size.height / 2), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 2) );
+//            Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width/2) + (size.width*4/10) , size.height / 2), Helper.BLACK, (int) calcPointerWidth((int) size.height, Math.pow(2, p), 2) );
             Point[] points = new Point[]{new Point(size.width, size.height / 2),
                     new Point(size.width / 2, (size.height / 2) - 12),
                     new Point(size.width / 2, (size.height / 2) + 12)

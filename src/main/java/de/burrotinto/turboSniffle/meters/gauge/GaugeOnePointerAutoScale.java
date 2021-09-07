@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class GaugeOnePointerAutoScale extends ValueGauge {
 
-    private final TextDedection textDedection;
+    protected final TextDedection textDedection;
 
     GaugeOnePointerAutoScale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max) throws NotGaugeWithPointerException {
         this(gauge, textDedection, steps, min, max, GaugeOnePointerLearningDataset.get());

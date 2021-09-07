@@ -23,8 +23,10 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
     @SneakyThrows
     @Override
     public void machDeinDing() {
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"))
-                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
+
+//        val files = OnePointerErkennungBilder.listFiles(Paths.get(" data/example/CessnaAirSpeed.jpg"));
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/"))
+                .stream().filter(path -> path.toString().contains("CessnaAirSpeed.jpg")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
@@ -34,16 +36,16 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
 //            HighGui.imshow("", ArbeitHelper.drawGitter( Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),50));
 //            HighGui.waitKey();
 
-            Mat airspeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(50, 375, 150, 475);
+            Mat airspeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE);//.submat(50, 375, 150, 475);
 
 
 
 
             val ai = Cessna172SixpackFactory.getCessna172AirspeedIndecator(airspeed);
-            Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
+//            Imgproc.putText(airspeed,""+ai.getValue(),new Point(50,50),Imgproc.FONT_HERSHEY_PLAIN,1.0, Helper.WHITE);
             HighGui.imshow("xccccc", ai.getDrawing(ai.getSource().clone()));
 //            HighGui.imshow("xccccc", airspeed);
-            HighGui.waitKey(1);
+            HighGui.waitKey();
 
 
 

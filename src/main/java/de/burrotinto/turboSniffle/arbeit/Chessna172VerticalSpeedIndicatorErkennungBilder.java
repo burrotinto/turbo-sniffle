@@ -20,8 +20,8 @@ public class Chessna172VerticalSpeedIndicatorErkennungBilder implements Arbeit {
     @SneakyThrows
     @Override
     public void machDeinDing() {
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"))
-                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
+//                .stream().filter(path -> path.toString().contains("cessna172_01701.png")).collect(Collectors.toList());
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
