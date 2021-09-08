@@ -4,11 +4,13 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
+import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
+import net.sourceforge.lept4j.Pix;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -42,6 +44,8 @@ public class GarminG1000 {
 
     private TextField kurskreisel = new TextField(new Rect(new Point(425, 401), new Point(495, 435)), 0.0, 360.0);
 
+    private Rect verticalSpeedIndicator = new Rect(new Point(810, 144), new Point(830, 424));
+
     @SneakyThrows
     public GarminG1000(Mat src) {
         g1000TextOptimiert = new Mat();
@@ -55,22 +59,23 @@ public class GarminG1000 {
         g1000TextOptimiert = getBestThreshAndMat(g1000TextOptimiert).p2;
 
         //POT finden
-        val cannyEdgeDetector = GaugeFactory.getCanny();
-        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(g1000));
-        cannyEdgeDetector.process();
-        HeatMap heatMap = new HeatMap(cannyEdgeDetector.getEdgeMat().submat(KURSKREISEL_POS));
-        pot = new Point(KURSKREISEL_POS.x + heatMap.getCenter().x, KURSKREISEL_POS.y + heatMap.getCenter().y);
+//        val cannyEdgeDetector = GaugeFactory.getCanny();
+//        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(g1000));
+//        cannyEdgeDetector.process();
+//        HeatMap heatMap = new HeatMap(cannyEdgeDetector.getEdgeMat().submat(KURSKREISEL_POS));
+//        pot = new Point(KURSKREISEL_POS.x + heatMap.getCenter().x, KURSKREISEL_POS.y + heatMap.getCenter().y);
+//
+//        //POT MARKIEREN
+//        Imgproc.drawMarker(g1000, pot, Helper.BLACK, 0, 1000);
 
-        //POT MARKIEREN
-        Imgproc.drawMarker(g1000, pot, Helper.BLACK, 0, 1000);
 
-
-        Imgproc.line(g1000, new Point(0, centerLine), new Point(g1000.width(), centerLine), Helper.WHITE);
+//        Imgproc.line(g1000, new Point(0, centerLine), new Point(g1000.width(), centerLine), Helper.WHITE);
 
 
         System.out.println("Alti = " + getAltimeter());
         System.out.println("Airspeed = " + getAirspeed());
         System.out.println("Kurskreisel = " + getKurskreisel());
+        System.out.println("VSI =" + getVSI());
         HighGui.imshow("", g1000);
         HighGui.waitKey();
     }
@@ -103,6 +108,33 @@ public class GarminG1000 {
         return kurskreisel.fieldValue;
     }
 
+    public double getVSI() {
+        val x = Helper.getAllPixel(g1000.submat(verticalSpeedIndicator));
+        x.sort(Pixel::compareTo);
+        int darkest = x.get(0).color;
+        ArrayList<Pixel> darkPixels = new ArrayList<>(x.stream().filter(pixel -> pixel.color <= darkest * 1.2).collect(Collectors.toList()));
+//        val pixelIterator = darkPixels.iterator();
+//        int i = 0;
+//        Pixel p = null;
+//        while (pixelIterator.hasNext() && (p.color <= darkest * 1.2){
+//            i++;
+//            p = pixelIterator.next();
+//
+//        }
+        double y = 0;
+        for (int i = 0; i < darkPixels.size(); i++) {
+            y += darkPixels.get(i).point.y;
+        }
+
+        y = y / darkPixels.size();
+
+//        System.out.println(verticalSpeedIndicator.height);
+//        System.out.println(y);
+//        System.out.println(4000.0 / verticalSpeedIndicator.height);
+//        System.out.println();
+        return (2000.0 / 140.0) * ((verticalSpeedIndicator.height * 0.5) - y);
+    }
+
     private List<Pair<Rect, Double>> getAllNumbersOfArea(Mat src, Rect area, double mod) {
         val x = textDedection.getTextAreasWithTess(src.submat(area)).stream().map(rotatedRect -> {
             Rect rect = new Rect(new Point(rotatedRect.boundingRect().x + area.x, rotatedRect.boundingRect().y + area.y),
@@ -132,8 +164,8 @@ public class GarminG1000 {
 
                 initTextField(w, kurskreisel);
 
-//                HighGui.imshow("", w);
-//                HighGui.waitKey(100);
+                HighGui.imshow("", w);
+                HighGui.waitKey(100);
                 if ((altimeterUP.isInit && altimeterDOWN.isInit && airspeedUP.isInit && airspeedDOWN.isInit) || Core.countNonZero(w) == 0) {
                     altimeterUP.area.copyTo(out.p2.submat(altimeterUP.origin));
                     altimeterDOWN.area.copyTo(out.p2.submat(altimeterDOWN.origin));
@@ -149,7 +181,7 @@ public class GarminG1000 {
     private void initTextField(Mat w, TextField textField) {
         if (!textField.isInit) {
             val v = parseDoubleOrNAN(textDedection.doOCRNumbers(w.submat(textField.origin)));
-            if (!Double.isNaN(v)) {
+            if (!Double.isNaN(v) && textField.min <= v && textField.max > v) {
                 textField.fieldValue = v;
                 textField.isInit = true;
             }
