@@ -33,14 +33,15 @@ public class G1000 implements Arbeit {
 //        Mat g1000 = Imgcodecs.imread(G1000, Imgcodecs.IMREAD_GRAYSCALE);
 //        new GarminG1000(g1000);
 //
+        Mat g1000 = Imgcodecs.imread("data/example/G1000/2021-09-08 11_12_48-Window.png", Imgcodecs.IMREAD_GRAYSCALE);
+        new GarminG1000(g1000);
 
-
-        ArrayList<Point> corner = new ArrayList<>();
-        corner.add(new Point(404, 191));
-        corner.add(new Point(1317, 192));
-        corner.add(new Point(1296, 843));
-        corner.add(new Point(423, 841));
-        new GarminG1000(transformieren(Imgcodecs.imread("data/example/G1000/Cessna_172SP_G1000 - 2021-09-03 14.08.20.png", Imgcodecs.IMREAD_GRAYSCALE), corner, GarminG1000.SIZE));
+//        ArrayList<Point> corner = new ArrayList<>();
+//        corner.add(new Point(404, 191));
+//        corner.add(new Point(1317, 192));
+//        corner.add(new Point(1296, 843));
+//        corner.add(new Point(423, 841));
+//        new GarminG1000(transformieren(Imgcodecs.imread("data/example/G1000/Cessna_172SP_G1000 - 2021-09-03 14.08.20.png", Imgcodecs.IMREAD_GRAYSCALE), corner, GarminG1000.SIZE));
     }
 
     public static Mat transformieren(Mat mat, RotatedRect ellipse, Size size) {

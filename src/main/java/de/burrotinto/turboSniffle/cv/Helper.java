@@ -198,4 +198,8 @@ public class Helper {
             return sum / (input.size() - 1);
         }
     }
+
+    public static Point getCenter(Rect rect){
+        return new Point(rect.x+ (rect.width*0.5), rect.y+ (rect.height*0.5));
+    }
 }
