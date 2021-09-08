@@ -4,6 +4,7 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.meters.gauge.impl.HeatMap;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.*;
@@ -26,10 +27,13 @@ public class GarminG1000 {
     private Mat g1000, g1000TextOptimiert;
     private Point pot;
 
-    private Rect altimeterUP = new Rect(new Point(723, 113), new Point(788, 250));
-    private Rect altimeterDOWN = new Rect(new Point(723, 318), new Point(788, 455));
-    private Rect altimeter = new Rect(new Point(altimeterUP.x, altimeterUP.y),
-            new Point(altimeterDOWN.x + altimeterDOWN.width, altimeterDOWN.y + altimeterDOWN.height));
+    private Rect altimeterUPRect = new Rect(new Point(723, 113), new Point(788, 250));
+    private Rect altimeterDOWNRect = new Rect(new Point(723, 318), new Point(788, 455));
+    private Rect altimeter = new Rect(new Point(altimeterUPRect.x, altimeterUPRect.y),
+            new Point(altimeterDOWNRect.x + altimeterDOWNRect.width, altimeterDOWNRect.y + altimeterDOWNRect.height));
+
+    private Textarea altimeterUP = new Textarea(null, altimeterUPRect, null, false);
+    private Textarea altimeterDOWN = new Textarea(null, altimeterDOWNRect, null, false);
 
     private int centerLine = 284;
 
@@ -77,50 +81,64 @@ public class GarminG1000 {
      * @return
      */
     public List<Pair<Rect, Double>> getKandidatenFuerAltimeter(Mat mat) {
-        val numbers = getAllNumbersOfArea(mat, altimeterUP).stream().filter(rectDoublePair -> rectDoublePair.p2 % 100 == 0).collect(Collectors.toList());
-        numbers.addAll(getAllNumbersOfArea(mat, altimeterDOWN).stream().filter(rectDoublePair -> rectDoublePair.p2 % 100 == 0).collect(Collectors.toList()));
+        val numbers = new ArrayList<>(getAllNumbersOfArea(mat, altimeterUPRect, 100));
+        numbers.addAll(new ArrayList<>(getAllNumbersOfArea(mat, altimeterDOWNRect, 100)));
 //        return numbers.stream().sorted((o1, o2) -> o2.p2.compareTo(o1.p2)).findFirst().get();
         return numbers.stream().sorted(Comparator.comparing(o -> o.p2)).collect(Collectors.toList());
     }
 
 
-    private List<Pair<Rect, Double>> getAllNumbersOfArea(Mat src, Rect area) {
+    private List<Pair<Rect, Double>> getAllNumbersOfArea(Mat src, Rect area, double mod) {
         return textDedection.getTextAreasWithTess(src.submat(area)).stream().map(rotatedRect -> {
             Rect rect = new Rect(new Point(rotatedRect.boundingRect().x + area.x, rotatedRect.boundingRect().y + area.y),
                     (new Point(rotatedRect.boundingRect().x + area.x + rotatedRect.boundingRect().width, rotatedRect.boundingRect().y + area.y + rotatedRect.boundingRect().height)));
             return new Pair<>(rect, parseDoubleOrNAN(textDedection.doOCRNumbers(src.submat(rect))));
-        }).collect(Collectors.toList());
+        }).filter(rectDoublePair -> rectDoublePair.p2 % mod == 0).collect(Collectors.toList());
     }
 
     public Pair<Integer, Mat> getBestThreshAndMat(Mat src) {
         Mat w = new Mat();
-        int thresh = 200;
+        int thresh = 205;
         int nmbrsCount = 0;
         boolean isReady = false;
 
         Pair<Integer, Mat> out = null;
         do {
+            thresh -= 5;
             Imgproc.threshold(src, w, thresh, 255, Imgproc.THRESH_BINARY);
             Core.bitwise_not(w, w);
 
-            val altimeter = getKandidatenFuerAltimeter(w).stream().sorted((o1, o2) -> o2.p2.compareTo(o1.p2)).collect(Collectors.toList());
+            if (!altimeterUP.isInit) {
+                val altiUp = getAllNumbersOfArea(w, altimeterUP.origin, 100);
+                if (!altimeterUP.isInit && Helper.berecheDieDurchschnittlicheVeränderungDesDatensatzes(altiUp.stream().map(rectDoublePair -> rectDoublePair.p2).collect(Collectors.toList())) == -100.0) {
+                    altimeterUP.area = w.submat(altimeterUP.origin).clone();
+                    altimeterUP.textFields = altiUp;
+                    altimeterUP.isInit = true;
+                }
+            }
+            if (!altimeterDOWN.isInit) {
+                val altiDown = getAllNumbersOfArea(w, altimeterDOWN.origin, 100);
+                if (Helper.berecheDieDurchschnittlicheVeränderungDesDatensatzes(altiDown.stream().map(rectDoublePair -> rectDoublePair.p2).collect(Collectors.toList())) == -100.0) {
+                    altimeterDOWN.area = w.submat(altimeterDOWN.origin).clone();
+                    altimeterDOWN.textFields = altiDown;
+                    altimeterDOWN.isInit = true;
+                }
+            }
 
-            HighGui.imshow("", w);
-            HighGui.waitKey(100);
-            altimeter.forEach(rectDoublePair -> System.out.println(rectDoublePair.p2));
-            System.out.println();
-            if (altimeter.size() >= 4 && altimeter.get(0).p2 - altimeter.get(1).p2 == 100 && altimeter.get(2).p2 - altimeter.get(3).p2 == 100) {
-                out = new Pair<>(thresh, w.clone());
+//            HighGui.imshow("", w);
+//            HighGui.waitKey(100);
+
+            if (altimeterUP.isInit && altimeterDOWN.isInit) {
+                out = new Pair<>(thresh, w);
+                altimeterUP.area.copyTo(out.p2.submat(altimeterUP.origin));
+                altimeterDOWN.area.copyTo(out.p2.submat(altimeterDOWN.origin));
                 isReady = true;
             }
-//            if (nmbrsCount < numbers.length) {
-//                nmbrsCount = numbers.length;
-//                out = new Pair<>(thresh, w.clone());
-//            } else if (nmbrsCount > numbers.length) {
-//                isReady = true;
-//            }
-            thresh -= 5;
-        } while (!isReady);
+
+        } while (!isReady && thresh > 50);
+
+        HighGui.imshow("", out.p2);
+        HighGui.waitKey();
         return out;
 
     }
@@ -150,5 +168,13 @@ public class GarminG1000 {
         } catch (Exception e) {
             return Double.NaN;
         }
+    }
+
+    @AllArgsConstructor
+    private class Textarea {
+        Mat area;
+        Rect origin;
+        List<Pair<Rect, Double>> textFields;
+        boolean isInit;
     }
 }

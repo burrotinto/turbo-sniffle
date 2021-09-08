@@ -1,14 +1,7 @@
 package de.burrotinto.turboSniffle.cv;
 
 import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -123,13 +116,13 @@ public class Helper {
                 color, 4);
     }
 
-    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect, Scalar color,int thickness) {
+    public static void drawRotatedRectangle(Mat src, RotatedRect rotatedRect, Scalar color, int thickness) {
         Point[] points = new Point[4];
         rotatedRect.points(points);
 
         List<MatOfPoint> pointsL = new ArrayList<>();
         pointsL.add(new MatOfPoint(points));
-        Imgproc.drawContours(src,pointsL,-1,color,thickness);
+        Imgproc.drawContours(src, pointsL, -1, color, thickness);
 
     }
 
@@ -188,7 +181,21 @@ public class Helper {
         Imgproc.line(mat, p1, new Point(x, y), scalar, thickness);
     }
 
-    public static Point pointMinusPoint(Point a,Point b) {
-        return new Point(a.x-b.x,a.y-b.y);
+    public static Point pointMinusPoint(Point a, Point b) {
+        return new Point(a.x - b.x, a.y - b.y);
+    }
+
+    public static Double berecheDieDurchschnittlicheVeränderungDesDatensatzes(List<Double> input) {
+        Double sum = 0.0;
+
+        for (int i = 1; i < input.size(); i++) {
+            sum += input.get(i) - input.get(i - 1);
+        }
+
+        if (input.size() < 2) {
+            return sum;
+        } else {
+            return sum / (input.size() - 1);
+        }
     }
 }
