@@ -9,6 +9,7 @@ import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.dnn.Dnn;
 import org.opencv.dnn.Net;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
@@ -152,14 +153,17 @@ public class TextDedection {
     @SneakyThrows
     public List<RotatedRect> getTextAreasWithTess(Mat src) {
         List<RotatedRect> out = new ArrayList<>();
-        val reg = tesseractNumbers.getSegmentedRegions(Helper.Mat2BufferedImage(src), ITessAPI.TessPageIteratorLevel.RIL_WORD);
-        for (int i = 0; i < reg.size(); ++i) {
-            Rectangle r = reg.get(i);
-            Point[] vertices = new Point[4];
-            RotatedRect rot = new RotatedRect(new Point(r.getCenterX(), r.getCenterY()), new Size(r.getWidth(), r.getHeight()), 0);
-            out.add(rot);
-        }
+        try {
+            val reg = tesseractNumbers.getSegmentedRegions(Helper.Mat2BufferedImage(src), ITessAPI.TessPageIteratorLevel.RIL_WORD);
+            for (int i = 0; i < reg.size(); ++i) {
+                Rectangle r = reg.get(i);
+                Point[] vertices = new Point[4];
+                RotatedRect rot = new RotatedRect(new Point(r.getCenterX(), r.getCenterY()), new Size(r.getWidth(), r.getHeight()), 0);
+                out.add(rot);
+            }
+        }catch (Exception e){
 
+        }
         return out;
 
     }
