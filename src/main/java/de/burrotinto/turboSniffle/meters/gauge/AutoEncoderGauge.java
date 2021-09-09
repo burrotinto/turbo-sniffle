@@ -74,6 +74,9 @@ public class AutoEncoderGauge extends Gauge {
             Imgproc.resize(getIdealisierteDarstellung(), eingangsVektor, AUTOENCODER_INPUT_SIZE);
 
             List<Pair<Mat, double[]>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, hiddenLayer);
+            HighGui.imshow("asd",getIdealisierteDarstellung());
+            HighGui.waitKey();
+            Imgcodecs.imwrite("data/out/aePointer.png", eingangsVektor);
 
             for (int i = 0; i < ausgangsVektoren.size(); i++) {
                 Mat konjunktion = new Mat();

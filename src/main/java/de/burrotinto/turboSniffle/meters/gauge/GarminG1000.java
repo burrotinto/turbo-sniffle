@@ -13,6 +13,7 @@ import lombok.val;
 import net.sourceforge.lept4j.Pix;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
@@ -54,9 +55,14 @@ public class GarminG1000 {
         Imgproc.resize(src, g1000TextOptimiert, SIZE);
         Imgproc.resize(src, g1000, SIZE);
 
+        val g = Cessna172SixpackFactory.getCessna172Kurskreisel(g1000.submat(KURSKREISEL_POS));
+        Imgcodecs.imwrite("data/out/g100Kurskreisel.png", g.otsu);
+        System.out.println(g.getValue());
+        HighGui.imshow("Kurs",g.getDrawing(g.source));
+        HighGui.waitKey();
         //Init textOptimierteVersion
         textDedection.addOptions("tessedit_char_whitelist", "01234567890");
-        g1000TextOptimiert = getBestThreshAndMat(g1000TextOptimiert).p2;
+        getBestThreshAndMat(g1000TextOptimiert);
 
         //POT finden
 //        val cannyEdgeDetector = GaugeFactory.getCanny();
@@ -70,6 +76,7 @@ public class GarminG1000 {
 
 
 //        Imgproc.line(g1000, new Point(0, centerLine), new Point(g1000.width(), centerLine), Helper.WHITE);
+
 
 
         System.out.println("Alti = " + getAltimeter());
@@ -144,7 +151,7 @@ public class GarminG1000 {
         return x.stream().filter(rectDoublePair -> rectDoublePair.p2 % mod == 0).collect(Collectors.toList());
     }
 
-    public Pair<Integer, Mat> getBestThreshAndMat(Mat src) {
+    public void getBestThreshAndMat(Mat src) {
         Mat w = new Mat();
         int thresh = 205;
         boolean isReady = false;
@@ -167,14 +174,14 @@ public class GarminG1000 {
                 HighGui.imshow("", w);
                 HighGui.waitKey(100);
                 if ((altimeterUP.isInit && altimeterDOWN.isInit && airspeedUP.isInit && airspeedDOWN.isInit) || Core.countNonZero(w) == 0) {
-                    altimeterUP.area.copyTo(out.p2.submat(altimeterUP.origin));
-                    altimeterDOWN.area.copyTo(out.p2.submat(altimeterDOWN.origin));
+//                    altimeterUP.area.copyTo(out.p2.submat(altimeterUP.origin));
+//                    altimeterDOWN.area.copyTo(out.p2.submat(altimeterDOWN.origin));
                     isReady = true;
                 }
             }
         } while (!isReady && thresh > 50);
-        out = new Pair<>(thresh, w);
-        return out;
+//        out = new Pair<>(thresh, w);
+//        return out;
 
     }
 

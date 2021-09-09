@@ -32,10 +32,13 @@ public class CessnaKurskreiselTraingSet extends TrainingSet {
     public List<Pair<Mat, double[]>> getTrainingset(Size size, int p) {
         String key = generateKey(size, p);
         if (!training.containsKey(key)) {
-            Mat north =  Imgcodecs.imread("data/ae/kurskreisel.png", Imgcodecs.IMREAD_GRAYSCALE);
-            Imgproc.threshold(north, north, 0, 255, Imgproc.THRESH_BINARY);
+            Mat kurskreisel =  Imgcodecs.imread("data/ae/kurskreisel.png", Imgcodecs.IMREAD_GRAYSCALE);
+            Imgproc.threshold(kurskreisel, kurskreisel, 0, 255, Imgproc.THRESH_BINARY);
+            Imgproc.warpAffine(kurskreisel, kurskreisel, Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), -90, 1.0), size);
 
-            Imgproc.warpAffine(north, north, Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), -90, 1.0), size);
+            Mat kurskreiselG1000 =  Imgcodecs.imread("data/ae/g1000Kurskreisel.png", Imgcodecs.IMREAD_GRAYSCALE);
+            Imgproc.threshold(kurskreisel, kurskreisel, 0, 255, Imgproc.THRESH_BINARY);
+            Core.bitwise_not(kurskreiselG1000,kurskreiselG1000);
 
 
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
@@ -44,8 +47,13 @@ public class CessnaKurskreiselTraingSet extends TrainingSet {
             for (double i = 0; i < 360; i += angleSteps) {
                 Mat dstW = new Mat();
                 val rotate = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
-                Imgproc.warpAffine(north, dstW, rotate, size);
+                Imgproc.warpAffine(kurskreisel, dstW, rotate, size);
                 pairs.add(new Pair<>(dstW,new double[]{i}));
+
+                Mat dstW2 = new Mat();
+                val rotate2 = Imgproc.getRotationMatrix2D(new Point(size.width / 2, size.height / 2), i, 1.0);
+                Imgproc.warpAffine(kurskreiselG1000, dstW2, rotate, size);
+                pairs.add(new Pair<>(dstW2,new double[]{i}));
             }
 
             training.put(key, pairs);
