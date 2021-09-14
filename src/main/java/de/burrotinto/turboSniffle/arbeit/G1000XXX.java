@@ -40,8 +40,7 @@ public class G1000XXX implements Arbeit {
         val tx = new TextDedection("",300);
         tx.getTextAreasWithTess(x).stream().filter(rotatedRect -> rotatedRect.size.area() > 50).forEach(rotatedRect -> {
             try {
-                BufferedImage sub = Helper.Mat2BufferedImage(x.submat(rotatedRect.boundingRect()));
-                val t = tx.doOCRNumbers(sub);
+                val t = tx.doOCRNumbers(x.submat(rotatedRect.boundingRect()));
                 System.out.println(t);
                 HighGui.imshow(t,x.submat(rotatedRect.boundingRect()));
                 HighGui.waitKey(1);

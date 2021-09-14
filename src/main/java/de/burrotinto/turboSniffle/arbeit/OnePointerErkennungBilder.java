@@ -33,11 +33,11 @@ public class OnePointerErkennungBilder implements Arbeit {
     public void machDeinDing() {
         try {
 //            String prefix = "ELLIPSE";
-            String prefix = "HEATMAP";
-//            String prefix = "KOMBO";
+//            String prefix = "HEATMAP";
+            String prefix = "KOMBO";
 
-            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("Airspeed")).collect(Collectors.toList());
-//            val files = listFiles(Paths.get("data/example/gauge"));
+//            val files = listFiles(Paths.get("data/example/gauge")).stream().filter(path -> path.toString().contains("Airspeed")).collect(Collectors.toList());
+            val files = listFiles(Paths.get("data/example/gauge"));
 
             val td = new TextDedection();
 
@@ -85,7 +85,6 @@ public class OnePointerErkennungBilder implements Arbeit {
 
 
                 Gauge finalGauge = gauge;
-                new Thread(() -> {
 
                     try {
                         val analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
@@ -97,7 +96,6 @@ public class OnePointerErkennungBilder implements Arbeit {
                     } catch (NotGaugeWithPointerException e) {
                         e.printStackTrace();
                     }
-                }).start();
 
             }
 

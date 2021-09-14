@@ -6,12 +6,13 @@ import de.burrotinto.turboSniffle.meters.gauge.impl.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearningDataset;
 import de.burrotinto.turboSniffle.meters.gauge.trainingSets.TrainingSet;
 import lombok.val;
-import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
 
-import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class GaugeOnePointerAutoScale extends ValueGauge {
 
@@ -29,24 +30,36 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
 
     protected void doOCR() {
         try {
-            val textAreas = textDedection.getTextAreas(otsu);
-            textAreas.addAll(textDedection.getTextAreas(source));
+            val textAreas = textDedection.getTextAreas(otsu).stream().filter(rotatedRect -> Math.min(rotatedRect.size.width, rotatedRect.size.height) >= 20).collect(Collectors.toList());
+//            textAreas.addAll(textDedection.getTextAreas(source).stream().filter(rotatedRect -> Math.min(rotatedRect.size.width, rotatedRect.size.height) >= 20).collect(Collectors.toList()));
 
             HashMap<RotatedRect, Double> areas = new HashMap<>();
             for (RotatedRect r : textAreas) {
+
+//                Double d = textDedection.doOCRBruteForceNumber(source.submat(r.boundingRect()));
+//                if (!d.isNaN()) {
+//                    areas.put(r, d);
+//                }
                 try {
-                    BufferedImage sub = Helper.Mat2BufferedImage(otsu.submat(r.boundingRect()));
 //                    String s = textDedection.doOCRNumbers(sub);
 //                    System.out.println(s);
-                    String str = textDedection.doOCRNumbers(sub).replaceAll("[\\D.]", "");
+//
+                    HighGui.imshow("aaa",otsu.submat(r.boundingRect()));
+                    String str = textDedection.doOCRNumbers(
+                            Helper.sharpen(
+//                                    Helper.erode(
+                                            otsu.submat(r.boundingRect())
+//                                            , Imgproc.CV_SHAPE_RECT, 1)
+                            )
+                    ).replaceAll("[\\D.]", "");
+
                     Double i = Double.parseDouble(str);
                     areas.put(r, i);
                 } catch (Exception e) {
                     try {
-                        BufferedImage sub2 = Helper.Mat2BufferedImage(source.submat(r.boundingRect()));
-                        String str2 = textDedection.doOCRNumbers(sub2).replaceAll("[\\D.]", "");
-                        Double i2 = Double.parseDouble(str2);
-                        areas.put(r, i2);
+//                        String str2 = textDedection.doOCRNumbers(source.submat(r.boundingRect())).replaceAll("[\\D.]", "");
+//                        Double i2 = Double.parseDouble(str2);
+//                        areas.put(r, i2);
 
                     } catch (Exception e2) {
                     }

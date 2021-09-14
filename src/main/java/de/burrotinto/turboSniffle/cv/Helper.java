@@ -199,7 +199,32 @@ public class Helper {
         }
     }
 
-    public static Point getCenter(Rect rect){
-        return new Point(rect.x+ (rect.width*0.5), rect.y+ (rect.height*0.5));
+    public static Point getCenter(Rect rect) {
+        return new Point(rect.x + (rect.width * 0.5), rect.y + (rect.height * 0.5));
+    }
+
+    public static Mat sharpen(Mat src) {
+        Mat dest = new Mat(src.rows(), src.cols(), src.type());
+        Imgproc.GaussianBlur(src, dest, new Size(0, 0), 10);
+        Core.addWeighted(src, 1.5, dest, -0.5, 0, dest);
+        return dest;
+    }
+
+    public static Mat erode(Mat src,int shape,int kernelSize) {
+        Mat out = new Mat();
+        Core.bitwise_not(src, out);
+        Mat element = Imgproc.getStructuringElement( shape, new Size(2 * kernelSize + 1, 2 * kernelSize + 1));
+
+        Imgproc.erode(out, out, element);
+        Core.bitwise_not(out, out);
+        return out;
+    }
+
+    public static Double parseDoubleOrNAN(String string) {
+        try {
+            return Double.parseDouble(string);
+        } catch (Exception e) {
+            return Double.NaN;
+        }
     }
 }

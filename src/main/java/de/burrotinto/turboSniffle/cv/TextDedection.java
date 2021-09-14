@@ -16,7 +16,9 @@ import org.opencv.utils.Converters;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TextDedection {
     public static final String ENGRESTRICT_BEST_INT = "engrestrict_best_int";
@@ -51,9 +53,10 @@ public class TextDedection {
         outNames.add("feature_fusion/concat_3");
     }
 
-    public void addOptions(String var,String x){
+    public void addOptions(String var, String x) {
         tesseractNumbers.setTessVariable(var, x);
     }
+
     public List<RotatedRect> getTextAreas(Mat src) {
 
         // input image
@@ -146,7 +149,7 @@ public class TextDedection {
 
     @SneakyThrows
     @Synchronized
-    public String doOCRNumbers(BufferedImage sub) {
+    String doOCRNumbers(BufferedImage sub) {
         return tesseractNumbers.doOCR(sub);
     }
 
@@ -161,17 +164,61 @@ public class TextDedection {
                 RotatedRect rot = new RotatedRect(new Point(r.getCenterX(), r.getCenterY()), new Size(r.getWidth(), r.getHeight()), 0);
                 out.add(rot);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
         return out;
 
     }
 
+    /**
+     * Wie in https://github.com/tesseract-ocr/tessdoc/blob/e0a3ca5aff95b9e531ff56bb191a2ad5bcd188f6/images/borders.png
+     * beschrieben wird ein 10 PX weißer Rand eingefügt
+     *
+     * @param sub
+     * @return
+     */
     @SneakyThrows
     public String doOCRNumbers(Mat sub) {
-        return doOCRNumbers(Helper.Mat2BufferedImage(sub));
+        Mat withBorders = new Mat(new Size(sub.width() + 20, sub.height() + 20), sub.type());
+        withBorders.setTo(Helper.WHITE);
+
+        sub.copyTo(withBorders.submat(10, sub.rows() + 10, 10, sub.cols() + 10));
+//        HighGui.imshow("a", sub);
+//        HighGui.imshow("b", withBorders);
+//        HighGui.waitKey(1000);
+        return doOCRNumbers(Helper.Mat2BufferedImage(withBorders));
     }
+
+    public Double doOCRBruteForceNumber(Mat org) {
+        Mat sub = new Mat();
+        Imgproc.resize(org, sub, new Size(org.size().width * 3, org.size().height * 3));
+        Mat test = new Mat();
+
+        HashMap<Double, AtomicInteger> results = new HashMap<>();
+        for (int i = 50; i <= 210; i += 10) {
+            Imgproc.threshold(sub, test, i, 255, Imgproc.THRESH_BINARY);
+//            HighGui.imshow("", test);
+//            HighGui.waitKey(100);
+            val v = Helper.parseDoubleOrNAN(doOCRNumbers(Helper.sharpen(test)));
+            if (!Double.isNaN(v)) {
+                if (!results.containsKey(v)) {
+                    results.put(v, new AtomicInteger());
+                }
+                results.get(v).incrementAndGet();
+            }
+        }
+
+        val kandidat = results.entrySet()
+                .stream().min((o1, o2) -> o2.getValue().get() - o1.getValue().get());
+        if (kandidat.isPresent() && kandidat.get().getValue().get() >= 2) {
+            return kandidat.get().getKey();
+        } else {
+            return Double.NaN;
+        }
+
+    }
+}
 //    @SneakyThrows
 //    public String doOCR(BufferedImage sub) {
 //        return tesseract.doOCR(sub);
@@ -180,4 +227,4 @@ public class TextDedection {
 //    public String doOCR(Mat sub) {
 //        return tesseract.doOCR(Helper.Mat2BufferedImage(sub));
 //    }
-}
+
