@@ -10,7 +10,9 @@ import lombok.val;
 import org.apache.commons.math3.util.Precision;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,12 +53,23 @@ public class GarminG1000 {
 
         Imgproc.resize(src, g1000SRC, SIZE);
         Imgproc.resize(src, g1000, SIZE);
-        Imgproc.bilateralFilter(g1000.clone(), g1000, 5, 5 * 2.0, 5 * 0.5);
+
+        Imgcodecs.imwrite("data/out/G1000GreyundRescale.png", g1000);
+
+//        Imgproc.bilateralFilter(g1000.clone(), g1000, 7, 7 * 2.0, 7 * 0.5);
+//        Imgcodecs.imwrite("data/out/G1000Bil.png", g1000);
+
+        Photo.fastNlMeansDenoising(g1000,g1000);
+        Imgcodecs.imwrite("data/out/G1000denoise.png", g1000);
 
         Imgproc.createCLAHE(1.0, new Size(24, 24)).apply(g1000, g1000);
+        Imgcodecs.imwrite("data/out/G1000CLAHE.png", g1000);
 
         Imgproc.threshold(g1000, g1000, 0, 255, Imgproc.THRESH_OTSU);
+        Imgcodecs.imwrite("data/out/G1000OTSU.png", g1000);
+
         Core.bitwise_not(g1000, g1000);
+        Imgcodecs.imwrite("data/out/G1000NOT.png", g1000);
 
         initTextarea(g1000, altimeterUP, 100.0);
         initTextarea(g1000, altimeterDOWN, 100.0);
