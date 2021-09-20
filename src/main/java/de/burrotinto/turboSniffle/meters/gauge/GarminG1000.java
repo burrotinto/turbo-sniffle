@@ -1,13 +1,12 @@
 package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.apache.commons.math3.util.Precision;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -15,6 +14,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,13 +31,11 @@ public class GarminG1000 {
 
     private Textarea altimeterUP = new Textarea(new Rect(new Point(skale(723), skale(115)), new Point(skale(808), skale(250))));
     private Textarea altimeterDOWN = new Textarea(new Rect(new Point(skale(723), skale(320)), new Point(skale(808), skale(455))));
-//    private Textarea altimeter = new Textarea(new Rect(new Point(altimeterUP.origin.x, altimeterUP.origin.y),
-//            new Point(altimeterDOWN.origin.x + altimeterDOWN.origin.width, altimeterDOWN.origin.y + altimeterDOWN.origin.height)));
 
     private Textarea airspeedUP = new Textarea(new Rect(new Point(skale(160), skale(115)), new Point(skale(220), skale(250))));
     private Textarea airspeedDOWN = new Textarea(new Rect(new Point(skale(160), skale(320)), new Point(skale(220), skale(455))));
 
-    private TextField kurskreisel = new TextField(new Rect(new Point(skale(428), skale(403)), new Point(skale(480), skale(430))), 0.0, 360.0);
+    private TextField kurskreisel = new TextField(new Rect(new Point(skale(425), skale(402)), new Point(skale(480), skale(432))));
 
     private int vsiHeight = 280;
     private Rect verticalSpeedIndicator = new Rect(new Point(skale(810), centerLine - skale(vsiHeight / 2)), new Point(skale(850), centerLine + skale(vsiHeight / 2)));
@@ -47,64 +45,39 @@ public class GarminG1000 {
 
         textDedection.addOptions("tessedit_char_whitelist", "01234567890");
 
-
         g1000SRC = new Mat();
         g1000 = new Mat();
 
+        //Schritte win in BAchelorarbeit beschrieben zur optimierung der Texterkennung:
+        // Skalieren
         Imgproc.resize(src, g1000SRC, SIZE);
         Imgproc.resize(src, g1000, SIZE);
 
-        Imgcodecs.imwrite("data/out/G1000GreyundRescale.png", g1000);
-
-//        Imgproc.bilateralFilter(g1000.clone(), g1000, 7, 7 * 2.0, 7 * 0.5);
-//        Imgcodecs.imwrite("data/out/G1000Bil.png", g1000);
-
-        Photo.fastNlMeansDenoising(g1000,g1000);
-        Imgcodecs.imwrite("data/out/G1000denoise.png", g1000);
+//        Imgcodecs.imwrite("data/out/G1000GreyundRescale.png", g1000);
 
         Imgproc.createCLAHE(1.0, new Size(24, 24)).apply(g1000, g1000);
-        Imgcodecs.imwrite("data/out/G1000CLAHE.png", g1000);
+//        Imgcodecs.imwrite("data/out/G1000CLAHE.png", g1000);
 
         Imgproc.threshold(g1000, g1000, 0, 255, Imgproc.THRESH_OTSU);
-        Imgcodecs.imwrite("data/out/G1000OTSU.png", g1000);
+//        Imgcodecs.imwrite("data/out/G1000OTSU.png", g1000);
+
+        Photo.fastNlMeansDenoising(g1000, g1000);
+//        Imgcodecs.imwrite("data/out/G1000denoise.png", g1000);
+
+        g1000 = Helper.erode(g1000, Imgproc.CV_SHAPE_RECT, 2);
+//        Imgcodecs.imwrite("data/out/G1000ERODE.png", g1000);
 
         Core.bitwise_not(g1000, g1000);
-        Imgcodecs.imwrite("data/out/G1000NOT.png", g1000);
+//        Imgcodecs.imwrite("data/out/G1000NOT.png", g1000);
 
-        initTextarea(g1000, altimeterUP, 100.0);
-        initTextarea(g1000, altimeterDOWN, 100.0);
 
-        initTextarea(g1000, airspeedUP, 10.0);
-        initTextarea(g1000, airspeedDOWN, 10.0);
+        initTextarea(g1000, altimeterUP);
+        initTextarea(g1000, altimeterDOWN);
+
+        initTextarea(g1000, airspeedUP);
+        initTextarea(g1000, airspeedDOWN);
 
         initTextField(g1000, kurskreisel);
-
-
-//        initFieldsAndAreas(g1000TextOptimiert);
-
-
-//        val g = Cessna172SixpackFactory.getCessna172Kurskreisel(g1000.submat(KURSKREISEL_POS));
-//        Imgcodecs.imwrite("data/out/g100Kurskreisel.png", g.otsu);
-//        System.out.println(g.getValue());
-//        HighGui.imshow("Kurs", g.getDrawing(g.source));
-//        HighGui.waitKey();
-
-        //Init textOptimierteVersion
-
-
-        //POT finden
-//        val cannyEdgeDetector = GaugeFactory.getCanny();
-//        cannyEdgeDetector.setSourceImage((BufferedImage) HighGui.toBufferedImage(g1000));
-//        cannyEdgeDetector.process();
-//        HeatMap heatMap = new HeatMap(cannyEdgeDetector.getEdgeMat().submat(KURSKREISEL_POS));
-//        pot = new Point(KURSKREISEL_POS.x + heatMap.getCenter().x, KURSKREISEL_POS.y + heatMap.getCenter().y);
-//
-//        //POT MARKIEREN
-//        Imgproc.drawMarker(g1000, pot, Helper.BLACK, 0, 1000);
-
-
-//        Imgproc.line(g1000, new Point(0, centerLine), new Point(g1000.width(), centerLine), Helper.WHITE);
-
 
         System.out.println("Alti = " + getAltimeter());
         System.out.println("Airspeed = " + getAirspeed());
@@ -133,15 +106,45 @@ public class GarminG1000 {
     public double getAltimeter() {
         val alti = new ArrayList<>(altimeterDOWN.textFields);
         alti.addAll(altimeterUP.textFields);
-        double x = Helper.berecheDieDurchschnittlicheVeränderungDesDatensatzes(alti.stream().map(textField -> textField.fieldValue).collect(Collectors.toList()));
 
-        return ((Helper.getCenter(alti.get(0).origin).y - centerLine) * downSkale(100 / 57.0)) + alti.get(0).fieldValue;
+        double[] values = new double[alti.size()];
+
+        for (int i = 0; i < alti.size(); i++) {
+            values[i] = ((Helper.getCenter(alti.get(i).origin).y - centerLine - skale(1)) * downSkale(100 / 57.0)) + alti.get(i).fieldValue;
+        }
+
+        return getMinDistEntryToMean(values);
     }
 
     public double getAirspeed() {
         val airs = new ArrayList<>(airspeedUP.textFields);
         airs.addAll(airspeedDOWN.textFields);
-        return ((Helper.getCenter(airs.get(0).origin).y - centerLine) * downSkale(10.0 / 57.0)) + airs.get(0).fieldValue;
+
+        double[] values = new double[airs.size()];
+
+        for (int i = 0; i < airs.size(); i++) {
+            values[i] = ((Helper.getCenter(airs.get(i).origin).y - centerLine) * downSkale(10 / 57.0)) + airs.get(i).fieldValue;
+        }
+
+        return getMinDistEntryToMean(values);
+    }
+
+    /**
+     *  Ohne NAN
+     * @param in
+     * @return
+     */
+    private double getMinDistEntryToMean(double[] in) {
+        double[] values = Arrays.stream(in).filter(value -> !Double.isNaN(value)).toArray();
+        Double mean = Arrays.stream(values).sum() / values.length;
+        
+        double value = values[0];
+        for (int i = 0; i < values.length; i++) {
+            if (Math.abs(value - mean) > Math.abs(values[i] - mean)) {
+                value = values[i];
+            }
+        }
+        return value;
     }
 
     public double getKurskreisel() {
@@ -154,7 +157,7 @@ public class GarminG1000 {
 
         for (int row = 5; row < sub.rows() - 5; row++) {
             int sum = 0;
-            for (int col = sub.cols()/2; col < sub.cols(); col++) {
+            for (int col = sub.cols() / 2; col < sub.cols(); col++) {
                 for (int i = -5; i <= 5; i++) {
                     sum += (int) sub.get(i + row, col)[0];
                 }
@@ -162,32 +165,25 @@ public class GarminG1000 {
             result[row - 5] += sum;
         }
 
-        int max = 0;
+        int centerOfVSI = 0;
         for (int i = 1; i < result.length; i++) {
-            if (result[max] > result[i]) {
-                max = i;
+            if (result[centerOfVSI] > result[i]) {
+                centerOfVSI = i;
             }
         }
 
-        Rect r = new Rect(verticalSpeedIndicator.x, verticalSpeedIndicator.y+5+max-50,200,100 );
-//        HighGui.imshow("",g1000.submat(r));
-//        HighGui.waitKey();
-        TextField vsi = new TextField(r,-2000.0,+2000.0);
-        initTextField(g1000,vsi);
-        //Maximale anzeige 4000
+        Rect r = new Rect(verticalSpeedIndicator.x, verticalSpeedIndicator.y + 5 + centerOfVSI - 50, 200, 100);
+
+
+        TextField vsi = new TextField(r);
+        initTextField(g1000, vsi);
+        if (vsi.fieldValue.isNaN()) {
+            vsi.fieldValue = (((double) (centerOfVSI - (result.length / 2)) / (result.length / 2)) * (2000 / (result.length / 2)));
+        }
+
         return vsi.fieldValue;
-//        return Precision.round(4000*(-((((double) max) / result.length) - 0.5)), 0);
     }
 
-
-//    private List<Pair<Rect, Double>> getAllNumbersOfArea(Mat src, Rect area, double mod) {
-//        val x = textDedection.getTextAreasWithTess(src.submat(area)).stream().map(rotatedRect -> {
-//            Rect rect = new Rect(new Point(rotatedRect.boundingRect().x + area.x, rotatedRect.boundingRect().y + area.y),
-//                    (new Point(rotatedRect.boundingRect().x + area.x + rotatedRect.boundingRect().width, rotatedRect.boundingRect().y + area.y + rotatedRect.boundingRect().height)));
-//            return new Pair<>(rect, Helper.parseDoubleOrNAN(textDedection.doOCRNumbers(src.submat(rect))));
-//        }).collect(Collectors.toList());
-//        return x.stream().filter(rectDoublePair -> rectDoublePair.p2 % mod == 0).collect(Collectors.toList());
-//    }
 
     private List<TextField> getAllNumbersOfArea(Mat src, Rect area) {
         val x = textDedection.getTextAreasWithTess(src.submat(area)).stream().map(rotatedRect -> {
@@ -195,9 +191,8 @@ public class GarminG1000 {
             Rect rect = new Rect(new Point(rotatedRect.boundingRect().x + area.x, rotatedRect.boundingRect().y + area.y),
                     (new Point(rotatedRect.boundingRect().x + area.x + rotatedRect.boundingRect().width, rotatedRect.boundingRect().y + area.y + rotatedRect.boundingRect().height)));
 
-            //Garmin maximale Betriebshöhee 55000 Fuß
-            TextField tv = new TextField(rect, 0.0, 55000.00);
-            initTextField(src,tv);
+            TextField tv = new TextField(rect);
+            initTextField(src, tv);
 
             return tv;
         }).collect(Collectors.toList());
@@ -206,23 +201,23 @@ public class GarminG1000 {
 
 
     private void initTextField(Mat w, TextField textField) {
-        val v = Helper.parseDoubleOrNAN(textDedection.doOCRNumbers(Helper.sharpen(Helper.erode(w.submat(textField.origin), Imgproc.CV_SHAPE_RECT, 2))));
+        val v = Helper.parseDoubleOrNAN(textDedection.doOCRNumbers(w.submat(textField.origin)));
         textField.fieldValue = v;
         textField.isInit = !v.isNaN();
 
     }
 
 
-    private void initTextarea(Mat w, Textarea textarea, double step) {
+    private void initTextarea(Mat w, Textarea textarea) {
+
         if (!textarea.isInit) {
+            Imgcodecs.imwrite("data/out/G1000_" + textarea.origin.toString() + ".png", Helper.sharpen(w.submat(textarea.origin)));
+
             val x = getAllNumbersOfArea(w, textarea.origin);
-            if (Helper.berecheDieDurchschnittlicheVeränderungDesDatensatzes(x.stream().map(textField -> textField.fieldValue).collect(Collectors.toList())) == -step) {
-                textarea.area = w.submat(textarea.origin).clone();
-                textarea.textFields = x;
-                textarea.isInit = true;
-            } else if (x.size() == 1 && textarea.textFields.isEmpty()) {
-                textarea.textFields.addAll(x);
-            }
+            textarea.textFields.addAll(x);
+
+            textarea.isInit = textarea.textFields.stream().allMatch(textField -> textField.isInit);
+
         }
     }
 
@@ -240,8 +235,7 @@ public class GarminG1000 {
         @NonNull
         Rect origin;
         Double fieldValue = Double.NaN;
-        @NonNull
-        Double min, max;
+
         boolean isInit = false;
 
     }

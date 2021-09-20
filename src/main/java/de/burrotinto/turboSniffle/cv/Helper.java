@@ -211,12 +211,12 @@ public class Helper {
     }
 
     public static Mat erode(Mat src,int shape,int kernelSize) {
-        Mat out = new Mat();
-        Core.bitwise_not(src, out);
+        Mat out = src.clone();
+//        Core.bitwise_not(src, out);
         Mat element = Imgproc.getStructuringElement( shape, new Size(2 * kernelSize + 1, 2 * kernelSize + 1));
 
         Imgproc.erode(out, out, element);
-        Core.bitwise_not(out, out);
+//        Core.bitwise_not(out, out);
         return out;
     }
 
@@ -226,5 +226,11 @@ public class Helper {
         } catch (Exception e) {
             return Double.NaN;
         }
+    }
+
+    public static Mat resize(Mat mat, Size size){
+        Mat out = new Mat();
+        Imgproc.resize(mat,out,size);
+        return out;
     }
 }

@@ -10,6 +10,7 @@ import org.opencv.core.*;
 import org.opencv.dnn.Dnn;
 import org.opencv.dnn.Net;
 import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.utils.Converters;
 
@@ -160,7 +161,6 @@ public class TextDedection {
             val reg = tesseractNumbers.getSegmentedRegions(Helper.Mat2BufferedImage(src), ITessAPI.TessPageIteratorLevel.RIL_WORD);
             for (int i = 0; i < reg.size(); ++i) {
                 Rectangle r = reg.get(i);
-                Point[] vertices = new Point[4];
                 RotatedRect rot = new RotatedRect(new Point(r.getCenterX(), r.getCenterY()), new Size(r.getWidth(), r.getHeight()), 0);
                 out.add(rot);
             }
@@ -184,9 +184,8 @@ public class TextDedection {
         withBorders.setTo(Helper.WHITE);
 
         sub.copyTo(withBorders.submat(10, sub.rows() + 10, 10, sub.cols() + 10));
-//        HighGui.imshow("a", sub);
-//        HighGui.imshow("b", withBorders);
-//        HighGui.waitKey(1000);
+
+//        Imgcodecs.imwrite("data/out/G1000_"+ System.currentTimeMillis()+ ".png", withBorders);
         return doOCRNumbers(Helper.Mat2BufferedImage(withBorders));
     }
 

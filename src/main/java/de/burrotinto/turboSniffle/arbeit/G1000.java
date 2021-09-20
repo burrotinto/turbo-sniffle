@@ -5,8 +5,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 import org.opencv.utils.Converters;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +32,10 @@ public class G1000 implements Arbeit {
 
     @Override
     public void machDeinDing() {
-        Mat g1000 = Imgcodecs.imread(G1000, Imgcodecs.IMREAD_GRAYSCALE);
-        new GarminG1000(g1000);
+
+
+//        Mat g1000 = Imgcodecs.imread(G1000, Imgcodecs.IMREAD_GRAYSCALE);
+//        new GarminG1000(g1000);
 
 //        Mat g1000 = Imgcodecs.imread("data/example/G1000/2021-09-08 11_12_48-Window.png", Imgcodecs.IMREAD_GRAYSCALE);
 //        new GarminG1000(g1000);
@@ -46,12 +50,12 @@ public class G1000 implements Arbeit {
 //        new GarminG1000(transformieren(Imgcodecs.imread("data/example/G1000/Cessna_172SP_G1000 - 2021-09-03 14.08.20.png", Imgcodecs.IMREAD_GRAYSCALE), corner, GarminG1000.SIZE));
 
 //
-//        List<Point> corner = new ArrayList<>();
-//        corner.add(new Point(880, 386));
-//        corner.add(new Point(2015, 375));
-//        corner.add(new Point(2023, 1264));
-//        corner.add(new Point(899, 1238));
-//        new GarminG1000(transformieren(Imgcodecs.imread("data/example/G1000/als-sim-al42-photo-alsim-al42-simulateur-04.jpg", Imgcodecs.IMREAD_GRAYSCALE), corner, GarminG1000.SIZE));
+        List<Point> corner = new ArrayList<>();
+        corner.add(new Point(880, 383));
+        corner.add(new Point(2015, 376));
+        corner.add(new Point(2023, 1257));
+        corner.add(new Point(899, 1235));
+        new GarminG1000(transformieren(Imgcodecs.imread("data/example/G1000/als-sim-al42-photo-alsim-al42-simulateur-04.jpg", Imgcodecs.IMREAD_GRAYSCALE), corner, GarminG1000.SIZE));
 
 
     }
