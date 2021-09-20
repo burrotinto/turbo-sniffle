@@ -137,7 +137,7 @@ public class GarminG1000 {
     private double getMinDistEntryToMean(double[] in) {
         double[] values = Arrays.stream(in).filter(value -> !Double.isNaN(value)).toArray();
         Double mean = Arrays.stream(values).sum() / values.length;
-        
+
         double value = values[0];
         for (int i = 0; i < values.length; i++) {
             if (Math.abs(value - mean) > Math.abs(values[i] - mean)) {
