@@ -2,11 +2,8 @@ package de.burrotinto.turboSniffle.meters.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import lombok.*;
+import org.apache.commons.math3.util.Precision;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -15,6 +12,7 @@ import org.opencv.photo.Photo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +22,7 @@ public class GarminG1000 {
     public static final Point POINT_OF_TRUST = new Point(skale(460), skale(586));
     private static final Rect KURSKREISEL_POS = new Rect(new Point(skale(252), skale(335)), new Point(skale(678), skale(747)));
     private static TextDedection textDedection = new TextDedection(TextDedection.ENGRESTRICT_BEST_INT, skale(123));
+
     private Mat g1000, g1000SRC;
     private Point pot;
 
@@ -38,6 +37,7 @@ public class GarminG1000 {
     private TextField kurskreisel = new TextField(new Rect(new Point(skale(425), skale(402)), new Point(skale(480), skale(432))));
 
     private int vsiHeight = 280;
+    private Textarea vsi = new Textarea(new Rect(new Point(skale(830), skale(127)), new Point(skale(875), skale(440))));
     private Rect verticalSpeedIndicator = new Rect(new Point(skale(810), centerLine - skale(vsiHeight / 2)), new Point(skale(850), centerLine + skale(vsiHeight / 2)));
 
     @SneakyThrows
@@ -79,23 +79,46 @@ public class GarminG1000 {
 
         initTextField(g1000, kurskreisel);
 
-        System.out.println("Alti = " + getAltimeter());
-        System.out.println("Airspeed = " + getAirspeed());
-        System.out.println("Kurskreisel = " + getKurskreisel());
-        System.out.println("VSI =" + getVSI());
+        initTextarea(g1000, vsi);
 
 
-        Imgproc.rectangle(g1000, altimeterUP.origin, Helper.GREY, 3);
-        Imgproc.rectangle(g1000, altimeterDOWN.origin, Helper.GREY, 3);
-        Imgproc.rectangle(g1000, verticalSpeedIndicator, Helper.GREY, 3);
-        Imgproc.rectangle(g1000, airspeedUP.origin, Helper.GREY, 3);
-        Imgproc.rectangle(g1000, airspeedDOWN.origin, Helper.GREY, 3);
-        Imgproc.rectangle(g1000, kurskreisel.origin, Helper.GREY, 3);
+//        System.out.println("Alti = " + getAltimeter());
+//        System.out.println("Airspeed = " + getAirspeed());
+//        System.out.println("Kurskreisel = " + getKurskreisel());
+//        System.out.println("VSI =" + getVSI());
+//
+//
+//        drawArea(g1000, airspeedUP);
+//        drawArea(g1000, airspeedDOWN);
+//        drawArea(g1000, altimeterUP);
+//        drawArea(g1000, altimeterDOWN);
+//        drawArea(g1000, vsi);
+//
+//        drawTf(g1000, kurskreisel);
+////        Imgproc.rectangle(g1000, altimeterUP.origin, Helper.GREY, 3);
+////        Imgproc.rectangle(g1000, altimeterDOWN.origin, Helper.GREY, 3);
+////        Imgproc.rectangle(g1000, verticalSpeedIndicator, Helper.GREY, 3);
+////        Imgproc.rectangle(g1000, airspeedUP.origin, Helper.GREY, 3);
+////        Imgproc.rectangle(g1000, airspeedDOWN.origin, Helper.GREY, 3);
+////        Imgproc.rectangle(g1000, kurskreisel.origin, Helper.GREY, 3);
+//        Imgproc.line(g1000, new Point(0, centerLine), new Point(g1000.cols(), centerLine), Helper.GREY, 10);
+//
+//        Imgproc.resize(g1000, g1000, new Size(1024, 768));
+//        HighGui.imshow("", g1000);
+//        HighGui.waitKey();
+    }
 
+    public Mat getOCROptimiert(){
+        return g1000.clone();
+    }
+    private void drawTf(Mat draw, TextField tf) {
+        Imgproc.rectangle(draw, tf.origin, Helper.WHITE, -1);
+        Imgproc.rectangle(draw, tf.origin, Helper.GREY, 2);
+        Imgproc.putText(draw, String.valueOf(Precision.round(tf.fieldValue, 0)), new Point(tf.origin.x, tf.origin.y + (tf.origin.height - 10)), Imgproc.FONT_HERSHEY_TRIPLEX, 1.2, Helper.BLACK);
+    }
 
-        Imgproc.resize(g1000, g1000, new Size(1024, 768));
-        HighGui.imshow("", g1000);
-        HighGui.waitKey();
+    private void drawArea(Mat draw, Textarea ta) {
+        ta.textFields.forEach(textField -> drawTf(draw, textField));
     }
 
     /**
@@ -104,13 +127,24 @@ public class GarminG1000 {
      * @return
      */
     public double getAltimeter() {
-        val alti = new ArrayList<>(altimeterDOWN.textFields);
+        List<TextField> alti = new ArrayList<>(altimeterDOWN.textFields);
         alti.addAll(altimeterUP.textFields);
+
+        alti = alti.stream().filter(textField -> textField.isInit).collect(Collectors.toList());
+        Collections.shuffle(alti);
+
+        double pp = downSkale(100 / 57.0);
+//
+//        if (alti.size() > 1) {
+//
+//            pp = calcValuePerPixel(alti.get(0), alti.get(1));
+//        }
 
         double[] values = new double[alti.size()];
 
         for (int i = 0; i < alti.size(); i++) {
-            values[i] = ((Helper.getCenter(alti.get(i).origin).y - centerLine - skale(1)) * downSkale(100 / 57.0)) + alti.get(i).fieldValue;
+            double delta = Helper.getCenter(alti.get(i).origin).y - centerLine - skale(1);
+            values[i] = alti.get(i).fieldValue + (delta * (pp));
         }
 
         return getMinDistEntryToMean(values);
@@ -129,8 +163,16 @@ public class GarminG1000 {
         return getMinDistEntryToMean(values);
     }
 
+    private double calcValuePerPixel(TextField a, TextField b) {
+        val aC = a.origin.y + (a.origin.height / 2);
+        val bC = b.origin.y + (b.origin.height / 2);
+
+        return Math.abs(b.fieldValue - a.fieldValue) / Math.abs(aC - bC);
+    }
+
     /**
-     *  Ohne NAN
+     * Ohne NAN
+     *
      * @param in
      * @return
      */
@@ -152,6 +194,18 @@ public class GarminG1000 {
     }
 
     public double getVSI() {
+        vsi.textFields = vsi.textFields.stream().filter(textField -> textField.fieldValue % 50 == 0 && textField.fieldValue != 0).collect(Collectors.toList());
+
+        if (vsi.textFields.size() == 1) {
+            return vsi.textFields.get(0).fieldValue;
+        } else if (vsi.textFields.isEmpty()) {
+            return 0;
+        } else {
+            return Double.NaN;
+        }
+    }
+
+    public double getVSI2() {
         val sub = g1000SRC.submat(verticalSpeedIndicator);
         val result = new int[sub.rows() - 10];
 

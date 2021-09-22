@@ -33,9 +33,15 @@ public class GaugeFactory {
         return td;
     }
 
+    public static Gauge getGaugeFromMat(Mat gauge){
+        return new Gauge(
+                gauge, null, null);
+    }
+
     public static Gauge getGauge(Mat src) {
         return getGauge(src,BILATERAL_D);
     }
+
 
     public static Gauge getGauge(Mat src,int bilateral) {
         Gauge out = null;

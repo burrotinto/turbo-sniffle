@@ -69,6 +69,7 @@ public class TwoPointerValueGauge extends ValueGauge {
         Mat finalDrawing = drawing;
         Imgproc.cvtColor(drawing, drawing, Imgproc.COLOR_GRAY2RGB);
 
+        Imgproc.rectangle(finalDrawing, new Point(0, 0), new Point(getRadius(), 25), Helper.WHITE, -1);
         Imgproc.putText(finalDrawing, "" + Precision.round(getValue(), 2), new Point(10,20), Imgproc.FONT_HERSHEY_DUPLEX, 0.5, new Scalar(0, 69, 255));
 
         labelScale.forEach((rotatedRect, aDouble) -> {
