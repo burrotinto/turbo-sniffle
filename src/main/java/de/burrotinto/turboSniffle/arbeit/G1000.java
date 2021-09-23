@@ -1,14 +1,12 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.GarminG1000;
+import de.burrotinto.turboSniffle.gauge.GarminG1000;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.photo.Photo;
 import org.opencv.utils.Converters;
 import org.springframework.stereotype.Service;
 

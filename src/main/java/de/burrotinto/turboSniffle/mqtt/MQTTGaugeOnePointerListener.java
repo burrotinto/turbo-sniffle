@@ -1,9 +1,8 @@
 package de.burrotinto.turboSniffle.mqtt;
 
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
-import de.burrotinto.turboSniffle.meters.gauge.ValueGauge;
+import de.burrotinto.turboSniffle.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.gauge.ValueGauge;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -25,7 +24,7 @@ public class MQTTGaugeOnePointerListener extends MQTTListener {
         String topic = publish.getTopic().toString()
                 .replace("/greyscale", "");
 
-        ValueGauge gauge = GaugeFactory.getGaugeWithOnePointerAutoScale( GaugeFactory.getGauge(MatToMessageString.generateMatFromString(publish.getPayloadAsBytes())));
+        ValueGauge gauge = GaugeFactory.getGaugeWithOnePointerAutoScale( GaugeFactory.getGauge(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes())));
 
         GaugeJSON json = new GaugeJSON(gauge);
         json.src = new String(publish.getPayloadAsBytes(), "UTF-8");
@@ -48,6 +47,6 @@ public class MQTTGaugeOnePointerListener extends MQTTListener {
 
     @Override
     public String[] getSubscribeTopic() {
-        return new String[]{mqttConfig.getTopic() + "/roundGauge/onePointer/+/greyscale"};
+        return new String[]{mqttConfig.getBaseTopic() + "/roundGauge/onePointer/+/greyscale"};
     }
 }

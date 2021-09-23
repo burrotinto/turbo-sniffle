@@ -11,11 +11,13 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "mqtt")
 public class MQTTConfig {
-    private String server;
+    private String broker;
     private int port;
     private String protokoll ;
     private int qos;
     private String clientID;
+    private String username;
+    private String password;
 
-    private String topic;
+    private String baseTopic;
 }

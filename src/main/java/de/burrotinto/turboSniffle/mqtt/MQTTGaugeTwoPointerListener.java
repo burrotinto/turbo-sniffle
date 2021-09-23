@@ -1,8 +1,8 @@
 package de.burrotinto.turboSniffle.mqtt;
 
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.ValueGauge;
+import de.burrotinto.turboSniffle.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.gauge.ValueGauge;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -39,17 +39,18 @@ public class MQTTGaugeTwoPointerListener extends MQTTListener {
 //            e.printStackTrace();
 //            mqttClient.publish(topic + "/EXCEPTION", e.getLocalizedMessage());
 //        }
-        ValueGauge gauge = GaugeFactory.getTwoPointerValueGauge( GaugeFactory.getGauge(MatToMessageString.generateMatFromString(publish.getPayloadAsBytes())), Integer.parseInt(publish.getTopic().getLevels().get(4)));
+        ValueGauge gauge = GaugeFactory.getTwoPointerValueGauge(GaugeFactory.getGauge(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes())),
+                Integer.parseInt(publish.getTopic().getLevels().get(publish.getTopic().getLevels().size() - 2)));
 
         GaugeJSON json = new GaugeJSON(gauge);
         json.src = new String(publish.getPayloadAsBytes(), "UTF-8");
 
-        mqttClient.publish(topic,json);
+        mqttClient.publish(topic, json);
 
     }
 
     @Override
     public String[] getSubscribeTopic() {
-        return new String[]{mqttConfig.getTopic() + "/roundGauge/twoPointer/+/+/greyscale"};
+        return new String[]{mqttConfig.getBaseTopic() + "/roundGauge/twoPointer/+/+/greyscale"};
     }
 }

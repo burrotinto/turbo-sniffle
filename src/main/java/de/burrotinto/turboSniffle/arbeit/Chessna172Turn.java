@@ -1,7 +1,7 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.trainingSets.CessnaTurnTrainingDataset;
+import de.burrotinto.turboSniffle.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.gauge.trainingSets.CessnaTurnTrainingDataset;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;

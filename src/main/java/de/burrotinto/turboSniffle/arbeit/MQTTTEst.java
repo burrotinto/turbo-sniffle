@@ -21,8 +21,8 @@ public class MQTTTEst {
         val client = MqttClient.builder()
                 .useMqttVersion5()
                 .identifier("TURBOSNIFFLE" + System.currentTimeMillis())
-//                .serverHost("broker.hivemq.com")
-                .serverHost("burrotinto.de")
+                .serverHost("broker.hivemq.com")
+//                .serverHost("burrotinto.de")
                 .serverPort(1883)
 //                .automaticReconnectWithDefaultConfig()
                 .buildAsync();
@@ -45,7 +45,7 @@ public class MQTTTEst {
             String topic = "turboSniffle/cessna172/X-PLANE/g1000/greyscale";
             client.publishWith()
                     .topic(topic)
-                    .payload(MatToMessageString.generateMessage(g1000).getBytes(StandardCharsets.UTF_8))
+                    .payload(MatToMessageString.erzeugeStringDarstellung(g1000).getBytes(StandardCharsets.UTF_8))
                     .qos(MqttQos.EXACTLY_ONCE)
                     .send();
         }).start();
@@ -59,7 +59,7 @@ public class MQTTTEst {
                     System.out.println(t);
                     client.publishWith()
                             .topic(t)
-                            .payload(MatToMessageString.generateMessage(Imgcodecs.imread(path.toString(), Imgcodecs.IMREAD_GRAYSCALE)).getBytes(StandardCharsets.UTF_8))
+                            .payload(MatToMessageString.erzeugeStringDarstellung(Imgcodecs.imread(path.toString(), Imgcodecs.IMREAD_GRAYSCALE)).getBytes(StandardCharsets.UTF_8))
                             .qos(MqttQos.EXACTLY_ONCE)
                             .send();
                 });

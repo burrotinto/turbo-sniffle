@@ -5,11 +5,13 @@ import org.opencv.core.Mat;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 public class MatToMessageString {
 
-    public static String generateMessage(Mat input) {
+    public static String erzeugeStringDarstellung(Mat input) {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
 
@@ -32,7 +34,7 @@ public class MatToMessageString {
         return sb.toString();
     }
 
-    public static Mat generateMatFromString(String message) {
+    public static Mat erzeugeMatAusStringDarstellung(String message) {
         String[] rows = message.subSequence(message.indexOf("[") + 1, message.indexOf("]")).toString()
                 .replace("\n", "")
                 .replace(" ", "")
@@ -49,18 +51,24 @@ public class MatToMessageString {
         return out;
     }
 
+    @SneakyThrows
     public static void main(String[] args) {
         nu.pattern.OpenCV.loadLocally();
         Mat x = Imgcodecs.imread("data/ae/G1000/GarminG1000.png", Imgcodecs.IMREAD_GRAYSCALE);
-        System.out.println(generateMessage(x));
+
+        FileWriter fileWriter = new FileWriter("data/x.txt");
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+        printWriter.print(erzeugeStringDarstellung(x));
+        printWriter.close();
+
 //        Core.bitwise_xor(x, generateMatFromString(generateMessage(x)), x);
-        HighGui.imshow("a", generateMatFromString(generateMessage(x)));
+        HighGui.imshow("a", erzeugeMatAusStringDarstellung(erzeugeStringDarstellung(x)));
 //        HighGui.imshow("",);
         HighGui.waitKey();
     }
 
     @SneakyThrows
-    public static Mat generateMatFromString(byte[] payloadAsBytes) {
-        return generateMatFromString(new String(payloadAsBytes, "UTF-8"));
+    public static Mat erzeugeMatAusStringDarstellung(byte[] payloadAsBytes) {
+        return erzeugeMatAusStringDarstellung(new String(payloadAsBytes, "UTF-8"));
     }
 }

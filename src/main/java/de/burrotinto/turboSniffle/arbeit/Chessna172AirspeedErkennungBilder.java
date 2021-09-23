@@ -1,16 +1,11 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.meters.gauge.Cessna172SixpackFactory;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
+import de.burrotinto.turboSniffle.gauge.Cessna172SixpackFactory;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;

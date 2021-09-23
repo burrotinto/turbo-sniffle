@@ -1,8 +1,6 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.Cessna172SixpackFactory;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
+import de.burrotinto.turboSniffle.gauge.Cessna172SixpackFactory;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.Mat;
@@ -11,7 +9,6 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Paths;
-import java.util.stream.Collectors;
 
 @Service
 public class Chessna172AltimeterErkennungBilder implements Arbeit {

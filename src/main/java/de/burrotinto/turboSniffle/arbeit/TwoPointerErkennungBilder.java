@@ -1,9 +1,8 @@
 package de.burrotinto.turboSniffle.arbeit;
 
 import de.burrotinto.turboSniffle.cv.TextDedection;
-import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.NotGaugeWithPointerException;
+import de.burrotinto.turboSniffle.gauge.Gauge;
+import de.burrotinto.turboSniffle.gauge.GaugeFactory;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.apache.commons.math3.util.Precision;

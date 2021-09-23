@@ -1,0 +1,20 @@
+mqtt:
+  broker: broker.hivemq.com
+  port: 1883
+  protokoll: tcp
+  qos: 0
+  username:
+  password:
+  clientID: turboSniffle
+  basetopic: turboSniffle
+
+spring:
+  gson:
+    pretty-printing: true
+
+
+  logging:
+    level:
+      de.burrotinto: ERROR
+      org.springframework: ERROR
+      org.hibernate: ERROR

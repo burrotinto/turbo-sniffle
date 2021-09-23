@@ -1,8 +1,8 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.GaugeFactory;
-import de.burrotinto.turboSniffle.meters.gauge.AutoEncoderGauge;
+import de.burrotinto.turboSniffle.gauge.Gauge;
+import de.burrotinto.turboSniffle.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.gauge.AutoEncoderGauge;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.opencv.core.CvType;

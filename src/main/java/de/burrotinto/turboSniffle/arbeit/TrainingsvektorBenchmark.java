@@ -1,18 +1,7 @@
 package de.burrotinto.turboSniffle.arbeit;
 
-import de.burrotinto.turboSniffle.cv.Helper;
-import de.burrotinto.turboSniffle.cv.Pair;
-import de.burrotinto.turboSniffle.meters.gauge.Gauge;
-import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeOnePointerLearningDataset;
-import de.burrotinto.turboSniffle.meters.gauge.trainingSets.GaugeTwoPointerLearningDataset;
-import lombok.val;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-
-import java.util.ArrayList;
-import java.util.List;
+import de.burrotinto.turboSniffle.gauge.Gauge;
+import de.burrotinto.turboSniffle.gauge.trainingSets.GaugeTwoPointerLearningDataset;
 
 public class TrainingsvektorBenchmark implements Arbeit{
     @Override

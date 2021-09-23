@@ -14,10 +14,10 @@ abstract public class MQTTListener {
 
     @SneakyThrows
     public void newMessage(Mqtt5Publish publish) {
-        if(new String(publish.getPayloadAsBytes(), "UTF-8").length() < 128) {
-            log.info(publish.getTopic() + " : " + new String(publish.getPayloadAsBytes(), "UTF-8"));
+        if (new String(publish.getPayloadAsBytes(), "UTF-8").length() < 64) {
+            log.info("RECEIVED : TOPIC: " + publish.getTopic() + " | PAYLOAD: " + new String(publish.getPayloadAsBytes(), "UTF-8"));
         } else {
-            log.info(publish.getTopic() + " : " + new String(publish.getPayloadAsBytes(), "UTF-8").length() +" Chars");
+            log.info("RECEIVED : TOPIC: " + publish.getTopic() + " | PAYLOAD: " + new String(publish.getPayloadAsBytes(), "UTF-8").substring(0, 64) + " ...");
         }
     }
 

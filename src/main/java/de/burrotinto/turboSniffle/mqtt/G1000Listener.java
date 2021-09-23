@@ -1,7 +1,7 @@
 package de.burrotinto.turboSniffle.mqtt;
 
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
-import de.burrotinto.turboSniffle.meters.gauge.GarminG1000;
+import de.burrotinto.turboSniffle.gauge.GarminG1000;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -23,20 +23,19 @@ public class G1000Listener extends MQTTListener {
         super.newMessage(publish);
 
         String id = getID(publish.getTopic());
-        GarminG1000 g1000 = new GarminG1000(MatToMessageString.generateMatFromString(publish.getPayloadAsBytes()));
+        GarminG1000 g1000 = new GarminG1000(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes()));
         g1000HashMap.put(id, g1000);
 
         String topic = publish.getTopic().toString().replace("/greyscale", "");
-        mqttClient.publish(topic + "/asi", String.valueOf(g1000.getAirspeed()));
-        mqttClient.publish(topic + "/dg", String.valueOf(g1000.getKurskreisel()));
-        mqttClient.publish(topic + "/vsi", String.valueOf(g1000.getVSI()));
-        mqttClient.publish(topic + "/alt", String.valueOf(g1000.getAltimeter()));
+        G1000JSON json = new G1000JSON(g1000);
+        mqttClient.publish(topic,json);
+
 //        mqttClient.publish(topic + "/ocrOptimiert", MatToMessageString.generateMessage(g1000.getOCROptimiert()));
     }
 
     @Override
     public String[] getSubscribeTopic() {
-        return new String[]{mqttConfig.getTopic()+"/cessna172/+/g1000/greyscale"};
+        return new String[]{mqttConfig.getBaseTopic()+"/cessna172/+/g1000/greyscale"};
     }
 
 

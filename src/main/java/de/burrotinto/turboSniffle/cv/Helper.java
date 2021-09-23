@@ -1,6 +1,5 @@
 package de.burrotinto.turboSniffle.cv;
 
-import de.burrotinto.turboSniffle.meters.gauge.impl.Pixel;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
