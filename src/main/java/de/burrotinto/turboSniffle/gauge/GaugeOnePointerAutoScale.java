@@ -2,10 +2,11 @@ package de.burrotinto.turboSniffle.gauge;
 
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
+import de.burrotinto.turboSniffle.gauge.cluster.DistanceToPointClusterer;
 import de.burrotinto.turboSniffle.gauge.trainingSets.GaugeOnePointerLearningDataset;
 import de.burrotinto.turboSniffle.gauge.trainingSets.TrainingSet;
-import de.burrotinto.turboSniffle.gauge.cluster.DistanceToPointClusterer;
 import lombok.val;
+import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.highgui.HighGui;
 
@@ -27,28 +28,23 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
         doOCR();
     }
 
+    protected Mat getOCROptimiert (){
+        return otsu;
+    }
+
     protected void doOCR() {
         try {
-            val textAreas = textDedection.getTextAreas(otsu).stream().filter(rotatedRect -> Math.min(rotatedRect.size.width, rotatedRect.size.height) >= 20).collect(Collectors.toList());
-//            textAreas.addAll(textDedection.getTextAreas(source).stream().filter(rotatedRect -> Math.min(rotatedRect.size.width, rotatedRect.size.height) >= 20).collect(Collectors.toList()));
-
+            HighGui.imshow("",getOCROptimiert());
+            Mat ocr = getOCROptimiert();
+            val textAreas = textDedection.getTextAreas(ocr).stream().filter(rotatedRect -> Math.min(rotatedRect.size.width, rotatedRect.size.height) >= 20).collect(Collectors.toList());
             HashMap<RotatedRect, Double> areas = new HashMap<>();
             for (RotatedRect r : textAreas) {
 
-//                Double d = textDedection.doOCRBruteForceNumber(source.submat(r.boundingRect()));
-//                if (!d.isNaN()) {
-//                    areas.put(r, d);
-//                }
                 try {
-//                    String s = textDedection.doOCRNumbers(sub);
-//                    System.out.println(s);
-//
-                    HighGui.imshow("aaa",otsu.submat(r.boundingRect()));
+
                     String str = textDedection.doOCRNumbers(
                             Helper.sharpen(
-//                                    Helper.erode(
-                                            otsu.submat(r.boundingRect())
-//                                            , Imgproc.CV_SHAPE_RECT, 1)
+                                    ocr.submat(r.boundingRect())
                             )
                     ).replaceAll("[\\D.]", "");
 
@@ -56,9 +52,6 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
                     areas.put(r, i);
                 } catch (Exception e) {
                     try {
-//                        String str2 = textDedection.doOCRNumbers(source.submat(r.boundingRect())).replaceAll("[\\D.]", "");
-//                        Double i2 = Double.parseDouble(str2);
-//                        areas.put(r, i2);
 
                     } catch (Exception e2) {
                     }

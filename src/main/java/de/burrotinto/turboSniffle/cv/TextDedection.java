@@ -26,7 +26,7 @@ public class TextDedection {
     public static final String ENG_BEST = "eng";
     private final float scoreThresh = 0.5f;
     private final float nmsThresh = 0.4f;
-    private final Net net = Dnn.readNetFromTensorflow("frozen_east_text_detection.pb");
+    private final Net net = Dnn.readNetFromTensorflow("data/frozen_east_text_detection.pb");
     private final List<String> outNames = new ArrayList<String>();
 
     private final Tesseract tesseract = new Tesseract();

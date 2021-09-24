@@ -3,7 +3,10 @@ package de.burrotinto.turboSniffle.gauge;
 import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.TextDedection;
 import de.burrotinto.turboSniffle.gauge.trainingSets.CessnaSpeedTraingSet;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +31,13 @@ public class Cessna172AirspeedIndecator extends GaugeOnePointerAutoScale {
 //        idealisierteDarstellung = otsu.clone();
 //        Core.bitwise_not(idealisierteDarstellung,idealisierteDarstellung);
 
+    }
+
+    @Override
+    protected Mat getOCROptimiert() {
+        Mat ocr = otsu.clone();
+        Core.bitwise_not(Helper.erode(ocr, Imgproc.CV_SHAPE_RECT, 1),ocr);
+        return ocr;
     }
 
     @Override

@@ -20,8 +20,9 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
     public void machDeinDing() {
 
 //        val files = OnePointerErkennungBilder.listFiles(Paths.get(" data/example/CessnaAirSpeed.jpg"));
-        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/"))
-                .stream().filter(path -> path.toString().contains("CessnaAirSpeed.jpg")).collect(Collectors.toList());
+//        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/"))
+//                .stream().filter(path -> path.toString().contains("CessnaAirSpeed.jpg")).collect(Collectors.toList());
+        val files = OnePointerErkennungBilder.listFiles(Paths.get("data/example/sixpack"));
 
         for (int i = 0; i < files.size(); i++) {
             val file = files.get(i).toString();
@@ -31,7 +32,7 @@ public class Chessna172AirspeedErkennungBilder implements Arbeit {
 //            HighGui.imshow("", ArbeitHelper.drawGitter( Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),50));
 //            HighGui.waitKey();
 
-            Mat airspeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE);//.submat(50, 375, 150, 475);
+            Mat airspeed = Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE).submat(50, 375, 150, 475);
 
 
 
