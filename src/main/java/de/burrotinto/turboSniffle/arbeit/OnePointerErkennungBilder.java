@@ -10,6 +10,7 @@ import org.apache.commons.math3.util.Precision;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
@@ -50,16 +51,16 @@ public class OnePointerErkennungBilder implements Arbeit {
 
 
                 Gauge gauge = null;
-                switch (prefix.toLowerCase(Locale.ROOT)){
+                switch (prefix.toLowerCase(Locale.ROOT)) {
                     case "heatmap": {
                         gauge = GaugeFactory.getGaugeWithHeatMap(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
                         break;
                     }
                     case "ellipse": {
-                        gauge =  GaugeFactory.getGaugeEllipseMethod(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE),20);
+                        gauge = GaugeFactory.getGaugeEllipseMethod(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), 20);
                         break;
                     }
-                    default:{
+                    default: {
                         gauge = GaugeFactory.getGauge(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE));
                     }
                 }
@@ -69,7 +70,7 @@ public class OnePointerErkennungBilder implements Arbeit {
                 Mat orgRezice = new Mat(Gauge.DEFAULT_SIZE, Gauge.TYPE);
                 Imgproc.resize(Imgcodecs.imread(file, Imgcodecs.IMREAD_GRAYSCALE), orgRezice, Gauge.DEFAULT_SIZE);
                 gauge.getSource().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange(0, (int) Gauge.DEFAULT_SIZE.width));
-                gauge.getCanny().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width*2));
+                gauge.getCanny().copyTo(all.rowRange((int) Gauge.DEFAULT_SIZE.height * i, (int) Gauge.DEFAULT_SIZE.height * (i + 1)).colRange((int) Gauge.DEFAULT_SIZE.width, (int) Gauge.DEFAULT_SIZE.width * 2));
 
                 Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_1_source.png", gauge.getSource());
                 Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_2_canny.png", gauge.getCanny());
@@ -85,16 +86,18 @@ public class OnePointerErkennungBilder implements Arbeit {
 
                 Gauge finalGauge = gauge;
 
-                    try {
-                        val analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
-                        Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
-                        Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
-                        Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));
+                try {
+                    val analogOnePointer = GaugeFactory.getGaugeWithOnePointerAutoScale(finalGauge, exampleFile.getSteps(), exampleFile.getMin(), exampleFile.getMax());
+//                    HighGui.imshow("", analogOnePointer.getIdealisierteDarstellung());
+//                    HighGui.waitKey();
+                    Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_8_otsu.png", analogOnePointer.getOtsu());
+                    Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "|_9_idealisiert.png", analogOnePointer.getIdealisierteDarstellung());
+                    Imgcodecs.imwrite("data/out/" + prefix + "_" + name + "_comp=" + Precision.round(analogOnePointer.getValue(), 2) + "_10_dedected.png", analogOnePointer.getDrawing(analogOnePointer.getSource().clone()));
 
 
-                    } catch (NotGaugeWithPointerException e) {
-                        e.printStackTrace();
-                    }
+                } catch (NotGaugeWithPointerException e) {
+                    e.printStackTrace();
+                }
 
             }
 

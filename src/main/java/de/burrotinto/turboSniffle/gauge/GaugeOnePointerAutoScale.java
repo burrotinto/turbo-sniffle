@@ -23,13 +23,13 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
     }
 
     GaugeOnePointerAutoScale(Gauge gauge, TextDedection textDedection, Optional<Double> steps, Optional<Double> min, Optional<Double> max, TrainingSet trainingSet) throws NotGaugeWithPointerException {
-        super(gauge, steps, min, max, trainingSet, 9);
+        super(gauge, steps, min, max, trainingSet, 10);
         this.textDedection = textDedection;
         doOCR();
     }
 
     protected Mat getOCROptimiert (){
-        return otsu;
+        return getIdealisierteDarstellung();
     }
 
     protected void doOCR() {
@@ -58,7 +58,7 @@ public class GaugeOnePointerAutoScale extends ValueGauge {
                 }
             }
 
-            val clustered = DistanceToPointClusterer.extractWithOutArea(areas.keySet(), getCenter(), 5, 2);
+            val clustered = DistanceToPointClusterer.extractWithOutArea(areas.keySet(), getCenter(), 5, 3);
 
             clustered.forEach(rotatedRect -> {
                 addToScaleMark(rotatedRect, areas.get(rotatedRect));

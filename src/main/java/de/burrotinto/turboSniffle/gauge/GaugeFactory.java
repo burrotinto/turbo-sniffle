@@ -288,7 +288,7 @@ public class GaugeFactory {
 
 
         Mat canny = new Mat(src.size(), Gauge.TYPE);
-        Imgproc.Canny(bilateral, canny, 255 / 3, 120);
+        Imgproc.Canny(bilateral, canny, 255 / 3, 255/2);
 
         HeatMap heatMap = new HeatMap(canny);
 

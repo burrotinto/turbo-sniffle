@@ -1,6 +1,7 @@
 package de.burrotinto.turboSniffle.gauge.trainingSets;
 
 import de.burrotinto.turboSniffle.cv.Pair;
+import lombok.val;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
@@ -14,7 +15,7 @@ public abstract class TrainingSet {
     public abstract List<Pair<Mat, double[]>> getTrainingset(Size size, int p);
 
     public int calcPointerWidth(int w, double q, double o) {
-        return (int) Math.ceil((w * Math.PI* o)/(q));
+        return (int) Math.ceil((w * Math.PI* o)/(q)) +1;
     }
 
     public int calcPointerLength(int w) {

@@ -197,7 +197,8 @@ public class GarminG1000 {
         vsi.textFields = vsi.textFields.stream().filter(textField -> textField.fieldValue % 50 == 0 && textField.fieldValue != 0).collect(Collectors.toList());
 
         if (vsi.textFields.size() == 1) {
-            return vsi.textFields.get(0).fieldValue;
+
+            return ((centerLine - vsi.textFields.get(0).origin.y) > 0? 1 : -1) * vsi.textFields.get(0).fieldValue ;
         } else if (vsi.textFields.isEmpty()) {
             return 0;
         } else {

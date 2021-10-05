@@ -10,18 +10,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GaugeJSON {
-    String src;
     String gauge;
     String idealisierteDarstellung;
     String detected;
     double[] pointer;
-    double value;
+    Double value = null;
 
     public GaugeJSON(ValueGauge gauge) {
         this((Gauge) gauge);
         detected = MatToMessageString.erzeugeStringDarstellung(gauge.getDrawing(gauge.getSource().clone()));
         pointer = gauge.getPointerAngel();
-        value = gauge.getValue();
+
+        if (!Double.isNaN(gauge.getValue())) {
+            value = gauge.getValue();
+        }
+
         idealisierteDarstellung = MatToMessageString.erzeugeStringDarstellung(gauge.getIdealisierteDarstellung());
     }
 

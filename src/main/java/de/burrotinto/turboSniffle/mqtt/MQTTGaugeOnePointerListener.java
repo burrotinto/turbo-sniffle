@@ -2,6 +2,7 @@ package de.burrotinto.turboSniffle.mqtt;
 
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import de.burrotinto.turboSniffle.gauge.GaugeFactory;
+import de.burrotinto.turboSniffle.gauge.NotGaugeWithPointerException;
 import de.burrotinto.turboSniffle.gauge.ValueGauge;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,6 @@ public class MQTTGaugeOnePointerListener extends MQTTListener {
     private MQTTConfig mqttConfig;
 
 
-    @SneakyThrows
     @Override
     public void newMessage(Mqtt5Publish publish) {
         super.newMessage(publish);
@@ -24,10 +24,14 @@ public class MQTTGaugeOnePointerListener extends MQTTListener {
         String topic = publish.getTopic().toString()
                 .replace("/greyscale", "");
 
-        ValueGauge gauge = GaugeFactory.getGaugeWithOnePointerAutoScale( GaugeFactory.getGauge(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes())));
+        ValueGauge gauge = null;
+        try {
+            gauge = GaugeFactory.getGaugeWithOnePointerAutoScale( GaugeFactory.getGauge(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes())));
+        } catch (NotGaugeWithPointerException e) {
+            e.printStackTrace();
+        }
 
         GaugeJSON json = new GaugeJSON(gauge);
-        json.src = new String(publish.getPayloadAsBytes(), "UTF-8");
 
         mqttClient.publish(topic,json);
 //        try {

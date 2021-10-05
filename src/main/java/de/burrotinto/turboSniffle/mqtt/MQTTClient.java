@@ -75,7 +75,7 @@ public class MQTTClient implements InitializingBean {
 
     }
 
-    @SneakyThrows
+
     public void publish(String baseTopic, GaugeJSON json) {
         publish(baseTopic, gson.toJson(json));
 
@@ -87,10 +87,6 @@ public class MQTTClient implements InitializingBean {
         publish(baseTopic + "/gauge", json.gauge);
         publish(baseTopic + "/idealisiert", json.idealisierteDarstellung);
 
-//        FileWriter fileWriter = new FileWriter("data/" + baseTopic.hashCode() + ".json");
-//        PrintWriter printWriter = new PrintWriter(fileWriter);
-//        printWriter.print(gson.toJson(json));
-//        printWriter.close();
     }
 
     public void publish(String topic, String payload) {

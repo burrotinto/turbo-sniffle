@@ -31,7 +31,6 @@ public class MQTTCessnaSixpackListener extends MQTTListener {
 
         ValueGauge gauge;
 
-
         switch (publish.getTopic().getLevels().get(3).toLowerCase(Locale.ROOT)) {
             case "asi":
                 gauge = Cessna172SixpackFactory.getCessna172AirspeedIndecator(MatToMessageString.erzeugeMatAusStringDarstellung(publish.getPayloadAsBytes()));
@@ -50,21 +49,8 @@ public class MQTTCessnaSixpackListener extends MQTTListener {
         }
         try {
             GaugeJSON json = new GaugeJSON(gauge);
-            json.src = new String(publish.getPayloadAsBytes(), "UTF-8");
 
             mqttClient.publish(topic,json);
-
-//            mqttClient.publish(topic, gson.toJson(json));
-//            if (publish.getTopic().getLevels().get(3).toLowerCase(Locale.ROOT).equals("alt")) {
-//                mqttClient.publish(topic + "/pointerAngle100", String.valueOf(json.getPointer()[1]));
-//                mqttClient.publish(topic + "/pointerAngle1000", String.valueOf(json.getPointer()[0]));
-//            } else {
-//                mqttClient.publish(topic + "/pointerAngle", String.valueOf(json.getPointer()[0]));
-//            }
-//
-//            mqttClient.publish(topic + "/value", String.valueOf(json.value));
-//            mqttClient.publish(topic + "/detected", json.detected);
-//            mqttClient.publish(topic + "/gauge", json.gauge);
 
         } catch (Exception e) {
             e.printStackTrace();

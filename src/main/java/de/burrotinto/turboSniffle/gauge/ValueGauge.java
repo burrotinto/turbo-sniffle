@@ -22,7 +22,7 @@ public class ValueGauge extends AutoEncoderGauge {
     }
 
     ValueGauge(Gauge gauge, TrainingSet trainingSet) throws NotGaugeWithPointerException {
-        super(gauge, trainingSet, 9);
+        super(gauge, trainingSet, 10);
         this.skalemarkSteps = Optional.empty();
         this.min = Optional.empty();
         this.max = Optional.empty();
@@ -139,6 +139,9 @@ public class ValueGauge extends AutoEncoderGauge {
         //Bestimmen ob der Zeiger innerhalb oder ausserhalb des Bereiches ist
         double summeDerAbstaende = pairs.get(0).p1 + pairs.get(1).p1;
         double value = 0;
+
+
+
         if (Math.abs(summeDerAbstaende - deltaV) <= 0.1) {
             //Fall 1 Zeiger Innerhalb des Bereiches
 
@@ -161,59 +164,6 @@ public class ValueGauge extends AutoEncoderGauge {
         return value;
 
     }
-
-//    public double getValue(double angle) {
-//        autosetMinMaxMiddle();
-//
-//        if (labelScale.size() < 2) {
-//            return Double.NaN;
-//        }
-//
-//        LinkedList<Pair<Double, Map.Entry<RotatedRect, Double>>> pairs = new LinkedList<>();
-//        labelScale.entrySet().stream().forEach(e -> {
-//            Double x = Math.abs(bildkoordinatenZuPoolar(e.getKey().center) - angle);
-//            pairs.add(new Pair<>(x, e));
-//            pairs.add(new Pair<>(360 - x, e));
-//        });
-//
-//        //Sortierung nach entfernung zum Zeiger
-//        pairs.sort((o1, o2) -> (int) (o1.p1 - o2.p1));
-//
-//
-//        Map.Entry<RotatedRect, Double> mark1 = pairs.get(0).p2;
-//        Map.Entry<RotatedRect, Double> mark2 = pairs.get(1).p2;
-//
-//        double delta = Math.abs(bildkoordinatenZuPoolar(mark1.getKey().center) - bildkoordinatenZuPoolar(mark2.getKey().center));
-//        double deltaMax = Math.max(360 - delta, delta);
-//        double deltaMin = 360 - deltaMax;
-//
-//        //Berechnen der Wertes pro Grad
-//        double xPPDeltaMin = Math.abs(mark1.getValue() - mark2.getValue()) / deltaMin;
-//
-//        //Bestimmen ob der Zeiger innerhalb oder ausserhalb des Bereiches ist
-//        double summeDerAbstaende = pairs.get(0).p1 + pairs.get(1).p1;
-//        double value = 0;
-//        if (Math.abs(summeDerAbstaende - deltaMin) <= 0.1) {
-//            //Fall 1 Zeiger Innerhalb des Bereiches
-//
-//            //Interpolation je nachdem ob auf oder absteigend
-//            if (mark1.getValue() > mark2.getValue()) {
-//                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
-//            } else {
-//                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
-//            }
-//
-//        } else {
-//            // Fall 2 Zeiger außerhalb des Bereiches
-//            if (mark1.getValue() > mark2.getValue()) {
-//                value = mark1.getValue() + (pairs.get(0).p1 * xPPDeltaMin);
-//            } else {
-//                value = mark1.getValue() - (pairs.get(0).p1 * xPPDeltaMin);
-//            }
-//        }
-//        return value;
-//    }
-
 
     public double getValue() {
         return getValue(getPointerAngel()[getPointerAngel().length - 1]);

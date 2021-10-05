@@ -32,11 +32,18 @@ public class G1000 implements Arbeit {
     public void machDeinDing() {
 
 
-        Mat g1000 = Imgcodecs.imread(G1000, Imgcodecs.IMREAD_GRAYSCALE);
-        new GarminG1000(g1000);
-
-//        Mat g1000 = Imgcodecs.imread("data/example/G1000/2021-09-08 11_12_48-Window.png", Imgcodecs.IMREAD_GRAYSCALE);
+//        Mat g1000 = Imgcodecs.imread(G1000, Imgcodecs.IMREAD_GRAYSCALE);
 //        new GarminG1000(g1000);
+
+
+        ArrayList<Point> corner = new ArrayList<>();
+        corner.add(new Point(329, 202));
+        corner.add(new Point(966, 202));
+        corner.add(new Point(954, 661));
+        corner.add(new Point(343, 662));
+        Mat g1000 = Imgcodecs.imread("data/example/g1000Auswertung/0.png", Imgcodecs.IMREAD_GRAYSCALE);
+//        Mat g1000 = Imgcodecs.imread("data/example/G1000/2021-09-08 11_12_48-Window.png", Imgcodecs.IMREAD_GRAYSCALE);
+        new GarminG1000(g1000);
 
 
 //        ArrayList<Point> corner = new ArrayList<>();

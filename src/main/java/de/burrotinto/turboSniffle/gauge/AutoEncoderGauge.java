@@ -47,7 +47,6 @@ public class AutoEncoderGauge extends Gauge {
         List<Pixel> pixels = Helper.getAllPixel(ideal, mask);
 
         if (Core.countNonZero(ideal) <= pixels.size() / 2) {
-//        if (pixels.stream().filter(pixel -> pixel.color == 0).count() > pixels.size() / 2) {
             Core.bitwise_not(ideal, ideal);
         }
         setIdealisierteDarstellung(ideal);
@@ -66,7 +65,6 @@ public class AutoEncoderGauge extends Gauge {
     public double[] getPointerAngel() {
         if (pointerAngel == null || pointerAngel.length == 0) {
             Pair<double[], Integer> min = null;
-            Mat minTV = null;
 
             Mat eingangsVektor = new Mat();
 
@@ -74,28 +72,16 @@ public class AutoEncoderGauge extends Gauge {
 
             List<Pair<Mat, double[]>> ausgangsVektoren = trainingSet.getTrainingset(AUTOENCODER_INPUT_SIZE, hiddenLayer);
 
-            Imgcodecs.imwrite("data/out/aePointer.png", eingangsVektor);
-
             for (int i = 0; i < ausgangsVektoren.size(); i++) {
                 Mat konjunktion = new Mat();
                 Core.bitwise_or(eingangsVektor, ausgangsVektoren.get(i).p1, konjunktion);
-//                int p = Core.countNonZero(konjunktion);
 
                 int p = (int)(Core.sumElems(konjunktion).val[0] / 255);
                 if (min == null || min.p2 > p) {
                     min = new Pair<>(ausgangsVektoren.get(i).p2, p);
-                    minTV = ausgangsVektoren.get(i).p1;
-//                    System.out.println(konjunktion.dump());
-//                    System.out.println(p);
-//                    HighGui.imshow("min", konjunktion);
-//                    HighGui.waitKey(100);
                 }
 
-
-//                System.out.println(min.p2 +" " + p);
             }
-
-//            Imgcodecs.imwrite("data/ae/kurskreisel/"+ min.p1[0] +"_"+ System.currentTimeMillis() + ".png", eingangsVektor);
 
             pointerAngel = min.p1;
         }

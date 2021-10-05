@@ -4,10 +4,7 @@ import de.burrotinto.turboSniffle.cv.Helper;
 import de.burrotinto.turboSniffle.cv.Pair;
 import de.burrotinto.turboSniffle.gauge.Gauge;
 import lombok.val;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -22,9 +19,6 @@ public class GaugeOnePointerLearningDataset extends TrainingSet {
     public static GaugeOnePointerLearningDataset get() {
         return GAUGE_ONE_POINTER_LEARNING_DATASET;
     }
-
-    private static final Scalar WHITE = new Scalar(255, 255, 255);
-    private static final Scalar BLACK = new Scalar(0, 0, 0);
 
     private final Map<String, List<Pair<Mat, double[]>>> training = new HashMap<>();
 
@@ -45,11 +39,9 @@ public class GaugeOnePointerLearningDataset extends TrainingSet {
 
             //Gegengewicht
             Imgproc.line(white, new Point(size.width / 2, size.height / 2), new Point((size.width / 2) - (calcPointerLength((int) size.width) / 4.0), size.height / 2), Helper.BLACK, (int) (calcPointerWidth((int) size.height, Math.pow(2, p), 6)));
-//            Imgproc.circle(white, new Point(size.width / 2, size.height / 2), (int) (calcPointerLength((int) size.width) / 4.0), Helper.BLACK, -1);
 
             List<Pair<Mat, double[]>> pairs = new ArrayList<>();
 
-            Imgcodecs.imwrite("data/out/aePointer.png", white);
 
             double angleSteps = 360 / Math.pow(2, p);
             for (double i = 0; i < 360; i += angleSteps) {
